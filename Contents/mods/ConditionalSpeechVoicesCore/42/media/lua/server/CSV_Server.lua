@@ -26,7 +26,7 @@ function S.receive(module,command,player,p)
     if previous and (p.seq==previous.seq or (now-previous.at<1500 and not (priority>=3 and priority>(previous.priority or 1) and (now-previous.at>=200 or previous.stopped)))) then return false end
     S.last[player]={at=now,seq=p.seq,priority=priority}
     -- Use the authenticated player's position/voice/pitch, never client coordinates or sound names.
-    local out={version=1,pack=V.pack.id,packRevision=V.pack.revision,actor=player:getOnlineID(),seq=p.seq,line=p.line,
+    local out={version=1,pack=V.bank(p.voice).id,packRevision=V.bank(p.voice).revision,actor=player:getOnlineID(),seq=p.seq,line=p.line,
         voice=V.voice(player),pitch=V.pitch(player),radius=math.min(25,p.radius),priority=priority,allowStealth=p.allowStealth==true and V.allowStealth(p.line),exposed=p.exposed==true,engaged=p.engaged==true}
     local players=getOnlinePlayers()
     for i=0,players:size()-1 do

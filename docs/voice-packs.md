@@ -1,6 +1,6 @@
 # Adding a voice pack
 
-Core 0.41.0 supports independently authored voice packs. No Core patch is required. Existing English and Turkish packs retain their IDs and save compatibility.
+Core 0.41.2 supports independently authored voice packs. No Core patch is required. Existing English and Turkish packs retain their IDs and save compatibility.
 
 Create a B42 mod requiring `Conditional-Speech-Voices-Core`. Give it a unique ModID starting with `CSV-Voice-`, followed by letters, digits, underscores or hyphens. This opt-in prefix avoids probing every unrelated installed mod. Put a provider at `42/media/lua/shared/CSV_Packs/<ModID>.lua`. Core requires this module explicitly for each activated mod using that prefix, once during loading. Return a schema-1 definition with a bank and a voices array. Do not require CSV/Core or CSV/Pack from your provider. Registration after Core loads is rejected; restart after changing packs.
 
@@ -15,11 +15,19 @@ The bank follows the existing schema-1 recording contract:
 - `lines` maps line IDs to the spoken captions. `native` contains `suffixes`, `replacements` and `pain`. `replacements.ShoutHey` and `WhisperHey` are caption-matched callout pools.
 - `data.contextLines` may omit `voice` to apply to every voice in that bank. Set it only for an intentional voice-specific rule.
 
-Use the established semantic line IDs for existing gameplay situations, and use unique sound event names `CSV_<voice>_<line>` and the matching self-playback definitions. Supply scripts and audio in your own package. Core does not synthesize recordings. An absent recording must remain absent rather than point at another speaker. Shared line IDs mean shared semantics, not shared audio. The registry adds voices to existing situations; it does not register arbitrary new gameplay observers.
+Use the established semantic line IDs for existing gameplay situations, and use unique sound event names `CSV_<voice>_<line>` and the matching self-playback definitions. Supply scripts and audio in your own package. Every media file path must be unique across packs, including the sound script filename. Use a pack-specific name such as `media/scripts/CSV_MyPack_Sounds.txt`. The game overlays matching paths; different sound event names inside the same script filename do not prevent one pack replacing another. Core does not synthesize recordings. An absent recording must remain absent rather than point at another speaker. Shared line IDs mean shared semantics, not shared audio. The registry adds voices to existing situations; it does not register arbitrary new gameplay observers.
 
 Do not edit provider tables after load. Core discovers providers in sorted ModID order and rejects duplicate voice identities. Shared semantic catalogs use the first definition for an existing ID; avoid changing the meaning of an existing ID. Clip lookup and captions use the selected voice's bank.
 
 Test alone, with English, with Turkish, and without any voice pack. Check character creation, pitch, save/reload, ordinary speech, stealth, injury and both Q and radial shout. The current automated tests do not establish multiplayer compatibility.
+
+## Multiplayer bank selection
+
+The speaker's selected voice owns the recording bank. Speech packets carry that bank's ID and revision, even when several packs are enabled. The listener's game language does not translate or replace the speaker's voice. Local prediction and the server echo share an actor and sequence ID to prevent duplicate playback.
+
+The server and each listener need the speaker's voice pack. A missing pack, mismatched recording revision or unavailable line is rejected. Core does not substitute another language or speaker. A pack update that changes recording identities or timing must update its bank revision; a packaging-only rename can retain the revision. Keep all server-required packs installed and enabled for multiplayer tests.
+
+The routing tests cover bank selection, malformed requests, missing packs and duplicate suppression with simulated engine services. A dedicated server and two real clients are still required to verify synchronization and audibility.
 
 ## Permission for independent packs
 

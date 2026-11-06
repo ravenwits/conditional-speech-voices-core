@@ -1,7 +1,7 @@
 local pack=require 'CSV/Pack'
 local V = {data=require 'CSV/Data',version=require('CSV/Release').version}
 V.pack=pack
-function V.bank(voice)return pack.extraVoices[voice] or pack end
+function V.bank(voice)return pack.voiceBanks[voice] or pack end
 function V.localize(voice,line)
  if not line then return nil end
  local b=pack.extraVoices[voice];if not b or not b.lines then return line end
@@ -9,9 +9,10 @@ function V.localize(voice,line)
  local out={};for key,value in pairs(line)do out[key]=value end;out.text=text;return out
 end
 function V.available()return pack.id~=false end
-function V.languageSupported()return V.available() and (pack.hasCustomVoices==true or Translator.getLanguage():name()==pack.language) end
+-- Voice selection chooses the audio language; the UI language never filters playback.
+function V.languageSupported()return V.available() end
 V.config={enabled=true,maxDistance=25,maxConcurrent=2,followPitch=true}
-function V.extended(voice)return V.available() and (pack.extraVoices[voice]~=nil or voice=='bob' and pack.id=='csv.en' or voice=='kate' and V.data.kateUS==true) end
+function V.extended(voice)return V.available() and (pack.extraVoices[voice]~=nil or voice=='bob' and pack.voiceBanks.bob~=nil or voice=='kate' and V.data.kateUS==true) end
 function V.finite(n) return type(n)=='number' and n==n and n>-math.huge and n<math.huge end
 function V.now() return getTimestampMs() end
 function V.voice(player)
@@ -22,8 +23,15 @@ function V.voice(player)
     if not d or not d.getVoiceType or not d.getVoicePrefix then return nil end
     if d:getVoiceType()~=0 then return nil end
     local prefix=d:getVoicePrefix()
-    if prefix=='VoiceMale' then return 'bob' end
-    if prefix=='VoiceFemale' then return 'kate' end
+    if prefix=='VoiceMale' then return pack.voiceBanks.bob and 'bob' or nil end
+    if prefix=='VoiceFemale' then return pack.voiceBanks.kate and 'kate' or nil end
+    -- Character descriptors can arrive before player modData on remote clients.
+    for id,v in pairs(pack.voices)do
+        if v.prefix and type(prefix)=='string' and prefix:sub(1,#v.prefix)==v.prefix then
+            local pitch=prefix:sub(#v.prefix+1)
+            if pitch:match('^%d+$') and tonumber(pitch)<=200 then return id end
+        end
+    end
 end
 function V.pitch(player)
     local d=player and player:getDescriptor()
@@ -32,9 +40,10 @@ function V.pitch(player)
     return math.max(-100,math.min(100,p))
 end
 function V.clip(voice,id)
-    if voice~='bob' and voice~='kate' and not pack.extraVoices[voice] then return nil end
+    local bank=voice and pack.voiceBanks[voice]
+    if not bank then return nil end
     if type(id)~='string' or #id>60 then return nil end
-    local data=pack.extraVoices[voice] and pack.extraVoices[voice].data or V.data
+    local data=pack.extraVoices[voice] and bank.data or V.data
     return data.clips[voice..'_'..id]
 end
 function V.choose(group,intensity,maximum)
@@ -118,7 +127,9 @@ function V.contextLine(player,voice,group,intensity,facts)
     end
 end
 function V.validPacket(p)
-    return type(p)=='table' and p.version==1 and (p.pack==nil or p.pack==pack.id and p.packRevision==pack.revision) and V.clip(p.voice,p.line)~=nil
+    if type(p)~='table' or type(p.voice)~='string' then return false end
+    local bank=pack.voiceBanks[p.voice]
+    return bank~=nil and p.version==1 and (p.pack==nil and p.packRevision==nil or p.pack==bank.id and p.packRevision==bank.revision) and V.clip(p.voice,p.line)~=nil
         and V.finite(p.actor) and p.actor>=0 and p.actor%1==0
         and V.finite(p.seq) and p.seq>=1 and p.seq<2147483647 and p.seq%1==0
         and V.finite(p.radius) and p.radius>0 and p.radius<=V.config.maxDistance

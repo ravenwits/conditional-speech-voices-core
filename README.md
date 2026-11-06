@@ -6,7 +6,7 @@ Core handles speech rules, playback, settings and debug reports. It requires [Co
 
 ## Status
 
-Version 0.41.1. Single-player beta, tested with Project Zomboid 42.21.0. Multiplayer is not yet verified. The latest character-specific pitch setting still needs a live save/reload check.
+Version 0.41.2. Single-player beta, tested with Project Zomboid 42.21.0. Multiplayer is not yet verified. The latest character-specific pitch setting still needs a live save/reload check.
 
 ## Install
 

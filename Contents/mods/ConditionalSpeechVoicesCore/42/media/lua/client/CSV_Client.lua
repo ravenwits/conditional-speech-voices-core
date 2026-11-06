@@ -30,16 +30,16 @@ local function diagnostic(key,message)
     logged[key]=true
     print('[CSV] '..key..' '..tostring(message or ''))
 end
-diagnostic('loaded','English voice addon v'..V.version)
+diagnostic('loaded','speech core v'..V.version)
 local function playerInfo(player)
     local d=player and player:getDescriptor()
     return 'language='..tostring(Translator.getLanguage():name())..' prefix='..tostring(d and d:getVoicePrefix())..' type='..tostring(d and d:getVoiceType())..' mapped='..tostring(V.voice(player))
 end
 require('CSV/Selection').install(C,V)
 require('CSV/Settings').install(C,V)
-local function english() return require('CSV/Core').languageSupported() end
-require('CSV/Playback').install(C,V,english,diagnostic)
-local installed,installError=require('CSV/SpeechAdapter').install(C,V,{english=english,diagnostic=diagnostic,playerInfo=playerInfo,extraGroups=extraGroups})
+local function speechAvailable() return require('CSV/Core').languageSupported() end
+require('CSV/Playback').install(C,V,speechAvailable,diagnostic)
+local installed,installError=require('CSV/SpeechAdapter').install(C,V,{speechAvailable=speechAvailable,diagnostic=diagnostic,playerInfo=playerInfo,extraGroups=extraGroups})
 if not installed then print('[CSV] speech adapter unavailable: '..tostring(installError));return end
 Speech._csvInstalled=true
 local function onServer(module,command,p)
@@ -52,7 +52,8 @@ local function onServer(module,command,p)
     end
 end
 local function onTick()
-    if V.config.enabled and english() then
+    if not Events.OnTickEvenPaused then require('CSV/ReportWriter').tick()end
+    if V.config.enabled and speechAvailable() then
         require('CSV/Observers').tick()
     end
     if #C.active==0 then return end
@@ -131,7 +132,7 @@ function C.preview(player,lineID,selectedVoice,previewRadius,previewPitch,detail
     if not lineID then return rejected('no_recorded_clip') end
     C.sequence=C.sequence+1
     if C.sequence>=2147483647 then C.sequence=1 end
-    local packet={version=1,pack=V.pack.id,packRevision=V.pack.revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,
+    local packet={version=1,pack=V.bank(voice).id,packRevision=V.bank(voice).revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,
         line=lineID,voice=voice,pitch=previewPitch or V.pitch(player),radius=previewRadius or 15}
     local trace=require 'CSV/Trace'
     details=details or {};details.trace=details.trace or trace.begin(player,lineID,'local_preview',details.contextFacts,'preview')
@@ -173,6 +174,7 @@ Events.OnFillWorldObjectContextMenu.Add(onContextMenu)
 Events.OnServerCommand.Add(onServer)
 Events.OnTick.Add(onTick)
 if Events.OnTickEvenPaused then Events.OnTickEvenPaused.Add(function()
+    require('CSV/ReportWriter').tick()
     local ok,err=pcall(function()C.pauseClock();C.observeSettings()end)
     if not ok then C.errors=C.errors+1;diagnostic('settings-monitor-error',err)end
 end)end

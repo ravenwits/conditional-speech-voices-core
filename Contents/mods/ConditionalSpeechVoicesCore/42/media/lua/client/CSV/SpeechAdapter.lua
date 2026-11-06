@@ -8,12 +8,12 @@ function Adapter.install(C,V,env)
  local Trace=require 'CSV/Trace'
  local Channel=require 'CSV/Channel'
  local Debug=C.debug
- local english,diagnostic,playerInfo,extraGroups=env.english,env.diagnostic,env.playerInfo,env.extraGroups
+ local speechAvailable,diagnostic,playerInfo,extraGroups=env.speechAvailable,env.diagnostic,env.playerInfo,env.extraGroups
  return require('CSV/Connections').install('conditional-speech',function(transaction)
   assert(type(Speech.generateSpeechFrom)=='function' and type(Speech.ProcessSpeech)=='function' and type(Speech.Say)=='function','Conditional Speech interface unavailable')
 local generate,process,say=Speech.generateSpeechFrom,Speech.ProcessSpeech,Speech.Say
 local function owns(player)
- return V.config.enabled and english() and player and player.isLocalPlayer and player:isLocalPlayer()
+ return V.config.enabled and speechAvailable() and player and player.isLocalPlayer and player:isLocalPlayer()
   and not player:isDead() and V.voice(player)~=nil
 end
 local function generateSpeechFrom(player,group,intensity,maximum,...)
@@ -21,7 +21,7 @@ local function generateSpeechFrom(player,group,intensity,maximum,...)
     if manager.enabled and not manager.dispatching and owns(player) then return manager.submit(generateSpeechFrom,player,group,intensity,maximum,{n=select('#',...),...})end
     local trace=Trace.request(player,group)
     if owns(player) and require('CSV/Activity').read(player)=='sleeping' then Trace.step(trace,'blocked','sleeping');C.lastAttempt[player]={group=group,outcome='sleeping',trace=trace};return end
-    if not V.config.enabled or not english() or not player or not player:isLocalPlayer() or player:isDead() then
+    if not V.config.enabled or not speechAvailable() or not player or not player:isLocalPlayer() or player:isDead() then
         Trace.step(trace,'bypassed','addon_inactive_or_actor_ineligible')
         return generate(player,group,intensity,maximum,...)
     end
@@ -162,7 +162,7 @@ local function Say(player,text,volume)
     local result=say(player,text,volume)
     if ctx and ctx.line and channel.allowed and channel.channel=='private' and not require('CSV/LootRules').groups[ctx.group] and ctx.group~='FoundLoot' and (not C.lastOrdinary[player] or V.now()-C.lastOrdinary[player]>=(({[0]=60000,[1]=30000,[2]=10000})[C.preferences().frequency] or 30000)) then
         C.sequence=C.sequence+1
-        local p={version=1,pack=V.pack.id,packRevision=V.pack.revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,line=ctx.line.id,voice=ctx.voice,pitch=V.pitch(player),radius=15}
+        local p={version=1,pack=V.bank(ctx.voice).id,packRevision=V.bank(ctx.voice).revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,line=ctx.line.id,voice=ctx.voice,pitch=V.pitch(player),radius=15}
         local ok,played,reason=pcall(C.play,p,player,true,{private=true,gain=.35,trace=ctx.trace})
         Trace.step(ctx.trace,'private_thought',ok and (played and 'queued' or reason) or 'play_error')
         if ok and played then require('CSV/Encounter').record(player,ctx.group,ctx.facts);C.remember(player,ctx.line.id,ctx.line);ctx.outcome='local_thought';C.lastOrdinary[player]=V.now();NeedTiming.mark(player,ctx.group,ctx.intensity,V.now()) end

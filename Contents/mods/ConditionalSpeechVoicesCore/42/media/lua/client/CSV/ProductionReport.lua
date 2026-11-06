@@ -34,8 +34,7 @@ local function sortInventory(keys)
   width=width*2
  end
 end
-function R.export(writer,compact)
- local f=writer or require('CSV/ReportWriter').open('CSV-production-report.txt');if not f then return false end
+local function buildReport(f,compact)
  local preparationStarted=getTimestampMs()
  local V=require 'CSV/Core';local C=V.client;local N=require 'CSV/NeedTiming'
  emit(f,function()return 'CSV production evidence v'..require('CSV/Core').version..'\nSessionStart='..R.started..' ExportedAt='..getTimestampMs()..' droppedRows='..(R.dropped or 0)..'\n' end)
@@ -80,7 +79,7 @@ function R.export(writer,compact)
  local manager=require('CSV/SpeechManager');local m=manager.metrics
  emit(f,function()return 'SPEECH_MANAGER pending='..#manager.queue..' submitted='..m.submitted..' accepted='..m.played..' expired='..m.expired..' cancelled='..m.cancelled..' blocked='..m.blocked..' retryPlansSkipped='..(m.retrySkipped or 0)..'\n' end)
  local writes=require('CSV/ReportWriter').metrics
- emit(f,function()return 'REPORT_WRITER completed='..writes.completed..' failed='..writes.failed..' maxSliceMs='..writes.maxSliceMs..' maxOpenMs='..(writes.maxOpenMs or 0)..' maxPrepareMs='..(R.maxPrepareMs or 0)..'\n' end)
+ emit(f,function()return 'REPORT_WRITER completed='..writes.completed..' failed='..writes.failed..' maxSliceMs='..writes.maxSliceMs..' maxOpenMs='..(writes.maxOpenMs or 0)..' maxCommitMs='..(writes.maxCommitMs or 0)..' maxPrepareMs='..(R.maxPrepareMs or 0)..'\n' end)
  require('CSV/AlpCallout').export(f)
  local native=require 'CSV/NativeVoice'
  emit(f,function()return 'VOICE_NATIVE_ACTIVITY scope=active_event_windows includesSilentSlots=true selectedTakeUnknown=true errors='..native.errors..'\n' end)
@@ -122,10 +121,16 @@ function R.export(writer,compact)
   emit(f,function()return 'ASSET '..key..' durationMs='..V.data.clips[key].duration..' gameplayQueued='..(evidence.gameplayQueued or 0)..' gameplayStarted='..(evidence.gameplayStarted or 0)..' gameplayFinished='..(evidence.gameplayFinished or 0)..' previewStarted='..(evidence.previewStarted or 0)..'\n' end)
  end
  R.maxPrepareMs=math.max(R.maxPrepareMs or 0,getTimestampMs()-preparationStarted)
- if not writer then f:close()end;return true
+ return true
+end
+function R.export(writer,compact)
+ if writer then return buildReport(writer,compact)end
+ local f=require('CSV/ReportWriter').open('CSV-production-report.txt');if not f then return false end
+ local ok,err=pcall(buildReport,f,compact)
+ if not ok then f:abort();print('[CSV] report preparation failed: '..tostring(err));return false end
+ f:close();return true
 end
 function R.tick()
- require('CSV/ReportWriter').tick()
  local now=getTimestampMs();if now<R.nextSave then return end;R.nextSave=now+60000
  local observed=false;for _ in pairs(R.observations)do observed=true;break end
  if R.count>0 or observed then R.export(nil,true)end

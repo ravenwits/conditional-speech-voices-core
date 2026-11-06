@@ -3,7 +3,7 @@ local Trace=require 'CSV/Trace'
 local spatial={self2d=0,worldPositionUpdates=0,movedWhileTalking=0}
 M.spatial=spatial
 local NeedTiming=require 'CSV/NeedTiming'
-function M.install(C,V,english,diagnostic)
+function M.install(C,V,speechAvailable,diagnostic)
 local function stop(entry)
     if entry.emitter and entry.handle then pcall(entry.emitter.stopSoundLocal,entry.emitter,entry.handle) end
 end
@@ -123,7 +123,7 @@ end
 function C.play(p,actor,localPreview,details)
     details=details or {}
     if not V.config.enabled then return false,'disabled' end
-    if not english() and not localPreview then return false,'language_not_english' end
+    if not speechAvailable() and not localPreview then return false,'voice_pack_unavailable' end
     if not V.validPacket(p) then return false,'invalid_packet_or_missing_clip' end
     if not require('CSV/Profanity').allowed(p.line,C.preferences(),p.voice) then return false,'profanity_disabled' end
     actor=actor or localPlayerByID(p.actor) or getPlayerByOnlineID(p.actor)
@@ -189,7 +189,7 @@ function C.emit(player,ctx,volume)
     if not V.finite(volume) or volume<=0 then return end
     C.sequence=C.sequence+1
     if C.sequence>=2147483647 then C.sequence=1 end
-    local p={version=1,pack=V.pack.id,packRevision=V.pack.revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,line=ctx.line.id,
+    local p={version=1,pack=V.bank(ctx.voice).id,packRevision=V.bank(ctx.voice).revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,line=ctx.line.id,
         voice=ctx.voice,pitch=V.pitch(player),radius=math.min(V.config.maxDistance,volume),priority=ctx.policy.priority,allowStealth=ctx.policy.allowStealth,exposed=ctx.policy.exposed,engaged=ctx.policy.engaged}
     Trace.step(ctx.trace,'play_requested','spoken',{line=p.line,radius=p.radius,noiseRadius=ctx.policy.noiseRadius})
     local played,reason,info=C.play(p,player,false,{trace=ctx.trace})

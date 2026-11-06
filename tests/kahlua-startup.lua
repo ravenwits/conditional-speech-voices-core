@@ -13,6 +13,6 @@ dofile(base..'client/CSV_CharacterVoice.lua');assert(count==4)
 pack.hasCustomVoices=false;pack.language='EN';Translator={getLanguage=function()return {name=function()return 'EN'end}end}
 assert(V.languageSupported())
 Translator.getLanguage=function()return {name=function()return 'TR'end}end
-assert(not V.languageSupported())
+assert(V.languageSupported(),'an installed bank stays usable across interface languages')
 count=0;dofile(base..'client/CSV_CharacterVoice.lua');assert(count==0)
-print('PASS startup without next: native hooks and language gates')
+print('PASS startup without next: native hooks, no-pack gate and interface-independent availability')
