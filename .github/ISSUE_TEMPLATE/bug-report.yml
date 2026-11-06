@@ -1,0 +1,68 @@
+{
+  "name": "Bug report",
+  "description": "Report a speech, playback or settings problem.",
+  "title": "[Bug] ",
+  "body": [
+    {
+      "type": "markdown",
+      "attributes": {
+        "value": "Describe the issue in English or Turkish. Check attachments for passwords, API keys, server addresses and personal information before posting."
+      }
+    },
+    {
+      "type": "textarea",
+      "id": "versions",
+      "attributes": {
+        "label": "Game, Core and voice pack versions",
+        "description": "Include Conditional Speech version if known."
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "textarea",
+      "id": "setup",
+      "attributes": {
+        "label": "Voice and game mode",
+        "description": "Bob, Kate, Alp or Mujde; single-player or multiplayer; game language."
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "textarea",
+      "id": "steps",
+      "attributes": {
+        "label": "Steps to reproduce",
+        "description": "What were you doing? What happened, and what did you expect?"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "textarea",
+      "id": "mods",
+      "attributes": {
+        "label": "Relevant mods",
+        "description": "List voice, audio and gameplay mods. Say whether a local copy and Workshop copy are both enabled."
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "textarea",
+      "id": "report",
+      "attributes": {
+        "label": "Debug report and relevant console output",
+        "description": "Enable Speech Debug, reproduce, then Debug > Speech > Save report. Attach Zomboid/Lua/CSV-report.txt and relevant console.txt lines. If export fails, explain that here; do not upload your whole game folder."
+      },
+      "validations": {
+        "required": true
+      }
+    }
+  ]
+}

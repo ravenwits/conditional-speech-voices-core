@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+.env.*
+*.log
+*.mp3
+*.wav
+*.ogg
+work/
+node_modules/
+CSV-report.txt
+console.txt
