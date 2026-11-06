@@ -9,7 +9,7 @@ function V.localize(voice,line)
  local out={};for key,value in pairs(line)do out[key]=value end;out.text=text;return out
 end
 function V.available()return pack.id~=false end
-function V.languageSupported()return V.available() and (pack.extraVoices.alp~=nil or Translator.getLanguage():name()==pack.language) end
+function V.languageSupported()return V.available() and (next(pack.extraVoices)~=nil or Translator.getLanguage():name()==pack.language) end
 V.config={enabled=true,maxDistance=25,maxConcurrent=2,followPitch=true}
 function V.extended(voice)return V.available() and (pack.extraVoices[voice]~=nil or voice=='bob' and pack.id=='csv.en' or voice=='kate' and V.data.kateUS==true) end
 function V.finite(n) return type(n)=='number' and n==n and n>-math.huge and n<math.huge end
@@ -69,7 +69,7 @@ function V.delivery(voice,id)
     local expression=require('CSV/Expressions').catalog[id];if expression then return expression.profile end
     if require('CSV/Whispers').contains(id) then return 'whisper' end
     for _,line in ipairs((pack.extraVoices[voice] and pack.extraVoices[voice].data or V.data).contextLines or {})do
-        if line.voice==voice and line.id==id then return line.delivery end
+        if (line.voice==nil or line.voice==voice) and line.id==id then return line.delivery end
     end
     return 'original'
 end
@@ -113,7 +113,7 @@ function V.contextLine(player,voice,group,intensity,facts)
     if group=='Panic' and s.fire==true then return nil end
     local threat=(s.visible or 0)>0 or s.recentThreat==true or require('CSV/Concealment').active(s)
     for _,line in ipairs((pack.extraVoices[voice] and pack.extraVoices[voice].data or V.data).contextLines or {})do
-        if line.voice==voice and line.group==group and intensity>=line.min and intensity<=line.max
+        if (line.voice==nil or line.voice==voice) and line.group==group and intensity>=line.min and intensity<=line.max
             and (line.threat==nil or (line.threat==threat and (line.threat or s.visible~=nil and s.recentThreat~=nil))) and (line.id~='PanicEscape_1' or require('CSV/Concealment').active(s) or (facts and (s.accessibleNear or s.near or 0)>0) or (not facts and V.closeThreat(player))) and V.clip(voice,line.id) then return line end
     end
 end

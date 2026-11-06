@@ -107,8 +107,8 @@ function A.open(player,selectedGroup)
  if delivery.setEditable then delivery:setEditable(true)end
  for i,e in ipairs(panel.entries)do delivery:addOption(e.group);if e.group==selectedGroup then delivery.selected=i end end
  local voice=ISComboBox:new(390,65,410,28,panel,nil);voice:initialise();panel:addChild(voice)
- voice:addOption('Bob (US)');voice:addOption('Kate (US)');if V.pack.extraVoices.alp then voice:addOption('Alp (Turkish)')end;if V.pack.extraVoices.mujde then voice:addOption('Mujde (Turkish)')end
- voice.selected=V.voice(player)=='mujde' and 4 or V.voice(player)=='alp' and 3 or V.voice(player)=='kate' and 2 or 1
+ for _,id in ipairs(require('CSV/Pack').voiceOrder)do voice:addOption(require('CSV/Pack').voices[id].name)end
+ for i,id in ipairs(V.pack.voiceOrder)do if id==V.voice(player)then voice.selected=i end end
  local sentence=ISComboBox:new(20,125,150,28,panel,nil);sentence:initialise();panel:addChild(sentence)
  local refreshActing
  local function refreshSentences()
@@ -116,10 +116,10 @@ function A.open(player,selectedGroup)
   panel.contextResult=false;panel.status=UI.text('Ready')
   if sentence.clear then sentence:clear()else sentence.options={}end
   local group=panel.entries[delivery.selected].group
-  if voice.selected==3 and #A.bank(V,group,'alp')==0 then
-   for i,entry in ipairs(panel.entries)do if #A.bank(V,entry.group,'alp')>0 then delivery.selected=i;group=entry.group;break end end
+  if V.pack.extraVoices[V.pack.voiceOrder[voice.selected]]~=nil and #A.bank(V,group,V.pack.voiceOrder[voice.selected])==0 then
+   for i,entry in ipairs(panel.entries)do if #A.bank(V,entry.group,V.pack.voiceOrder[voice.selected])>0 then delivery.selected=i;group=entry.group;break end end
   end
-  for i,line in ipairs(A.bank(V,group,voice.selected==4 and 'mujde' or voice.selected==3 and 'alp' or voice.selected==2 and 'kate' or 'bob'))do sentence:addOption(group=='AmmoCount' and line.id:match('_(%d+)$') or tostring(i))end
+  for i,line in ipairs(A.bank(V,group,require('CSV/Pack').voiceOrder[voice.selected]))do sentence:addOption(group=='AmmoCount' and line.id:match('_(%d+)$') or tostring(i))end
   sentence.selected=1
   if refreshActing then refreshActing()end
  end
@@ -133,7 +133,7 @@ function A.open(player,selectedGroup)
   self:drawText(t('Voice'),390,42,1,1,1,1,UIFont.Small)
   self:drawText(t('Sentence'),20,102,1,1,1,1,UIFont.Small)
   self:drawText(t('Acting'),190,102,1,1,1,1,UIFont.Small)
-  if not self.contextResult then self.sentence=(A.bank(V,panel.entries[delivery.selected].group,voice.selected==4 and 'mujde' or voice.selected==3 and 'alp' or voice.selected==2 and 'kate' or 'bob')[sentence.selected] or {text=t('Missing')}).text end
+  if not self.contextResult then self.sentence=(A.bank(V,panel.entries[delivery.selected].group,require('CSV/Pack').voiceOrder[voice.selected])[sentence.selected] or {text=t('Missing')}).text end
   self:drawText(t('Situation'),20,285,1,1,1,1,UIFont.Small)
   local y=178;local row=''
   for word in self.sentence:gmatch('%S+')do
@@ -159,7 +159,7 @@ function A.open(player,selectedGroup)
  local play=ISButton:new(20,460,340,30,t('Listen'),panel,function(self)
   stopPreview();self.playback=nil
   local entry=panel.entries[delivery.selected]
-  local selectedVoice=voice.selected==4 and 'mujde' or voice.selected==3 and 'alp' or voice.selected==2 and 'kate' or 'bob'
+  local selectedVoice=require('CSV/Pack').voiceOrder[voice.selected]
   local bank=A.bank(V,entry.group,selectedVoice)
   local index=sentence.selected
   local line=bank[index];if not line then self.status=t('Missing');return end;self.sentence=line.text
@@ -219,7 +219,7 @@ function A.open(player,selectedGroup)
   panel.contextResult=false;panel.status=UI.text('Ready')
   if acting.clear then acting:clear()else acting.options={}end
   acting.profiles={'normal'};acting:addOption(t('Original'));acting.selected=1
-  local selectedVoice=voice.selected==4 and 'mujde' or voice.selected==3 and 'alp' or voice.selected==2 and 'kate' or 'bob'
+  local selectedVoice=require('CSV/Pack').voiceOrder[voice.selected]
   local line=A.bank(V,panel.entries[delivery.selected].group,selectedVoice)[sentence.selected]
   if not line then return end
   for _,profile in ipairs({'frightened','angry','sad','breathless','slurred','congested','stammer','whisper'})do

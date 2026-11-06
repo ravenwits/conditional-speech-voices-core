@@ -83,9 +83,9 @@ function R.export(writer,compact)
  emit(f,function()return 'REPORT_WRITER completed='..writes.completed..' failed='..writes.failed..' maxSliceMs='..writes.maxSliceMs..' maxOpenMs='..(writes.maxOpenMs or 0)..' maxPrepareMs='..(R.maxPrepareMs or 0)..'\n' end)
  require('CSV/AlpCallout').export(f)
  local native=require 'CSV/NativeVoice'
- emit(f,function()return 'ALP_NATIVE_ACTIVITY scope=active_event_windows includesSilentSlots=true selectedTakeUnknown=true errors='..native.errors..'\n' end)
- emit(f,function()return 'ALP_BREATH source=parameter_driven_native_event individualTakesObservable=false activeWindows='..native.ambient.windows..' activeScans='..native.ambient.activeScans..' scans='..native.ambient.scans..'\n' end)
- for name,count in pairs(native.activity)do emit(f,function()return 'ALP_NATIVE_EVENT name='..name..' activeWindows='..count..'\n' end)end
+ emit(f,function()return 'VOICE_NATIVE_ACTIVITY scope=active_event_windows includesSilentSlots=true selectedTakeUnknown=true errors='..native.errors..'\n' end)
+ emit(f,function()return 'VOICE_BREATH source=parameter_driven_native_event individualTakesObservable=false activeWindows='..native.ambient.windows..' activeScans='..native.ambient.activeScans..' scans='..native.ambient.scans..'\n' end)
+ for name,count in pairs(native.activity)do emit(f,function()return 'VOICE_NATIVE_EVENT name='..name..' activeWindows='..count..'\n' end)end
  local spatial=require('CSV/Playback').spatial
  emit(f,function()return 'PLAYBACK_SPATIAL localForced2d='..spatial.self2d..' worldPositionUpdates='..spatial.worldPositionUpdates..' actorsMovedWhileTalking='..spatial.movedWhileTalking..'\n' end)
  local reload=require 'CSV/Reload';local rm=reload.metrics

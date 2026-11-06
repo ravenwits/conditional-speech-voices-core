@@ -1,4 +1,4 @@
-if require('CSV/Pack').extraVoices.alp then
+if next(require('CSV/Pack').extraVoices) then
  local adapter=require 'CSV/CharacterVoice'
  local function install()
   require 'OptionScreens/CharacterCreationMain'

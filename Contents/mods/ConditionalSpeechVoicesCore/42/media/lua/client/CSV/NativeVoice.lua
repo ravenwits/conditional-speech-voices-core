@@ -3,7 +3,7 @@ local V=require 'CSV/Core'
 local function spec(voice)local b=V.pack.extraVoices[voice or 'alp'];return b and b.native end
 function N.supported(voice)return voice~=nil and spec(voice)~=nil end
 function N.prefix(pitch,voice)
- return (voice=='mujde' and 'VoiceCSVMujdeP' or 'VoiceCSVAlpP')..tostring(math.floor(math.max(-100,math.min(100,pitch or 0))+100.5))
+ return assert(V.pack.voices[voice or 'alp'],'Unknown voice').prefix..tostring(math.floor(math.max(-100,math.min(100,pitch or 0))+100.5))
 end
 -- The engine picks a clip uniformly. Leave some exertions unvoiced while
 -- keeping the animation, impact sound, and the native vocal handle intact.
@@ -25,7 +25,7 @@ function N.ensure(pitch,voice)
  end
  for _,event in ipairs(events)do
   local suffix=event.suffix
-  local original=GameSounds.getSound((voice=='mujde' and 'VoiceFemale' or 'VoiceMale')..event.source)
+  local original=GameSounds.getSound(V.pack.voices[voice].base..event.source)
   if not original then error('Missing native voice event '..suffix)end
   local name=prefix..suffix
   local body={'sound '..name..' { category = '..original:getCategory()..', is3D = true, loop = false, master = '..original:getMasterName()..','}
@@ -66,7 +66,8 @@ function N.apply(player)
  if not player or not player.getDescriptor then return end
  local d=player:getDescriptor();if not d then return end
  local md=player:getModData()
- local voice=md.csvVoice or ((d:getVoicePrefix() or ''):match('^VoiceCSVMujdeP') and 'mujde' or (d:getVoicePrefix() or ''):match('^VoiceCSVAlpP') and 'alp')
+ local voice=md.csvVoice
+ if not voice then for id,v in pairs(V.pack.voices)do if v.prefix and (d:getVoicePrefix() or ''):sub(1,#v.prefix)==v.prefix then voice=id;break end end end
  local selected=voice and spec(voice)~=nil
  if not selected then return end
  local prefix=N.ensure(V.pitch(player),voice);if not prefix then return end

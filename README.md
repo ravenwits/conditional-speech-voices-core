@@ -2,11 +2,11 @@
 
 Source code and bug reports for the Core mod, by ravenwits.
 
-Core handles speech rules, playback, settings and debug reports. It requires [Conditional Speech by Chuckleberry Finn](https://steamcommunity.com/sharedfiles/filedetails/?id=2398253681). Core works without a voice pack, but no recorded speech will play until you install English or Turkish.
+Core handles speech rules, playback, settings and debug reports. It requires [Conditional Speech by Chuckleberry Finn](https://steamcommunity.com/sharedfiles/filedetails/?id=2398253681). Core works without a voice pack, but no recorded speech will play until you install a compatible voice pack.
 
 ## Status
 
-Version 0.40.9. Single-player beta, tested with Project Zomboid 42.21.0. Multiplayer is not yet verified. The latest character-specific pitch setting still needs a live save/reload check.
+Version 0.41.0. Single-player beta, tested with Project Zomboid 42.21.0. Multiplayer is not yet verified. The latest character-specific pitch setting still needs a live save/reload check.
 
 ## Install
 
@@ -31,3 +31,7 @@ Copyright (c) 2026 ravenwits. [PolyForm Strict 1.0.0](LICENSE.md).
 The source is publicly readable. The license permits noncommercial use; it does not grant permission to redistribute, modify or use the software commercially. Ask for written permission before sending code changes or redistributing any part of it. Bug reports and suggestions are welcome.
 
 The original Conditional Speech mod, language packs and recordings are not included in this repository.
+
+## Voice pack authors
+
+See [the provider interface and permission for independent packs](docs/voice-packs.md). Existing save identifiers remain supported.

@@ -197,7 +197,7 @@ add{name='Recovered: HasACold',group='ReliefColdSymptoms',level=1,max=1,state={s
 add{name='Recovered: Unhappy',group='ReliefMood',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,unhappy=0},expect='ReliefMood',kate='none'}
 add{name='Recovered: Uncomfortable',group='ReliefDiscomfort',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,discomfort=0},expect='ReliefDiscomfort',kate='none'}
 function T.each(fn)
- for i,c in ipairs(T.cases)do for _,voice in ipairs({'bob','kate'})do for step=1,#(c.steps or {c})do fn(i,voice,step)end end end
+ for i,c in ipairs(T.cases)do for _,voice in ipairs(require('CSV/Pack').voiceOrder)do for step=1,#(c.steps or {c})do fn(i,voice,step)end end end
 end
 function T.totalChecks()local count=0;T.each(function()count=count+1 end);return count end
 for _,item in ipairs({{'Anger','anger'},{'Boredom','boredom'},{'Sobriety','drunk'}})do
@@ -314,7 +314,7 @@ function T.open(player)
  panel.backgroundColor={r=.06,g=.06,b=.06,a=.97};T.panel=panel
  local choice=ISComboBox:new(20,55,490,28,panel,nil);choice:initialise();panel:addChild(choice)
  for i,c in ipairs(T.cases)do local event=c.group or (c.steps and c.steps[1].group) or '?';choice:addOption(tostring(i)..' - '..event)end
- local voice=ISComboBox:new(530,55,210,28,panel,nil);voice:initialise();panel:addChild(voice);voice:addOption('Bob');voice:addOption('Kate');if require('CSV/Core').pack.extraVoices.alp then voice:addOption('Alp (Turkish)')end;if require('CSV/Core').pack.extraVoices.mujde then voice:addOption('Mujde (Turkish)')end
+ local voice=ISComboBox:new(530,55,210,28,panel,nil);voice:initialise();panel:addChild(voice);for _,id in ipairs(require('CSV/Pack').voiceOrder)do voice:addOption(require('CSV/Pack').voices[id].name)end
  panel.message=tr('Ready')
  local function stopPreview()
   for _,e in ipairs(V.client.active)do if e==panel.playback and e.preview then V.client.cancel(e,'preview_stopped',false);break end end
@@ -323,8 +323,8 @@ function T.open(player)
  panel.stopPreview=stopPreview
  local function evaluate(live,advance)
   if not advance then panel.step=1 end
-  panel.result=T.evaluate(player,voice.selected==4 and 'mujde' or voice.selected==3 and 'alp' or voice.selected==2 and 'kate' or 'bob',choice.selected,live,panel.step)
-  panel.result.voice=voice.selected==4 and 'mujde' or voice.selected==3 and 'alp' or voice.selected==2 and 'kate' or 'bob'
+  panel.result=T.evaluate(player,require('CSV/Pack').voiceOrder[voice.selected],choice.selected,live,panel.step)
+  panel.result.voice=require('CSV/Pack').voiceOrder[voice.selected]
   panel.message=panel.result.status=='compatibility' and 'COMPAT' or panel.result.status=='live' and tr('Live') or panel.result.skipped and getText('UI_CSV_Aud_Unavailable') or panel.result.pass and tr('Pass') or tr('Fail')
  end
  local function button(x,y,w,label,fn)local o=ISButton:new(x,y,w,30,label,panel,fn);o:initialise();panel:addChild(o)end

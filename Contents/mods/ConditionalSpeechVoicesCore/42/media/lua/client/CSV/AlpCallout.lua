@@ -26,6 +26,8 @@ function M.call(player)
     if previous and player:getEmitter():isPlaying(player:getDescriptor():getVoicePrefix()..'CSV'..previous) then M.metrics.blocked=M.metrics.blocked+1;return true end
     local candidates = {}
     for _,id in ipairs(pool) do if id ~= previous then candidates[#candidates+1]=id end end
+    if #candidates==0 then candidates=pool end
+    if #candidates==0 then return false end
     local id = candidates[ZombRand(#candidates)+1]
     local item = player:getPrimaryHandItem()
     local mega = item and item:hasTag(ItemTag.MEGAPHONE)
@@ -33,7 +35,7 @@ function M.call(player)
     local handle=player:transmitPlayerVoiceSound('CSV'..id)
     if not handle or handle==0 then M.metrics.failed=M.metrics.failed+1;return true end
     recent[player] = id
-    local entry={id=id,text=bank.lines[id],radius=radius,sneaking=sneaking,megaphone=mega==true,at=getTimestampMs(),handle=handle,state='queued'}
+    local entry={voice=V.voice(player),id=id,text=bank.lines[id],radius=radius,sneaking=sneaking,megaphone=mega==true,at=getTimestampMs(),handle=handle,state='queued'}
     M.history[#M.history+1]=entry
     if #M.history>32 then table.remove(M.history,1)end
     playing[player]=entry;M.metrics.queued=M.metrics.queued+1
@@ -59,17 +61,24 @@ end
 
 function M.export(writer)
     local m=M.metrics
-    writer:write('ALP_CALLOUT requested='..m.requested..' queued='..m.queued..' engineActive='..m.active..' blocked='..m.blocked..' failed='..m.failed..'\n')
+    writer:write('VOICE_CALLOUT requested='..m.requested..' queued='..m.queued..' engineActive='..m.active..' blocked='..m.blocked..' failed='..m.failed..'\n')
     for _,entry in ipairs(M.history)do
         -- Kahlua's %q truncates non-ASCII characters, e.g. Turkish dotless i.
         local caption='"'..entry.text:gsub('\\','\\\\'):gsub('"','\\"'):gsub('\r','\\r'):gsub('\n','\\n')..'"'
-        writer:write('ALP_CALL line='..entry.id..' caption='..caption..' sneaking='..tostring(entry.sneaking)..' megaphone='..tostring(entry.megaphone)..' radius='..entry.radius..' at='..entry.at..' state='..entry.state..'\n')
+        writer:write('VOICE_CALL voice='..tostring(entry.voice)..' line='..entry.id..' caption='..caption..' sneaking='..tostring(entry.sneaking)..' megaphone='..tostring(entry.megaphone)..' radius='..entry.radius..' at='..entry.at..' state='..entry.state..'\n')
     end
 end
 
 function M.install(menu)
     if menu.csvAlpKeyInstalled then return end
     menu.csvAlpKeyInstalled = true
+    local emote=menu.emote
+    menu.emote=function(self,name,...)
+        if name=='shout' and require('CSV/NativeVoice').supported(V.voice(self.character)) and M.call(self.character) then
+            self.character:setJoypadIgnoreAimUntilCentered(true);return
+        end
+        return emote(self,name,...)
+    end
     local pressed, released = menu.onKeyPressed, menu.onKeyReleased
     local pending
     menu.onKeyPressed = function(key)

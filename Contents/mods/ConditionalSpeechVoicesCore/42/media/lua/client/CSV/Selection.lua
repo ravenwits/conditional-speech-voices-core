@@ -68,11 +68,11 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
     if group=='Threat' then
         if type(f.panic)=='number' and f.panic<3 and ((f.accessibleNear or f.near or 0)>0 or require('CSV/Concealment').active(f)) then
             extraGroup=f.panic==0 and not require('CSV/Concealment').active(f) and 'ThreatCalm' or 'ThreatTense'
-            return C.extraLine(player,voice,extraGroup) or V.data.groups.Panic[2]
+            return C.extraLine(player,voice,extraGroup) or (V.data.groups.Panic or {})[2]
         end
         return nil
     elseif group=='AcutePain' then
-        if f.acute then return C.extraLine(player,voice,'InjuryAcute') or V.data.groups.Pain[3] end
+        if f.acute then return C.extraLine(player,voice,'InjuryAcute') or (V.data.groups.Pain or {})[3] end
         return nil
     elseif group:match('^Relief') then
         return C.extraLine(player,voice,group)
@@ -132,7 +132,7 @@ function C.plan(player,voice,group,intensity,maximum,facts,prefs)
     end
     s.whisperAvailable=whisper~=nil;s.contextWhisperAvailable=contextualWhisper~=nil
     local decision=Delivery.decide(group,intensity,s,prefs)
-    if decision.reason=='observed_calm_warning' then line=C.extraLine(player,voice,'ThreatCalm') or V.data.groups.Panic[2] end
+    if decision.reason=='observed_calm_warning' then line=C.extraLine(player,voice,'ThreatCalm') or (V.data.groups.Panic or {})[2] end
     if decision.reason=='recorded_whisper' then line=whisper
     elseif decision.reason=='recorded_context_whisper' then line=contextualWhisper end
     line=V.localize(voice,line)
