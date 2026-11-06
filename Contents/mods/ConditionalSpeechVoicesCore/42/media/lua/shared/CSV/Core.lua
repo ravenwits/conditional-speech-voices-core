@@ -9,7 +9,7 @@ function V.localize(voice,line)
  local out={};for key,value in pairs(line)do out[key]=value end;out.text=text;return out
 end
 function V.available()return pack.id~=false end
-function V.languageSupported()return V.available() and (next(pack.extraVoices)~=nil or Translator.getLanguage():name()==pack.language) end
+function V.languageSupported()return V.available() and (pack.hasCustomVoices==true or Translator.getLanguage():name()==pack.language) end
 V.config={enabled=true,maxDistance=25,maxConcurrent=2,followPitch=true}
 function V.extended(voice)return V.available() and (pack.extraVoices[voice]~=nil or voice=='bob' and pack.id=='csv.en' or voice=='kate' and V.data.kateUS==true) end
 function V.finite(n) return type(n)=='number' and n==n and n>-math.huge and n<math.huge end

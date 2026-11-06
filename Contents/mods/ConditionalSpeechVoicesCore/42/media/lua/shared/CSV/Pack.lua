@@ -38,14 +38,14 @@ if type(getActivatedMods)=='function' then
 end
 R.locked=true
 local bank={};for k,v in pairs(en or tr or empty)do bank[k]=v end
-bank.extraVoices={};bank.voices={};bank.voiceOrder={}
+bank.extraVoices={};bank.voices={};bank.voiceOrder={};bank.hasCustomVoices=false
 local keys={};for id in pairs(R.providers)do keys[#keys+1]=id end;table.sort(keys)
 for _,id in ipairs(keys)do
  local p=R.providers[id]
  if bank.id==false then for k,v in pairs(p.bank)do bank[k]=v end end
  for _,v in ipairs(p.voices)do
   bank.voices[v.id]=v;bank.voiceOrder[#bank.voiceOrder+1]=v.id
-  if not v.vanilla then bank.extraVoices[v.id]=p.bank end
+  if not v.vanilla then bank.extraVoices[v.id]=p.bank;bank.hasCustomVoices=true end
  end
 end
 -- Merge into fresh tables, never into a provider's own bank.
