@@ -4,13 +4,18 @@ local pack=require 'CSV/Pack'
 local styles={}
 for _,id in ipairs(pack.voiceOrder)do
  local voice=id;local v=pack.voices[voice]
- if not v.vanilla then styles[voice]={getName=function()return v.styleName or 'CSV_'..voice end,
+ if not v.vanilla and not v.builtinPrefix then styles[voice]={getName=function()return v.styleName or 'CSV_'..voice end,
  getPrefix=function()return require('CSV/NativeVoice').tryEnsure(0,voice) or v.base end,
  getVoiceType=function()return 0 end,getBodyTypeDefault=function()return v.base=='VoiceFemale' and 1 or 2 end}end
 end
 function M.choice(screen)
  local combo=screen.voiceTypeCombo;local item=combo and combo:getOptionData(combo.selected)
  for id,style in pairs(styles)do if item==style then return id end end
+ if item and item.getPrefix and item.getVoiceType and item:getVoiceType()==0 then
+  for _,id in ipairs(pack.voiceOrder)do
+   if pack.voices[id].builtinPrefix==item:getPrefix() then return id end
+  end
+ end
 end
 function M.selected(screen)return M.choice(screen)~=nil end
 function M.created(index,player)
@@ -18,7 +23,7 @@ function M.created(index,player)
  local choice=M.pending;M.pending=nil
  local md=player:getModData()
  md.csvVoice=choice.voice
- if choice.voice then require('CSV/NativeVoice').apply(player)end
+ if choice.voice then require('CSV/NativeVoice').safeApply(player)end
  if player.transmitModData then player:transmitModData()end
 end
 function M.install(screen)

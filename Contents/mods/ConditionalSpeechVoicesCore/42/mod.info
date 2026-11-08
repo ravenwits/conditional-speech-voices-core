@@ -6,4 +6,4 @@ icon=poster.png
 require=Conditional-Speech
 versionMin=42.20
 description=Shared speech rules, playback and settings. Requires Conditional Speech. Core works without a language pack; install English or Turkish to hear voices.
-modversion=0.41.2
+modversion=0.42.2

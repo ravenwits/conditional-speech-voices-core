@@ -14,22 +14,22 @@ local T={cases={
  {name='Tree removed after your axe hit',group='ChopTree',level=1,max=1,state={treeDown=true},expect='ChopTree_3'},
  {name='Wet but warm',group='Wet',level=4,max=4,state={cold=0},expect='Wet_2'},
  {name='Wet and hypothermic',group='Wet',level=4,max=4,state={cold=3},expect='Wet_3'},
- {name='High panic, no external threat',group='Panic',level=4,max=4,state={fire=false,visible=0,recentThreat=false,near=0},expect='PanicGrounding_1',kate='Panic_3'},
- {name='High panic, visible close zombie',group='Panic',level=4,max=4,state={fire=false,visible=1,recentThreat=true,near=1},expect='PanicEscape_1',kate='Panic_3'},
+ {name='High panic, no external threat',group='Panic',level=4,max=4,state={fire=false,visible=0,recentThreat=false,near=0},expect='PanicGrounding_1',limited='Panic_3'},
+ {name='High panic, visible close zombie',group='Panic',level=4,max=4,state={fire=false,visible=1,recentThreat=true,near=1},expect='PanicEscape_1',limited='Panic_3'},
  {name='On fire, no zombies',group='Panic',level=4,max=4,state={fire=true,visible=0,recentThreat=false,near=0},expect='Panic_3'},
- {name='Severe thirst',group='Thirst',level=4,max=4,state={},expect='ThirstCritical_1',kate='Thirst_2'},
+ {name='Severe thirst',group='Thirst',level=4,max=4,state={},expect='ThirstCritical_1',limited='Thirst_2'},
  {name='Unknown weapon API',group='OutOfAmmo',level=1,max=1,state={},expect='none'}
 }}
 -- Delivery checks exercise the same policy as gameplay. They do not fake player state.
 local function add(c)T.cases[#T.cases+1]=c end
-add{name='Hidden, high panic, two close zombies',group='Panic',level=4,max=4,state={sneaking=true,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',kate='Panic_3',mode='silent'}
-add{name='Standing, high panic, two close zombies',group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',kate='Panic_3',mode='spoken',radius=15}
+add{name='Hidden, high panic, two close zombies',group='Panic',level=4,max=4,state={sneaking=true,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',limited='Panic_3',mode='silent'}
+add{name='Standing, high panic, two close zombies',group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',limited='Panic_3',mode='spoken',radius=15}
 add{name='No panic moodle, close threat warning',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=2,visible=2,recentThreat=true},expect='Panic_2',mode='spoken',radius=6}
 add{name='Hidden, no panic, close threat',group='Threat',level=1,max=4,state={sneaking=true,panic=0,near=2,visible=2,recentThreat=true},expect='Panic_2',mode='silent'}
 add{name='Distant zombies do not trigger close warning',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=0,visible=2},expect='none',mode='silent'}
 add{name='Low panic near threat gives tense warning',group='Panic',level=1,max=4,state={sneaking=false,panic=1,near=2,visible=2,recentThreat=true},expect='Panic_1',mode='spoken'}
 add{name='Unknown panic cannot invent calm warning',group='Threat',level=1,max=4,state={sneaking=false,near=2,visible=2},expect='none',mode='silent'}
-add{name='Unknown concealment cannot force speech',group='Panic',level=4,max=4,state={panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',kate='Panic_3',mode='upstream'}
+add{name='Unknown concealment cannot force speech',group='Panic',level=4,max=4,state={panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',limited='Panic_3',mode='upstream'}
 add{name='Agoraphobic: Safe',group='Agoraphobic',level=4,max=4,state={sneaking=false,panic=0,near=0,visible=0,recentThreat=false,crowd=3,empty=true,pickup=true,treeDown=true,cold=3,fire=false},expect='eligible_or_none',mode='upstream'}
 add{name='Agoraphobic: Hidden',group='Agoraphobic',level=4,max=4,state={sneaking=true,panic=4,near=3,visible=3,recentThreat=true,crowd=3,empty=true,pickup=true,treeDown=true,cold=3,fire=false},expect='eligible_or_none',mode='silent'}
 add{name='Agoraphobic: Close threat',group='Agoraphobic',level=4,max=4,state={sneaking=false,panic=4,near=3,visible=3,recentThreat=true,crowd=3,empty=true,pickup=true,treeDown=true,cold=3,fire=false},expect='eligible_or_none',mode='silent'}
@@ -175,33 +175,33 @@ add{name='Transition: calm, threat, panic, hiding, fire',steps={
  {group='FoundLoot',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,pickup=true},prefs={safeSpeech=true},expect='FoundLoot_3',mode='spoken'},
  {group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=2,visible=2},expect='Panic_2',mode='spoken'},
  {group='Threat',level=2,max=4,state={sneaking=false,panic=2,near=2,visible=2},expect='Panic_2',mode='spoken'},
- {group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',kate='Panic_3',mode='spoken'},
- {group='Panic',level=4,max=4,state={sneaking=true,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',kate='Panic_3',mode='silent'},
+ {group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',limited='Panic_3',mode='spoken'},
+ {group='Panic',level=4,max=4,state={sneaking=true,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',limited='Panic_3',mode='silent'},
  {group='Panic',level=4,max=4,state={sneaking=true,fire=true,panic=4,near=2},expect='Panic_3',mode='spoken'}
 }}
 -- Explicit measured zombie behavior. These are selection tests, not fabricated live events.
-add{name='Nearby zombie observed, no pursuit',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=1,visible=1,accessibleNear=1,reactiveNear=0,targeted=0,approaching=0,attacking=0},expect='ThreatCalm',kate='Panic_2',mode='spoken',radius=4}
+add{name='Nearby zombie observed, no pursuit',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=1,visible=1,accessibleNear=1,reactiveNear=0,targeted=0,approaching=0,attacking=0},expect='ThreatCalm',limited='Panic_2',mode='spoken',radius=4}
 add{name='High panic but zombie not pursuing',group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=1,visible=1,accessibleNear=1,reactiveNear=0,targeted=0,approaching=0,attacking=0},expect='eligible_or_none',mode='silent'}
-add{name='Attacking player with high panic',group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=1,visible=1,accessibleNear=1,reactiveNear=1,targeted=1,approaching=0,attacking=1},expect='PanicEscape_1',kate='Panic_3',mode='spoken',radius=15}
+add{name='Attacking player with high panic',group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=1,visible=1,accessibleNear=1,reactiveNear=1,targeted=1,approaching=0,attacking=1},expect='PanicEscape_1',limited='Panic_3',mode='spoken',radius=15}
 add{name='Threat motion not measured yet',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=1,accessibleNear=1,targeted=0},expect='eligible_or_none',mode='silent'}
-add{name='Recovered: Hungry',group='ReliefHunger',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,hunger=0},expect='ReliefHunger',kate='none'}
-add{name='Recovered: Hypothermia',group='ReliefCold',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,cold=0},expect='ReliefCold',kate='none'}
-add{name='Recovered: Hyperthermia',group='ReliefHeat',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,heat=0},expect='ReliefHeat',kate='none'}
-add{name='Recovered: Tired',group='ReliefRest',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,tired=0},expect='ReliefRest',kate='none'}
-add{name='Recovered: Pain',group='ReliefPain',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,pain=0},expect='ReliefPain',kate='none'}
-add{name='Recovered: Stress',group='ReliefStress',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,stress=0},expect='ReliefStress',kate='none'}
-add{name='Recovered: Wet',group='ReliefWet',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,wet=0},expect='ReliefWet',kate='none'}
-add{name='Recovered: HeavyLoad',group='ReliefLoad',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,load=0},expect='ReliefLoad',kate='none'}
-add{name='Recovered: Sick',group='ReliefSickness',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,sick=0},expect='ReliefSickness',kate='none'}
-add{name='Recovered: HasACold',group='ReliefColdSymptoms',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,coldSymptoms=0},expect='ReliefColdSymptoms',kate='none'}
-add{name='Recovered: Unhappy',group='ReliefMood',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,unhappy=0},expect='ReliefMood',kate='none'}
-add{name='Recovered: Uncomfortable',group='ReliefDiscomfort',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,discomfort=0},expect='ReliefDiscomfort',kate='none'}
+add{name='Recovered: Hungry',group='ReliefHunger',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,hunger=0},expect='ReliefHunger',limited='none'}
+add{name='Recovered: Hypothermia',group='ReliefCold',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,cold=0},expect='ReliefCold',limited='none'}
+add{name='Recovered: Hyperthermia',group='ReliefHeat',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,heat=0},expect='ReliefHeat',limited='none'}
+add{name='Recovered: Tired',group='ReliefRest',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,tired=0},expect='ReliefRest',limited='none'}
+add{name='Recovered: Pain',group='ReliefPain',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,pain=0},expect='ReliefPain',limited='none'}
+add{name='Recovered: Stress',group='ReliefStress',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,stress=0},expect='ReliefStress',limited='none'}
+add{name='Recovered: Wet',group='ReliefWet',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,wet=0},expect='ReliefWet',limited='none'}
+add{name='Recovered: HeavyLoad',group='ReliefLoad',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,load=0},expect='ReliefLoad',limited='none'}
+add{name='Recovered: Sick',group='ReliefSickness',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,sick=0},expect='ReliefSickness',limited='none'}
+add{name='Recovered: HasACold',group='ReliefColdSymptoms',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,coldSymptoms=0},expect='ReliefColdSymptoms',limited='none'}
+add{name='Recovered: Unhappy',group='ReliefMood',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,unhappy=0},expect='ReliefMood',limited='none'}
+add{name='Recovered: Uncomfortable',group='ReliefDiscomfort',level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,discomfort=0},expect='ReliefDiscomfort',limited='none'}
 function T.each(fn)
  for i,c in ipairs(T.cases)do for _,voice in ipairs(require('CSV/Pack').voiceOrder)do for step=1,#(c.steps or {c})do fn(i,voice,step)end end end
 end
 function T.totalChecks()local count=0;T.each(function()count=count+1 end);return count end
 for _,item in ipairs({{'Anger','anger'},{'Boredom','boredom'},{'Sobriety','drunk'}})do
- add{name='Recovered: '..item[1],group='Relief'..item[1],level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,[item[2]]=0},expect='Relief'..item[1],kate='none'}
+ add{name='Recovered: '..item[1],group='Relief'..item[1],level=1,max=1,state={sneaking=false,near=0,visible=0,recentThreat=false,[item[2]]=0},expect='Relief'..item[1],limited='none'}
 end
 add{name='Weapon jam, calm and safe',group='GunJammed',level=1,max=1,state={jammed=true,sneaking=false,panic=0,near=0,visible=0,recentThreat=false},expect='GunJammed',mode='spoken',prefs={safeSpeech=true}}
 add{name='Weapon jam, high panic under attack',group='GunJammed',level=1,max=1,state={jammed=true,sneaking=false,panic=4,near=1,reactiveNear=1,targeted=1,attacking=1},expect='GunJammed',mode='spoken'}
@@ -211,14 +211,15 @@ add{name='Empty gun is not a jam',group='GunJammed',level=1,max=1,state={jammed=
 add{name='Jammed and empty prioritizes jam',group='OutOfAmmo',level=1,max=1,state={jammed=true,empty=true},expect='none'}
 add{name='Cleared jam cannot announce jam',group='GunJammed',level=1,max=1,state={jammed=false},expect='none'}
 for _,n in ipairs({1,5,30,100,150})do
- add{name='Magazine count '..n,group='AmmoCount',level=1,max=1,state={rounds=n,jammed=false,sneaking=false,near=1,reactiveNear=1,panic=0},expect=require('CSV/AmmoCounts').contains(n) and ('AmmoCount_'..n) or 'AmmoReserve',kate='none',newConditions=true}
+ add{name='Magazine count '..n,group='AmmoCount',level=1,max=1,state={rounds=n,jammed=false,sneaking=false,near=1,reactiveNear=1,panic=0},expect=require('CSV/AmmoCounts').contains(n) and ('AmmoCount_'..n) or 'AmmoReserve',limited='none',newConditions=true}
 end
-add{name='Empty chamber with rounds available',group='ChamberEmpty',level=1,max=1,state={hasChamber=true,chamber=false,rounds=5,jammed=false,sneaking=false,near=1,panic=0},expect='ChamberEmpty',kate='none',newConditions=true}
-add{name='Three nearby zombies without pursuit after hits',group='MultiHit',level=1,max=1,state={crowd=3,reactiveCrowd=0,near=3,targeted=0,approaching=0,sneaking=false,panic=0},expect='RepeatedHit',kate='none',newConditions=true}
+add{name='Empty chamber with rounds available',group='ChamberEmpty',level=1,max=1,state={hasChamber=true,chamber=false,rounds=5,jammed=false,sneaking=false,near=1,panic=0},expect='ChamberEmpty',limited='none',newConditions=true}
+add{name='Three nearby zombies without pursuit after hits',group='MultiHit',level=1,max=1,state={crowd=3,reactiveCrowd=0,near=3,targeted=0,approaching=0,sneaking=false,panic=0},expect='RepeatedHit',limited='none',newConditions=true}
 add{name='Drunk safe exploration',group='Explore',level=1,max=1,state={drunk=3,sneaking=false,near=0,visible=0,recentThreat=false,panic=0},expect='eligible_or_none',prefs={safeSpeech=true},newConditions=true}
-add{name='Congested food sickness without claiming cause',group='SickFromFood',level=3,max=4,state={coldSymptoms=2,sneaking=false,near=0,visible=0,recentThreat=false,panic=0},expect='FoodSuspect',kate='SickFromFood',prefs={safeSpeech=true},newConditions=true}
+add{name='Congested food sickness without claiming cause',group='SickFromFood',level=3,max=4,state={coldSymptoms=2,sneaking=false,near=0,visible=0,recentThreat=false,panic=0},expect='FoodSuspect',limited='SickFromFood',prefs={safeSpeech=true},newConditions=true}
 for _,case in ipairs(require('CSV/LootScenarios').cases())do add(case)end
 for _,case in ipairs(require('CSV/OutcomeScenarios').cases())do add(case)end
+for _,case in ipairs(require('CSV/TraitScenarios').cases())do add(case)end
 for _,case in ipairs(require('CSV/PsychologyScenarios').cases())do add(case)end
 for _,case in ipairs(require('CSV/AlertScenarios').cases())do add(case)end
 for _,case in ipairs(require('CSV/ConcealmentScenarios').cases())do add(case)end
@@ -229,6 +230,7 @@ local function evaluate(player,voice,index,live,step)
  if c.newLoot and not require('CSV/Extras').approved then return {pass=false,skipped=true,line=nil,facts=c.state,expected='loot bank disabled',live=live,case=c,decision={mode='silent',reason='loot_bank_disabled'},name=parent.name,step=step,stepCount=1} end
  if c.newConditions and not require('CSV/Conditions').enabled then return {line=nil,facts=c.state,expected='new conditions disabled',pass=false,skipped=true,live=live,case=c,decision={mode='silent',reason='new_conditions_disabled'},name=parent.name,step=step,stepCount=1} end
  if (c.newOutcomes or c.newPsychology) and not require('CSV/Extras').approved then return {pass=false,skipped=true,line=nil,facts=c.state,expected='outcome bank disabled',live=live,case=c,decision={mode='silent',reason='outcome_bank_disabled'},name=parent.name,step=step,stepCount=1} end
+ if c.newTraits and (not V.extended(voice) or not require('CSV/Extras').approved or c.state.sneaking and not require('CSV/Whispers').approved) then return {pass=false,skipped=true,line=nil,facts=c.state,expected=c.expect,live=live,case=c,decision={mode='silent',reason='trait_bank_disabled'},name=parent.name,step=step,stepCount=1}end
  local facts=live and require('CSV/State').capture(player) or c.state
  local savedHistory=V.client.history[player]
  if not live then
@@ -245,13 +247,13 @@ local function evaluate(player,voice,index,live,step)
   local pass=available and line~=nil and decision.mode==c.mode and decision.radius==c.radius and whisper==c.expectWhisper and (not c.sharedDanger or line.id:match('^MortalFear_')~=nil)
   return {line=line,facts=facts,expected=(c.expectWhisper and 'whisper' or 'normal')..', radius '..tostring(c.radius),pass=pass==true,skipped=not available,live=live,case=c,decision=decision,name=parent.name,step=step,stepCount=1}
  end
- local expected=voice=='kate' and not V.extended(voice) and (c.kate or c.expect) or c.expect
+ local expected=not V.extended(voice) and (c.limited or c.expect) or c.expect
  if c.expect=='ThreatCalm' and not require('CSV/Extras').approved then expected='Panic_2' end
  if (c.name or ''):match('^Recovered:') and not require('CSV/Extras').approved then expected='none' end
  if V.extended(voice) and require('CSV/Conditions').enabled and c.group=='OutOfAmmo' and facts.hasChamber==true and facts.chamber==false and (facts.rounds or 0)>0 and facts.jammed~=true then expected='ChamberEmpty' end
  local expectedMode=c.mode
- if (c.newLoot or c.newOutcomes or c.newPsychology) and (voice=='kate' and not V.extended(voice) or (facts.sneaking and not require('CSV/Whispers').approved)) then expectedMode='silent' end
- if V.extended(voice) and require('CSV/Extras').approved then
+ if (c.newLoot or c.newOutcomes or c.newPsychology) and (not V.extended(voice) or (facts.sneaking and not require('CSV/Whispers').approved)) then expectedMode=(not V.extended(voice) and c.legacyMode) or 'silent' end
+ if not c.newTraits and V.extended(voice) and require('CSV/Extras').approved then
   if c.group=='Panic' and facts.fire then expected='Fire'
   elseif c.group=='AcutePain' and facts.acute then expected='InjuryAcute'
   elseif c.group=='Threat' and type(facts.panic)=='number' and facts.panic<3 and (facts.accessibleNear or facts.near or 0)>0 then expected=facts.panic==0 and 'ThreatCalm' or 'ThreatTense'
@@ -261,12 +263,11 @@ local function evaluate(player,voice,index,live,step)
   if c.prefs and c.prefs.whisper and facts.sneaking and (facts.near or 0)>0 and (c.group=='Threat' or c.group=='Panic') then expected='ThreatWhisper';expectedMode='spoken' end
  end
  if V.extended(voice) and require('CSV/Extras').approved then expected=expected:gsub('ThirstCritical_1$','ThirstCritical'):gsub('PanicGrounding_1$','PanicGrounding'):gsub('PanicEscape_1$','PanicEscape') end
- if voice=='kate' and V.extended(voice) and not V.data.kateComplete and not line then expected='none';expectedMode='silent' end
- local compatibility=c.expect=='eligible_or_none' or facts.sneaking==true and not (c.newLoot or c.newOutcomes or c.newPsychology or c.newConcealment)
+ local compatibility=c.expect=='eligible_or_none' or facts.sneaking==true and not (c.newLoot or c.newOutcomes or c.newPsychology or c.newConcealment or c.newTraits)
  local selected=line and (require('CSV/Expressions').source(line.id) or line.id)
  -- New exact fixtures declare whisper intent themselves. Never derive expectations
  -- from the production decision reason.
- local expectsWhisper=(c.newLoot or c.newOutcomes or c.newPsychology) and facts.sneaking==true and c.prefs and c.prefs.whisper==true and expectedMode=='spoken'
+ local expectsWhisper=(c.newLoot or c.newOutcomes or c.newPsychology or c.newTraits) and facts.sneaking==true and c.prefs and c.prefs.whisper==true and expectedMode=='spoken'
  if expectsWhisper and selected then selected=selected:gsub('^Whisper_','') end
  local pass=expected=='eligible_or_none' or expected=='none' and line==nil or line and (selected==expected or selected:sub(1,#expected+1)==expected..'_')
  if expectedMode then pass=pass and decision.mode==expectedMode end

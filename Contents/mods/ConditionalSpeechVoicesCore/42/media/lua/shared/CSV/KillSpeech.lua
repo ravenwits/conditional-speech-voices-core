@@ -12,6 +12,7 @@ end
 function K.angry(f)return (f.anger or 0)>=2 and not K.distressed(f)end
 function K.pool(f,experience)
  if K.distressed(f) then return 'KillDesperate' end
+ if (f.traits or {}).pacifist and f.near==0 and f.visible==0 and not f.humanThreat then return 'TraitReluctant' end
  if K.angry(f) then return 'KillAngry' end
  if (f.unhappy or 0)>=3 or (f.traits or {}).cowardly and (f.panic or 0)>0 or (f.traits or {}).hemophobic and (f.bleeding or 0)>0 then return 'KillUneasy' end
  if K.dark(f,experience) then return 'KillDark' end
@@ -42,6 +43,9 @@ function K.choose(C,V,player,voice,f,experience)
  local pool=K.pool(f,experience or require('CSV/Experience').level(player,'zombie'))
  -- Existing quiet takes remain available without turning concealed kills into shouts.
  if f.sneaking then
+  if pool=='TraitReluctant' then
+   local line=C.extraLine(player,voice,pool);if line then return line end
+  end
   local id=pool=='KillDesperate' and 'Kill_2' or 'Kill_1'
   local data=V.bank(voice).data
   for _,line in ipairs(data.groups.Kill or {})do if line.id==id and V.clip(voice,id) and K.allowed(id,f) then return line end end

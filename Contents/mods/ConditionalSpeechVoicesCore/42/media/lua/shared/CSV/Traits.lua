@@ -1,5 +1,7 @@
 local T={}
 local names={brave='BRAVE',cowardly='COWARDLY',desensitized='DESENSITIZED',agoraphobic='AGORAPHOBIC',claustrophobic='CLAUSTROPHOBIC',hemophobic='HEMOPHOBIC',smoker='SMOKER'}
+for key,value in pairs({allThumbs='ALL_THUMBS',clumsy='CLUMSY',conspicuous='CONSPICUOUS',disorganized='DISORGANIZED',hearty='HEARTY_APPETITE',highThirst='HIGH_THIRST',illiterate='ILLITERATE',outOfShape='OUT_OF_SHAPE',illness='PRONE_TO_ILLNESS',feeble='FEEBLE',pacifist='PACIFIST',restless='INSOMNIAC',shortSighted='SHORT_SIGHTED',asthmatic='ASTHMATIC',sleepy='NEEDS_MORE_SLEEP',slowHealer='SLOW_HEALER',slowLearner='SLOW_LEARNER',slowReader='SLOW_READER',sunday='SUNDAY_DRIVER',thinSkin='THIN_SKINNED',unfit='UNFIT',weak='WEAK',weakStomach='WEAK_STOMACH',fastMetabolism='WEIGHT_LOSS',slowMetabolism='WEIGHT_GAIN',lightEater='LIGHT_EATER',deaf='DEAF',hardHearing='HARD_OF_HEARING'})do names[key]=value end
+
 function T.read(player)
  local result={}
  for name,constant in pairs(names)do
@@ -24,6 +26,8 @@ function T.phobiaAllowed(group,s)
  return true
 end
 function T.context(group,s)
+ local selected=require('CSV/TraitSpeechRules').context(group,s)
+ if selected then return selected end
  local t=s.traits or {}
  if s.fire or require('CSV/Concealment').active(s) or (s.near or 0)>0 or s.humanThreat then return nil end
  if (group=='Stress' or group=='Panic') and t.hemophobic and (s.bleeding or 0)>0 and (s.panic or 0)>0 then return 'BloodAversion' end

@@ -4,7 +4,7 @@ if require('CSV/Pack').hasCustomVoices then
   require 'OptionScreens/CharacterCreationMain'
   adapter.install(CharacterCreationMain)
   require 'ISUI/ISEmoteRadialMenu'
-  require('CSV/AlpCallout').install(ISEmoteRadialMenu)
+  require('CSV/Callout').install(ISEmoteRadialMenu)
  end
  Events.OnGameBoot.Add(install)
  Events.OnCreatePlayer.Add(adapter.created)

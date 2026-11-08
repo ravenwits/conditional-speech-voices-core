@@ -4,27 +4,28 @@ V.pack=pack
 function V.bank(voice)return pack.voiceBanks[voice] or pack end
 function V.localize(voice,line)
  if not line then return nil end
- local b=pack.extraVoices[voice];if not b or not b.lines then return line end
+ local b=pack.voiceBanks[voice];if not b or not b.lines then return line end
  local text=b.lines[line.id];if not text then return nil end
  local out={};for key,value in pairs(line)do out[key]=value end;out.text=text;return out
 end
 function V.available()return pack.id~=false end
 -- Voice selection chooses the audio language; the UI language never filters playback.
 function V.languageSupported()return V.available() end
-V.config={enabled=true,maxDistance=25,maxConcurrent=2,followPitch=true}
-function V.extended(voice)return V.available() and (pack.extraVoices[voice]~=nil or voice=='bob' and pack.voiceBanks.bob~=nil or voice=='kate' and V.data.kateUS==true) end
+V.config={selfPlayback="character",enabled=true,maxDistance=25,maxConcurrent=2,followPitch=true}
+function V.extended(voice)return V.available() and pack.voiceBanks[voice]~=nil and pack.voices[voice].extended~=false end
 function V.finite(n) return type(n)=='number' and n==n and n>-math.huge and n<math.huge end
 function V.now() return getTimestampMs() end
 function V.voice(player)
     if not V.available() or not player or not player.getDescriptor then return nil end
     local md=player.getModData and player:getModData()
-    if md and md.csvVoice then return pack.extraVoices[md.csvVoice] and md.csvVoice or nil end
+    if md and md.csvVoice then return pack.voiceBanks[md.csvVoice] and md.csvVoice or nil end
     local d=player:getDescriptor()
     if not d or not d.getVoiceType or not d.getVoicePrefix then return nil end
     if d:getVoiceType()~=0 then return nil end
     local prefix=d:getVoicePrefix()
-    if prefix=='VoiceMale' then return pack.voiceBanks.bob and 'bob' or nil end
-    if prefix=='VoiceFemale' then return pack.voiceBanks.kate and 'kate' or nil end
+    for _,id in ipairs(pack.voiceOrder)do
+        if pack.voices[id].builtinPrefix==prefix then return id end
+    end
     -- Character descriptors can arrive before player modData on remote clients.
     for id,v in pairs(pack.voices)do
         if v.prefix and type(prefix)=='string' and prefix:sub(1,#v.prefix)==v.prefix then
@@ -43,13 +44,13 @@ function V.clip(voice,id)
     local bank=voice and pack.voiceBanks[voice]
     if not bank then return nil end
     if type(id)~='string' or #id>60 then return nil end
-    local data=pack.extraVoices[voice] and bank.data or V.data
+    local data=bank.data
     return data.clips[voice..'_'..id]
 end
-function V.choose(group,intensity,maximum)
-    local list=V.data.groups[group]
+function V.choose(group,intensity,maximum,voice)
+    local list=V.bank(voice).data.groups[group]
     if not list or #list==0 then return nil end
-    if not V.finite(maximum) or maximum<=1 then return list[ZombRand(#list)+1] end
+    if not V.finite(maximum) or maximum<=1 then return list[(V.selectionRandom or ZombRand)(#list)+1] end
     local level=V.finite(intensity) and intensity or 1
     local index=1+math.floor(math.max(0,level-1)/math.max(1,maximum-1)*(#list-1)+0.5)
     return list[math.max(1,math.min(#list,index))]
@@ -67,7 +68,8 @@ function V.recordedLevel(voice,id)
 end
 function V.deliveryGain(voice,id)
     id=require('CSV/Expressions').source(id) or id
-    return voice=='bob' and id:match('^PanicEscape_%d+$')~=nil and 1.25 or 1
+    local levels=(pack.voices[voice] or {}).deliveryGains or {}
+    return levels[id:match('^(.-)_%d+$') or id] or 1
 end
 function V.delivery(voice,id)
     if id:match('^KillControlled_') then return 'controlled' end
@@ -77,7 +79,7 @@ function V.delivery(voice,id)
     if reload then return ({ReloadPanic='frightened',ReloadBreathless='breathless',ReloadSteady='controlled',ReloadShaken='sad'})[reload] or 'original' end
     local expression=require('CSV/Expressions').catalog[id];if expression then return expression.profile end
     if require('CSV/Whispers').contains(id) then return 'whisper' end
-    for _,line in ipairs((pack.extraVoices[voice] and pack.extraVoices[voice].data or V.data).contextLines or {})do
+    for _,line in ipairs(V.bank(voice).data.contextLines or {})do
         if (line.voice==nil or line.voice==voice) and line.id==id then return line.delivery end
     end
     return 'original'
@@ -87,7 +89,7 @@ function V.closeThreat(player)
 end
 function V.pitchMultiplier(pitch,voice)
     -- MP3 approximation. The vanilla FMOD event's automation curve is not exposed here.
-    return 2^((math.max(-100,math.min(100,pitch or 0))/50+(voice=='bob' and 1 or 0))/12)
+    return 2^((math.max(-100,math.min(100,pitch or 0))/50+((pack.voices[voice] or {}).pitchOffset or 0))/12)
 end
 -- Per-file measured peak headroom; this does not limit the final mixed game bus.
 local peakLimits=require 'CSV/PeakLimits'
@@ -98,7 +100,8 @@ end
 function V.maxPriority(id)
     if id:match('^KillControlled_') or id:match('^KillUneasy_') or id:match('^KillDesperate_') then return 2 end
     if id:match('^Reload') then return 3 end
-    if id:sub(1,3)=='Alp' then return V.maxPriority(id:sub(4)) end
+    local canonical=pack.semanticAliases[id]
+    if canonical and canonical~=id then return V.maxPriority(canonical) end
     local source=require('CSV/Expressions').source(id);if source then return V.maxPriority(source) end
     if require('CSV/Whispers').contains(id) then return math.min(2,V.maxPriority(id:sub(9))) end
     if id:match('^Startle') then return 3 end
@@ -121,7 +124,7 @@ function V.contextLine(player,voice,group,intensity,facts)
     local s=facts or require('CSV/State').capture(player)
     if group=='Panic' and s.fire==true then return nil end
     local threat=(s.visible or 0)>0 or s.recentThreat==true or require('CSV/Concealment').active(s)
-    for _,line in ipairs((pack.extraVoices[voice] and pack.extraVoices[voice].data or V.data).contextLines or {})do
+    for _,line in ipairs(V.bank(voice).data.contextLines or {})do
         if (line.voice==nil or line.voice==voice) and line.group==group and intensity>=line.min and intensity<=line.max
             and (line.threat==nil or (line.threat==threat and (line.threat or s.visible~=nil and s.recentThreat~=nil))) and (line.id~='PanicEscape_1' or require('CSV/Concealment').active(s) or (facts and (s.accessibleNear or s.near or 0)>0) or (not facts and V.closeThreat(player))) and V.clip(voice,line.id) then return line end
     end

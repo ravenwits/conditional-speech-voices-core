@@ -52,6 +52,7 @@ local function onServer(module,command,p)
     end
 end
 local function onTick()
+    require('CSV/NativeVolume').update()
     if not Events.OnTickEvenPaused then require('CSV/ReportWriter').tick()end
     if V.config.enabled and speechAvailable() then
         require('CSV/Observers').tick()
@@ -66,6 +67,11 @@ end
 local lastPreview={}
 function C.previewCandidates(voice)
     local ids={}
+    if V.bank(voice).needTiers==1 then
+        for _,pool in pairs(require('CSV/NeedTiers').slots)do
+            for _,id in ipairs(pool)do if V.clip(voice,id) then ids[#ids+1]=id end end
+        end
+    end
     for _,group in pairs(V.data.groups) do
         for _,line in ipairs(group) do
             if V.clip(voice,line.id) then ids[#ids+1]=line.id end
@@ -127,7 +133,7 @@ function C.preview(player,lineID,selectedVoice,previewRadius,previewPitch,detail
     print('[CSV] preview requested line='..tostring(lineID or 'random')..' voice='..tostring(selectedVoice or 'character'))
     if not player or not player:isLocalPlayer() or player:isDead() then return rejected('invalid_local_player') end
     local voice=selectedVoice or V.voice(player)
-    if voice~='bob' and voice~='kate' and not V.pack.extraVoices[voice] then return rejected('unsupported_voice') end
+    if not V.pack.voiceBanks[voice] then return rejected('unsupported_voice') end
     lineID=lineID or randomPreview(voice)
     if not lineID then return rejected('no_recorded_clip') end
     C.sequence=C.sequence+1
@@ -151,8 +157,12 @@ local function onContextMenu(playerIndex,context,worldobjects,test)
     local player=getSpecificPlayer(playerIndex)
     if not player or not player:isLocalPlayer() or player:isDead() then return end
     local voice=V.voice(player)
-    if not voice or #C.previewCandidates(voice)==0 then return end
     local submenu=require('CSV/DebugMenu').speech(context)
+    require('CSV/DebugMenu').health(submenu,player)
+    if not voice or #C.previewCandidates(voice)==0 then
+        submenu:addOption(getText('UI_CSV_SaveReport'),nil,Debug.export)
+        return
+    end
     submenu:addOption(getText('UI_CSV_Scenarios'),player,function(p)require('CSV/Scenarios').open(p)end)
     submenu:addOption(getText('UI_CSV_Pitch'),player,function(p)require('CSV/Pitch').open(p)end)
     submenu:addOption(getText('UI_CSV_Audition'),player,function(p)require('CSV/Audition').open(p)end)

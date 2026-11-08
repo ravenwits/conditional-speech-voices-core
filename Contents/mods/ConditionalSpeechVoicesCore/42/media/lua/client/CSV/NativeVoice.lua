@@ -1,16 +1,27 @@
-local N={banks={},errors=0,disabledVoices={}}
+local N={banks={},errors=0,disabledVoices={},failures={},installed={}}
 local V=require 'CSV/Core'
-local function spec(voice)local b=V.pack.extraVoices[voice or 'alp'];return b and b.native end
+local function spec(voice)local b=voice and V.pack.voiceBanks[voice];return b and b.native end
 function N.supported(voice)return voice~=nil and spec(voice)~=nil end
+function N.ready(player)
+ if not player then return false end
+ local voice=V.voice(player)
+ if not N.supported(voice) or N.disabledVoices[voice] then return false end
+ local descriptor=player:getDescriptor()
+ local prefix=descriptor and descriptor:getVoicePrefix()
+ local expected=V.pack.voices[voice].prefix
+ return type(prefix)=='string' and expected and prefix:sub(1,#expected)==expected and N.banks[prefix]==true
+end
 function N.prefix(pitch,voice)
- return assert(V.pack.voices[voice or 'alp'],'Unknown voice').prefix..tostring(math.floor(math.max(-100,math.min(100,pitch or 0))+100.5))
+ return assert(V.pack.voices[voice],'Unknown voice').prefix..tostring(math.floor(math.max(-100,math.min(100,pitch or 0))+100.5))
 end
 -- The engine picks a clip uniformly. Leave some exertions unvoiced while
 -- keeping the animation, impact sound, and the native vocal handle intact.
 local silentChoices={MeleeAttack=6,MeleeStab=6,MeleeStabOnGround=6,MeleeAttackHeavy=3,
  MeleeShove=6,MeleeStomp=6,Exercise=6,CorpseDragging=6,CorpseHighEffort=3,CorpseLowEffort=6}
+-- Gain is applied by NativeVolume for all voices, never baked into native clips.
+function N.recordingGain(voice,id)return 1 end
 function N.ensure(pitch,voice)
- voice=voice or 'alp'
+ if not voice then return nil end
  local data=spec(voice);if not data then return nil end
  pitch=math.floor(math.max(-100,math.min(100,pitch or 0))+.5)
  local prefix=N.prefix(pitch,voice);if N.banks[prefix] then return prefix end
@@ -33,7 +44,7 @@ function N.ensure(pitch,voice)
    -- IsoPlayer.updateVocalProperties keeps this parameter-driven event alive.
    -- A finite breath sample here restarts even when the character is resting.
    local clip=original:getRandomClip()
-   body[#body+1]='clip { event = '..clip:getEvent()..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
+   body[#body+1]='clip { event = '..clip:getEvent()..', volume = '..tostring(clip:getVolume()*N.recordingGain(voice,''))..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
   else
    local ids=event.ids
    if not ids or #ids==0 then error('Missing custom voice replacement '..suffix)end
@@ -43,7 +54,7 @@ function N.ensure(pitch,voice)
     local clip=source and source:getRandomClip()
     local file=clip and clip:getFile()
     if not file or not file:match('^media/sound/CSV/[%w_]+%.mp3$') then error('Missing custom voice file '..id)end
-    body[#body+1]='clip { file = '..file..', volume = '..tostring(index<=#ids and clip:getVolume() or 0)..', pitch = '..tostring(V.pitchMultiplier(pitch,voice))..', distanceMin = '..tostring(clip:getMinDistance())..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
+    body[#body+1]='clip { file = '..file..', volume = '..tostring(index<=#ids and clip:getVolume()*N.recordingGain(voice,id) or 0)..', pitch = '..tostring(V.pitchMultiplier(pitch,voice))..', distanceMin = '..tostring(clip:getMinDistance())..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
    end
   end
   body[#body+1]='}'
@@ -54,19 +65,19 @@ function N.ensure(pitch,voice)
   GameSounds.OnReloadSound(script)
   if not GameSounds.isKnownSound(name) then error('Custom sound registration failed '..name)end
  end
- N.banks[prefix]=true;return prefix
+ N.banks[prefix]=true;N.installed[voice]=true;return prefix
 end
 function N.tryEnsure(pitch,voice)
- if N.disabledVoices[voice or 'alp'] then return nil end
+ if not voice or N.disabledVoices[voice] then return nil end
  local ok,prefix=pcall(N.ensure,pitch,voice)
  if ok then return prefix end
- N.disabled=true;N.disabledVoices[voice or 'alp']=true;N.errors=N.errors+1;print('[CSV] '..(voice or 'alp')..' native voice setup disabled for this session: '..tostring(prefix))
+ N.disabled=true;N.disabledVoices[voice]=true;N.failures[voice]=tostring(prefix):sub(1,240);N.errors=N.errors+1;print('[CSV] '..voice..' native voice setup disabled for this session: '..N.failures[voice])
 end
 function N.apply(player)
  if not player or not player.getDescriptor then return end
  local d=player:getDescriptor();if not d then return end
  local md=player:getModData()
- local voice=md.csvVoice
+ local voice=V.voice(player)
  if not voice then for id,v in pairs(V.pack.voices)do if v.prefix and (d:getVoicePrefix() or ''):sub(1,#v.prefix)==v.prefix then voice=id;break end end end
  local selected=voice and spec(voice)~=nil
  if not selected then return end
@@ -76,9 +87,9 @@ function N.apply(player)
 end
 function N.safeApply(player)
  local voice=player and V.voice(player)
- if N.disabledVoices[voice or 'alp'] then return end
+ if not voice or N.disabledVoices[voice] then return end
  local ok,err=pcall(N.apply,player)
- if not ok then N.disabled=true;N.disabledVoices[voice or 'alp']=true;N.errors=N.errors+1;print('[CSV] '..(voice or 'alp')..' native voice setup disabled for this session: '..tostring(err))end
+ if not ok then N.disabled=true;N.disabledVoices[voice]=true;N.failures[voice]=tostring(err):sub(1,240);N.errors=N.errors+1;print('[CSV] '..(voice)..' native voice setup disabled for this session: '..tostring(err))end
 end
 function N.painActive(player)
  if not player or not N.supported(V.voice(player)) then return false end
@@ -93,8 +104,8 @@ N.ambient={windows=0,scans=0,activeScans=0}
 local lastPain=setmetatable({},{__mode='k'})
 function N.update(player)
  N.safeApply(player)
- if N.supported(V.voice(player)) then
-  require('CSV/AlpCallout').observe(player)
+ if N.ready(player) then
+  require('CSV/Callout').observe(player)
   local now=V.now();local state=activity[player]
   if not state then state={nextScan=0,seen={}};activity[player]=state end
   if now>=state.nextScan then

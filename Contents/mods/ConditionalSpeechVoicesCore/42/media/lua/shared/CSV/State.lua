@@ -25,6 +25,10 @@ local function collect(player)
  s.visible=Actors.call(stats,'getNumVisibleZombies')
  s.engineLastSeen=Actors.call(player,'getLastSeenZomboidTime')
  s.traits=require('CSV/Traits').read(player)
+ if s.traits.sunday then
+  local car=Actors.call(player,'getVehicle');local speed=Actors.call(car,'getCurrentSpeedKmHour')
+  s.traitDriver=Actors.call(car,'isDriver',player)==true and type(speed)=='number' and math.abs(speed)>1
+ end
  s.outside=Actors.call(square,'isOutside')
  s.nicotineStress=Actors.call(stats,'getNicotineStress')
  s.levels={}
@@ -34,6 +38,7 @@ local function collect(player)
   if mt then s.levels[group]=Actors.call(moodles,'getMoodleLevel',mt)end
  end
  s.panic=Actors.call(moodles,'getMoodleLevel',MoodleType.PANIC)
+ s.levels.Panic=s.panic
  s.endurance=Actors.call(moodles,'getMoodleLevel',MoodleType.ENDURANCE)
  s.thirst=Actors.call(moodles,'getMoodleLevel',MoodleType.THIRST)
  for _,rule in pairs(require('CSV/RecoveryRules'))do

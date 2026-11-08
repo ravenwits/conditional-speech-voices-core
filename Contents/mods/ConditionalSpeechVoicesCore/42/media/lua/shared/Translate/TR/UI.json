@@ -1,4 +1,7 @@
 {
+  "UI_CSV_PackPending": "Kurulum bekliyor",
+  "UI_CSV_PackUnsupported": "Kullanılamıyor",
+  "UI_CSV_PackHealth": "Ses paketi durumu",
   "UI_CSV_Option_1": "Conditional Speech Voices",
   "UI_CSV_Option_2": "Kendi sesin ( yüzde)",
   "UI_CSV_Option_3": "Karakterinin ve yerel ses denemelerinin ses seviyesi. Aralık:  yüzde0–200. Varsayılan:  yüzde100. Sıfır sesi kapatır. Kayıtların tepe sınırları yükseltmeyi sınırlayabilir.",

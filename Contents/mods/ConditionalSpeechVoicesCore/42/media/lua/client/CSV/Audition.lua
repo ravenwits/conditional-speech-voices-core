@@ -73,8 +73,16 @@ local A={entries={
 {group="BloodAversion"},
 }}
 function A.bank(V,group,voice)
- local bank=V.bank(voice);local data=V.pack.extraVoices[voice] and bank.data or V.data;local catalog=bank.extras.catalog
- if voice=='kate' and not V.extended(voice) then return data.groups[group] or {} end
+ local tiers=voice and V.bank(voice).needTiers==1 and require('CSV/NeedTiers').slots[group]
+ if tiers then
+  local bank=V.bank(voice);local lines={}
+  for i,id in ipairs(tiers)do lines[i]={id=id,text=bank.lines[id],group=group} end
+  return lines
+ end
+ voice=voice or V.pack.voiceOrder[1]
+ local bank=V.bank(voice);local data=bank.data;local catalog=bank.extras.catalog
+ if not V.extended(voice) then return data.groups[group] or {} end
+ if bank.native and bank.native.groups and bank.native.groups[group] then return bank.native.groups[group] end
  local X=require 'CSV/Conditions'
  if X.enabled and X.replacements[group] then
   local list={};local index=({Bored=2,Explore=2,AnimalTracks=1,FoodRotten=1})[group]
@@ -99,7 +107,10 @@ function A.open(player,selectedGroup)
  for _,entry in ipairs(A.entries)do if not seen[entry.group] then panel.entries[#panel.entries+1]=entry;seen[entry.group]=true end end
  local more={}
  for group in pairs(V.data.groups)do if not seen[group] then more[group]=true end end
- for _,bank in pairs(V.pack.extraVoices)do for group in pairs(bank.data.groups)do if not seen[group] then more[group]=true end end end
+ for _,bank in pairs(V.pack.voiceBanks)do
+  for group in pairs(bank.data.groups)do if not seen[group] then more[group]=true end end
+  for group in pairs(bank.native and bank.native.groups or {})do if not seen[group] then more[group]=true end end
+ end
  for _,entry in pairs(require('CSV/Extras').catalog)do if not seen[entry.group] then more[entry.group]=true end end
  local names={};for group in pairs(more)do names[#names+1]=group end;table.sort(names)
  for _,group in ipairs(names)do panel.entries[#panel.entries+1]={group=group}end

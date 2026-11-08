@@ -1,3 +1,20 @@
+# 0.42.2
+
+
+Core
+- Stops repeated calm warnings during the same encounter, including brief loss of sight.
+- Allows a fresh response when an attack begins or panic rises substantially. Simultaneous escalation produces one response.
+- Cancels stale queued warnings and preserves a failed sound's retry opportunity.
+- Keeps native surprise reactions separate from earlier warnings without overlapping speech.
+- Adds framework health, recording checks and diagnostic replay support prepared in 0.42.1.
+- Keeps the debug menu label "Conditional Voices" in every language.
+
+English and Turkish
+- Adds the previously prepared need-severity recordings for Bob, Kate, Alp and Mujde.
+- Four distinct base reactions for each of the seven needs, with contextual danger and trait rules retained.
+
+31 offline test groups passed, including encounter sequences, package routing, native sounds, recovery, injuries and performance checks. Live verification of this release is pending.
+
 # 0.41.2
 
 - Route speech using the selected voice's pack, independently of interface language.

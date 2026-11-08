@@ -1,4 +1,7 @@
 {
+  "UI_CSV_PackPending": "Waiting for setup",
+  "UI_CSV_PackUnsupported": "Unavailable",
+  "UI_CSV_PackHealth": "Voice pack health",
   "UI_CSV_Option_1": "Conditional Speech Voices",
   "UI_CSV_Option_2": "Your voice ( percent)",
   "UI_CSV_Option_3": "Volume of your character and local previews. Range: 0-200 percent. Default: 100 percent. Zero mutes. Recording peak limits can cap amplification.",

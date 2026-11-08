@@ -11,6 +11,8 @@ local function eligible(p)
  return p and call(p,'isLocalPlayer')==true and call(p,'isDead')==false and V.config.enabled and V.extended(V.voice(p)) and require('CSV/Core').languageSupported()
 end
 function O.snapshot(kind,obj,p)
+ if kind=='trait' then return require('CSV/TraitReactions').snapshot(p) end
+ if kind=='darkness' then return require('CSV/Darkness').snapshot(p) end
  if kind=='vehicle_combat' then return {occupied=call(p,'getVehicle')==obj} end
  if kind:match('^vehicle_') then return require('CSV/Vehicles').snapshot(obj,p) end
  if kind=='swing' or kind=='gun' then return {condition=call(obj,'getCondition'),jammed=call(obj,'isJammed'),rounds=call(obj,'getCurrentAmmoCount'),perShot=call(obj,'getAmmoPerShoot'),hasChamber=call(obj,'haveChamber'),chamber=call(obj,'isRoundChambered'),spent=call(obj,'isSpentRoundChambered')}

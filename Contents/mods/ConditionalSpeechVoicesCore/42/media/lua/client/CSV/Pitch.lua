@@ -16,7 +16,7 @@ function P.open(player)
    if P.handle then emitter:stopSound(P.handle)end
    if require('CSV/NativeVoice').supported(V.voice(player)) then
     -- Compare the same take and delivery through both playback paths.
-    P.handle=manager:playUISound('CSV_'..V.voice(player)..'_AlpCall_1_Self')
+    P.handle=manager:playUISound('CSV_'..V.voice(player)..'_'..V.pack.voices[V.voice(player)].preview..'_Self')
     emitter:setPitch(P.handle,V.pitchMultiplier(values[choices.selected],V.voice(player)))
    else
     P.handle=manager:playUISound(player:getDescriptor():getVoicePrefix()..'ShoutHey')
@@ -28,7 +28,7 @@ function P.open(player)
   panel.status=ok and getText('UI_CSV_Aud_Queued') or getText('UI_CSV_Aud_NotStarted')
  end)
  button(230,t('ModVoice'),function()
-  local ok,reason=V.client.preview(player,require('CSV/NativeVoice').supported(V.voice(player)) and 'AlpCall_1' or 'Thirst_1',nil,15,values[choices.selected]);panel.status=ok and getText('UI_CSV_Aud_Queued') or getText('UI_CSV_Aud_NotStarted')
+  local ok,reason=V.client.preview(player,require('CSV/NativeVoice').supported(V.voice(player)) and V.pack.voices[V.voice(player)].preview or 'Thirst_1',nil,15,values[choices.selected]);panel.status=ok and getText('UI_CSV_Aud_Queued') or getText('UI_CSV_Aud_NotStarted')
  end)
  button(440,getText('UI_CSV_Aud_Close'),function()
   if P.handle then pcall(function()getSoundManager():getUIEmitter():stopSound(P.handle)end);P.handle=nil end

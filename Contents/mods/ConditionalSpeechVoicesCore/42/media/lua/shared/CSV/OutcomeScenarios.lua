@@ -1,12 +1,15 @@
 local S={}
 function S.evidence(group)
  local e={completed=true,before={},after={}}
+ local traitCases={TraitRest={traits={sleepy=true},tired=3},TraitWound={traits={slowHealer=true},lingering=true},TraitFumble={traits={allThumbs=true},action='ISInventoryTransferAction',visible=1},TraitReading={traits={slowReader=true},action='ISReadABook',stress=1},TraitStudy={traits={slowLearner=true},action='ISResearchRecipe'},TraitFall={traits={clumsy=true},falling=false},TraitScratch={traits={thinSkin=true},recentCut=true},TraitIlliterate={traits={illiterate=true},inspectLiterature=true}}
+ if traitCases[group] then e.kind='trait';e.traitGroup=group;e.verified=true;e.after=traitCases[group];e.after.awake=true;return e end
  local vehicle={VehicleCrowdDriver={'crowd','driver'},VehicleCrowdPassenger={'crowd','passenger'},VehicleSiegeDriver={'siege','driver'},VehicleSiegePassenger={'siege','passenger'},VehicleImpactDriver={'impact','driver'},VehicleImpactPassenger={'impact','passenger'},VehicleKillDriver={'kill','driver'},VehicleKillPassenger={'kill','passenger'}}
  if vehicle[group] then
   local v=vehicle[group]
   return {kind='vehicle_combat',event=v[1],role=v[2],completed=true,verified=true,localAction=true,before={},after={occupied=true},surrounded=true,targets=4,attacks=1,panic=4,aliveBefore=true,nativeContact=true,driverMatched=true,noInterveningHit=true,dead=true,observed=true}
  end
- if group=='WeaponBroken' then e.kind='swing';e.before.condition=1;e.after.condition=0
+ if group=='Darkness' then e.kind='darkness';e.after={light=.1,awake=true}
+ elseif group=='WeaponBroken' then e.kind='swing';e.before.condition=1;e.after.condition=0
  elseif group=='JamCleared' then e.kind='gun';e.before.jammed=true;e.after.jammed=false
  elseif group=='WeaponReady' then e.kind='gun';e.after={condition=5,jammed=false,hasChamber=true,chamber=true,spent=false}
  elseif group=='FuelLow' then e.kind='fuel';e.after={running=true,fuel=8}
@@ -31,11 +34,14 @@ function S.cases()
    local e=S.evidence(group);local f={outcome=e,sneaking=mode=='whisper' or mode=='concealed',near=mode=='combat' and 2 or 0,accessibleNear=mode=='combat' and 2 or 0,visible=mode=='combat' and 2 or 0,recentThreat=mode=='combat',panic=0}
    if mode=='cancelled' then e.cancelled=true end
    if mode=='unknown' then f.outcome=nil end
-   local muted=mode=='concealed' or mode=='combat' and not ({WeaponBroken=true,EngineStalled=true,FuelEmpty=true,CarAlarm=true,HeadlightsFailed=true,VehicleCrowdDriver=true,VehicleCrowdPassenger=true,VehicleSiegeDriver=true,VehicleSiegePassenger=true,VehicleImpactDriver=true,VehicleImpactPassenger=true,VehicleKillDriver=true,VehicleKillPassenger=true})[group] or mode=='cancelled' or mode=='unknown'
-   cases[#cases+1]={name=group..': '..mode,group=group,level=1,max=1,state=f,prefs={whisper=mode=='whisper'},expect=(mode=='cancelled' or mode=='unknown') and 'none' or group,mode=muted and 'silent' or 'spoken',newOutcomes=true,kate='none'}
+   local muted=mode=='concealed' or mode=='combat' and not ({TraitFumble=true,WeaponBroken=true,EngineStalled=true,FuelEmpty=true,CarAlarm=true,HeadlightsFailed=true,VehicleCrowdDriver=true,VehicleCrowdPassenger=true,VehicleSiegeDriver=true,VehicleSiegePassenger=true,VehicleImpactDriver=true,VehicleImpactPassenger=true,VehicleKillDriver=true,VehicleKillPassenger=true})[group] or mode=='cancelled' or mode=='unknown'
+   cases[#cases+1]={name=group..': '..mode,group=group,level=1,max=1,state=f,prefs={whisper=mode=='whisper'},expect=(mode=='cancelled' or mode=='unknown') and 'none' or group,mode=muted and 'silent' or 'spoken',newOutcomes=true,limited='none'}
   end
  end
  local negatives={
+  {'Darkness','light_restored',function(e)e.after.light=.8 end},
+  {'Darkness','asleep',function(e)e.after.awake=false end},
+  {'Darkness','unknown_light',function(e)e.after.light=nil end},
   {'VehicleCrowdDriver','one_side_only',function(e)e.surrounded=false end},
   {'VehicleCrowdPassenger','only_three',function(e)e.targets=3 end},
   {'VehicleSiegeDriver','no_panic',function(e)e.panic=0 end},

@@ -27,12 +27,12 @@ function O.module(name,method)
 end
 function O.tick()
  local S=require 'CSV/State';if S.beginFrame then S.beginFrame()end
- for _,name in ipairs({'Injury','VehicleCombat','Startle','Threat','Recovery','Loot','Vehicles','Outcomes','Reload','Psychology','ProductionReport','Upstream'})do O.module(name,'tick')end
+ for _,name in ipairs({'Injury','VehicleCombat','Startle','Threat','Recovery','Loot','Vehicles','Outcomes','TraitReactions','Darkness','Reload','Psychology','ProductionReport','Upstream'})do O.module(name,'tick')end
  O.module('SpeechManager','flush')
  if S.endFrame then S.endFrame()end
 end
 function O.install()
  require('CSV/SpeechManager').enabled=true
- for _,name in ipairs({'Observe','VehicleCombat','Vehicles','Outcomes','Reload','Psychology','Upstream'})do O.module(name,'install')end
+ for _,name in ipairs({'Observe','VehicleCombat','Vehicles','Outcomes','TraitReactions','Reload','Psychology','Upstream'})do O.module(name,'install')end
 end
 return O

@@ -44,7 +44,7 @@ function C.pauseClock()
 end
 function C.settingsSnapshot()
     local p=C.preferences()
-    local text='own='..C.volumeGain(true)..' other='..C.volumeGain(false)..' frequency='..p.frequency..' whisper='..tostring(p.whisper)..' thoughts='..tostring(p.thoughts)..' profanity='..tostring(p.profanity)..' safe='..tostring(p.safeSpeech)..' lootMode='..p.lootMode..' lootFrequency='..p.lootFrequency..' nearbyVoiceBoost='..C.presenceGain()..' pitchSource=character'..' bobPitchOffsetSemitones=1'
+    local text='own='..C.volumeGain(true)..' other='..C.volumeGain(false)..' frequency='..p.frequency..' whisper='..tostring(p.whisper)..' thoughts='..tostring(p.thoughts)..' profanity='..tostring(p.profanity)..' safe='..tostring(p.safeSpeech)..' lootMode='..p.lootMode..' lootFrequency='..p.lootFrequency..' nearbyVoiceBoost='..C.presenceGain()..' pitchSource=character'..' pitchCalibration=provider'
     if knoxwaveGetOption then
         for _,key in ipairs({'echo','echoWet','roomReverb','roomReverbWet'})do
             local ok,value=pcall(knoxwaveGetOption,key)
@@ -104,7 +104,7 @@ function C.sweep()
             if e.originX and not e.movementObserved and (math.abs(x-e.originX)+math.abs(y-e.originY)>.2 or z~=e.originZ) then
                 e.movementObserved=true;spatial.movedWhileTalking=spatial.movedWhileTalking+1
             end
-            if e.ownVoice then
+            if e.self2d then
                 e.emitter:set3D(e.handle,false)
             elseif e.emitter.setPos then
                 e.emitter:setPos(x,y,z)
@@ -155,34 +155,37 @@ function C.play(p,actor,localPreview,details)
     local emitter=actor:getEmitter()
     if not emitter then return false,'emitter_unavailable' end
     local ownVoice=actor:isLocalPlayer()
-    if ownVoice then
+    local self2d=ownVoice and (details.private==true or V.config.selfPlayback=="ui")
+    if self2d then
         emitter=getSoundManager():getUIEmitter()
         if not emitter then return false,'self_emitter_unavailable' end
     elseif emitter.setPos then
         emitter:setPos(actor:getX(),actor:getY(),actor:getZ())
     end
     -- Local playback only. The server relay owns replication, and original Speech.Say owns AI noise.
-    local sound=ownVoice and (clip.sound..'_Self') or clip.sound
+    local sound=self2d and (clip.sound..'_Self') or clip.sound
+    local mode=self2d and 'self-2d' or ownVoice and 'character-vocals' or 'world-3d'
     local handle
-    if ownVoice then handle=emitter:playSoundImpl(sound,false,nil)
+    if self2d then handle=emitter:playSoundImpl(sound,false,nil)
+    elseif ownVoice then handle=emitter:playVocals(sound)
     else handle=emitter:playSoundImpl(sound,nil)end
     if not handle or handle==0 then diagnostic('play-failed',clip.sound); return false,'play_failed' end
-    diagnostic('play-started-'..p.voice,sound..' mode='..(ownVoice and 'self-2d' or 'world-3d')..' handle='..tostring(handle))
+    diagnostic('play-started-'..p.voice,sound..' mode='..mode..' handle='..tostring(handle))
     local baseVolume=V.deliveryGain(p.voice,p.line) -- Delivery loudness is independent of hearing/relay radius.
     local balance=(clip.gain or 1)*(details.gain or 1)
     local mix={player=actor,packet=p,line=p.line,ownVoice=ownVoice,baseVolume=baseVolume,balance=balance,private=details.private,preview=localPreview==true,contextFacts=details.contextFacts}
     local finalGain,presence,requestedGain=C.entryGain(mix)
     C.lastMix={line=p.line,gain=finalGain,requested=requestedGain,presence=presence,limited=finalGain+0.00001<requestedGain}
-    print('[CSV] playback settings sound='..sound..' mode='..(ownVoice and 'self-2d' or 'world-3d')..' pitchInput='..p.pitch..' pitchFactor='..V.pitchMultiplier(p.pitch,p.voice)..' gain='..finalGain..' requestedGain='..requestedGain..' nearbyBoost='..presence)
-    if ownVoice then emitter:set3D(handle,false);spatial.self2d=spatial.self2d+1 end
+    print('[CSV] playback settings sound='..sound..' mode='..mode..' pitchInput='..p.pitch..' pitchFactor='..V.pitchMultiplier(p.pitch,p.voice)..' gain='..finalGain..' requestedGain='..requestedGain..' nearbyBoost='..presence)
+    if self2d then emitter:set3D(handle,false);spatial.self2d=spatial.self2d+1 end
     emitter:setVolume(handle,finalGain)
     if V.config.followPitch and emitter.setPitch then
         -- Approximation, not the game's FMOD curve: +/-100 maps to +/-2 semitones.
         emitter:setPitch(handle,V.pitchMultiplier(p.pitch,p.voice))
     end
-    if ownVoice then emitter:tick()end
+    if self2d then emitter:tick()end
     Trace.step(details.trace,'queued','engine_handle',{line=p.line,voice=p.voice,handle=handle,private=details.private==true,preview=localPreview==true and not details.private,gain=finalGain,requestedGain=requestedGain,peakLimited=finalGain+0.00001<requestedGain})
-    C.active[#C.active+1]={originX=actor:getX(),originY=actor:getY(),originZ=actor:getZ(),trace=details.trace,player=actor,emitter=emitter,handle=handle,baseVolume=baseVolume,balance=balance,contextFacts=details.contextFacts,ownVoice=ownVoice,line=p.line,priority=priority,preview=localPreview==true and not details.private,private=details.private,allowStealth=p.allowStealth==true and V.allowStealth(p.line),exposed=p.exposed==true and p.radius<=require('CSV/Hearing').quietRadius,engaged=p.engaged==true and p.radius<=12,packet=p,queued=now,duration=clip.duration/(V.config.followPitch and V.pitchMultiplier(p.pitch,p.voice) or 1),deadline=now+clip.duration/(V.config.followPitch and V.pitchMultiplier(p.pitch,p.voice) or 1)+300}
+    C.active[#C.active+1]={self2d=self2d,originX=actor:getX(),originY=actor:getY(),originZ=actor:getZ(),trace=details.trace,player=actor,emitter=emitter,handle=handle,baseVolume=baseVolume,balance=balance,contextFacts=details.contextFacts,ownVoice=ownVoice,line=p.line,priority=priority,preview=localPreview==true and not details.private,private=details.private,allowStealth=p.allowStealth==true and V.allowStealth(p.line),exposed=p.exposed==true and p.radius<=require('CSV/Hearing').quietRadius,engaged=p.engaged==true and p.radius<=12,packet=p,queued=now,duration=clip.duration/(V.config.followPitch and V.pitchMultiplier(p.pitch,p.voice) or 1),deadline=now+clip.duration/(V.config.followPitch and V.pitchMultiplier(p.pitch,p.voice) or 1)+300}
     return true,'played',{line=p.line,delivery=V.delivery(p.voice,p.line),gain=finalGain,pitch=p.pitch}
 end
 function C.emit(player,ctx,volume)

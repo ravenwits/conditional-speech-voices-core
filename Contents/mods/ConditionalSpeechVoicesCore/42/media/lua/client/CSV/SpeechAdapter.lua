@@ -68,7 +68,10 @@ local function generateSpeechFrom(player,group,intensity,maximum,...)
     local oldCooldown
     local ownedEvent=policy.mode=='spoken' and (group=='AcutePain' and facts.acute==true or group=='Startle' and facts.nativeAlert or recoveryRule~=nil or group=='Psychology' and facts.psychology and facts.psychology.verified==true or facts.outcome and require('CSV/OutcomeRules').groups[group]~=nil)
     if ownedEvent then oldCooldown=player:getModData().cs_lastspoke;player:getModData().cs_lastspoke={0,''}end
-    if not ownedEvent and policy.engaged and not require('CSV/Encounter').blocked(player,group,facts) then oldCooldown=player:getModData().cs_lastspoke;player:getModData().cs_lastspoke={0,''}end
+    local encounter=require('CSV/Encounter')
+    local escalation=encounter.reaction(group,facts) and encounter.escalation(encounter.players[player],facts)
+    if escalation then Trace.step(trace,'encounter',escalation)end
+    if not ownedEvent and (policy.engaged or policy.mode=='spoken' and escalation) and not encounter.blocked(player,group,facts) then oldCooldown=player:getModData().cs_lastspoke;player:getModData().cs_lastspoke={0,''}end
     if not oldCooldown and (attempt.policy.priority or 1)>=3 then
         for _,active in ipairs(C.active)do
             if active.player==player and not active.preview and (active.priority or 1)<attempt.policy.priority then
@@ -78,6 +81,7 @@ local function generateSpeechFrom(player,group,intensity,maximum,...)
     end
     local result={pcall(generate,player,group,intensity,maximum,...)}
     if oldCooldown and (ownedEvent or attempt.outcome~='played') then player:getModData().cs_lastspoke=oldCooldown end
+    if attempt.playbackFailed then player:getModData().cs_lastspoke=sourceLast end
     if supplied then phraseSets.Phrases[group]=originalPhrases end
     C.contexts[player]=previous
     attempt.info=attempt.info or {line=line and line.id or '-'}
@@ -156,6 +160,7 @@ local function Say(player,text,volume)
     if ctx and ctx.ready and text==ctx.line.text and channel.channel=='public' then
         ctx.ready=false
         local ok,played=pcall(C.emit,player,ctx,volume)
+        ctx.playbackFailed=not ok or not played
         if not ok then ctx.outcome='emit_error';C.errors=C.errors+1;diagnostic('emit-error',played) end
         return say(player,ok and played and text or ('('..text..')'),ok and played and (ctx.policy.noiseRadius or volume) or 0)
     end

@@ -1,17 +1,24 @@
 local M=require('CSV/Pack').expressions
-M.byGroup={}
-
-
-for _,entry in pairs(M.catalog)do
- M.bySource[entry.source]=M.bySource[entry.source] or {};M.bySource[entry.source][entry.profile]=entry
- if entry.groupFallback then
-  M.byGroup[entry.group]=M.byGroup[entry.group] or {};local group=M.byGroup[entry.group]
-  group[entry.profile]=group[entry.profile] or {};group[entry.profile][#group[entry.profile]+1]=entry
+local indexes=setmetatable({},{__mode='k'})
+local function index(bank)
+ if indexes[bank] then return indexes[bank] end
+ local result={sources={},groups={}}
+ for _,entry in pairs(bank.catalog)do
+  local source=result.sources[entry.source] or {};result.sources[entry.source]=source;source[entry.profile]=entry
+  if entry.groupFallback then
+   local group=result.groups[entry.group] or {};result.groups[entry.group]=group
+   local pool=group[entry.profile] or {};group[entry.profile]=pool;pool[#pool+1]=entry
+  end
  end
+ indexes[bank]=result
+ return result
 end
 function M.pick(V,voice,line,facts,forced,player)
  if not M.approved or not V.extended(voice) or not line then return line end
- local options=M.bySource[line.id] or {};local fallback=M.byGroup[line.group] or {}
+ local bank=V.bank and V.bank(voice).expressions or M
+ if not bank.approved then return line end
+ local routes=index(bank)
+ local options=routes.sources[line.id] or {};local fallback=routes.groups[line.group] or {}
  local f=facts or {};if f.sneaking==true and not require('CSV/Concealment').open(f) and not require('CSV/Concealment').active(f) and not forced then return line end
  local levels=f.levels or {};local choices={}
  if forced then choices[1]=forced

@@ -80,7 +80,8 @@ local function buildReport(f,compact)
  emit(f,function()return 'SPEECH_MANAGER pending='..#manager.queue..' submitted='..m.submitted..' accepted='..m.played..' expired='..m.expired..' cancelled='..m.cancelled..' blocked='..m.blocked..' retryPlansSkipped='..(m.retrySkipped or 0)..'\n' end)
  local writes=require('CSV/ReportWriter').metrics
  emit(f,function()return 'REPORT_WRITER completed='..writes.completed..' failed='..writes.failed..' maxSliceMs='..writes.maxSliceMs..' maxOpenMs='..(writes.maxOpenMs or 0)..' maxCommitMs='..(writes.maxCommitMs or 0)..' maxPrepareMs='..(R.maxPrepareMs or 0)..'\n' end)
- require('CSV/AlpCallout').export(f)
+ require('CSV/Callout').export(f)
+ require('CSV/NativeVolume').export(f)
  local native=require 'CSV/NativeVoice'
  emit(f,function()return 'VOICE_NATIVE_ACTIVITY scope=active_event_windows includesSilentSlots=true selectedTakeUnknown=true errors='..native.errors..'\n' end)
  emit(f,function()return 'VOICE_BREATH source=parameter_driven_native_event individualTakesObservable=false activeWindows='..native.ambient.windows..' activeScans='..native.ambient.activeScans..' scans='..native.ambient.scans..'\n' end)
@@ -110,6 +111,8 @@ local function buildReport(f,compact)
   emit(f,function()return 'DECISION '..key..' count='..row.count..' first='..row.first..' last='..row.last..' line='..row.line..' policy='..row.policy..' remainingMs='..row.remaining..' text='..row.text..' '..row.facts..'\n' end)
  end
  for name,o in pairs(R.observations)do emit(f,function()return 'OBSERVATION '..name..' count='..o.count..' last='..o.last..' '..o.facts..'\n' end)end
+ require('CSV/DebugMenu').healthRows(nil,function(row) emit(f,function()return 'PACK_HEALTH '..row..'\n' end)end)
+ require('CSV/Replay').export(f)
  require('CSV/Trace').export(f)
  emit(f,function()return 'INVENTORY includes debug-only recordings; existence does not prove appropriate acting.\n' end)
  local trace=require('CSV/Trace')

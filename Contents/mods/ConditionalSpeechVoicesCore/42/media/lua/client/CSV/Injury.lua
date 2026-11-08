@@ -29,16 +29,28 @@ function I.emit(p,kind,source,part)
  local s=state(p);local now=V.now()
  -- Several native notifications in one engine update describe one injury episode.
  if s.emittedAt==now then return false end
+ if s.nativeWait then require('CSV/Trace').step(s.nativeWait.trace,'cancelled','newer_injury');s.nativeWait=nil end
  s.emittedAt=now;I.sequence=I.sequence+1
+ require('CSV/TraitReactions').injury(p,kind,part)
  require('CSV/State').record(p,'physicalInjury');require('CSV/State').record(p,'acute')
  local trace=require('CSV/Trace')
  local t=trace.begin(p,'AcutePain',source,{acute=true})
  trace.step(t,'injury_confirmed',kind,{part=part,event=I.sequence})
- if require('CSV/NativeVoice').supported(V.voice(p)) then
+ local native=require 'CSV/NativeVoice'
+ if native.supported(V.voice(p)) and native.ready(p) then
   require('CSV/ProductionReport').observe(V.voice(p)..'_injury_detected_'..kind,{acute=true})
-  trace.step(t,'delegated','await_native_'..V.voice(p)..'_pain');return true
+  trace.step(t,'delegated','await_native_'..V.voice(p)..'_pain')
+  if native.painActive(p) then trace.step(t,'native_active','injury_audio_observed')
+  else s.nativeWait={deadline=now+200,trace=t,sequence=I.sequence} end
+  return true
  end
- local previous=I.context[p];I.context[p]=I.sequence
+ return I.fallback(p,t,I.sequence)
+end
+function I.fallback(p,t,sequence)
+ local trace=require 'CSV/Trace'
+ trace.step(t,'fallback','native_pain_unavailable')
+ require('CSV/Callout').interrupt(p)
+ local previous=I.context[p];I.context[p]=sequence
  local ok,err=pcall(trace.call,t,p,require('ConditionalSpeech_Core').generateSpeechFrom,p,'AcutePain',4,4,false,true)
  I.context[p]=previous
  if not ok then error(err)end
@@ -106,6 +118,15 @@ function I.tick()
   local p=getSpecificPlayer(index)
   if eligible(p) then
    local s=state(p)
+   local wait=s.nativeWait
+   if wait then
+    local native=require 'CSV/NativeVoice'
+    if native.painActive(p) then
+     s.nativeWait=nil;require('CSV/Trace').step(wait.trace,'native_active','injury_audio_observed')
+    elseif not native.ready(p) or now>=wait.deadline then
+     s.nativeWait=nil;I.fallback(p,wait.trace,wait.sequence)
+    end
+   end
    local known=finite(multiplier) and multiplier>=0
    s.clockKnown=s.clockKnown~=false and known
    if known then s.budget=s.budget+multiplier end

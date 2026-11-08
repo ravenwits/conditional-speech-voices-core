@@ -39,6 +39,11 @@ end
 function M.valid(e)
  local p=e.player
  if not V.config.enabled or not V.languageSupported() or A.call(p,'isDead')~=false or A.call(p,'isLocalPlayer')~=true then return false end
+ if e.group=='Threat' or e.group=='Panic' or e.group=='PanicCallback' then
+  local f=S.capture(p)
+  if e.group=='Threat' and not ((f.near or 0)>0 or require('CSV/Concealment').active(f)) then e.invalidReason='threat_cleared';return false end
+  if require('CSV/Encounter').blocked(p,e.group,f) then e.invalidReason='encounter_already_reacted';return false end
+ end
  if e.group=='GunJammed' or e.group=='OutOfAmmo' then
   if e.firearm and A.call(p,'getPrimaryHandItem')~=e.firearm then return false end
   local facts=S.capture(p)
@@ -87,7 +92,7 @@ function M.flush()
  for i=#M.queue,1,-1 do
   local e=M.queue[i]
   if now>e.expires or not M.valid(e) then
-   local why=now>e.expires and 'expired' or 'cancelled';M.metrics[why]=M.metrics[why]+1;report(e,why);table.remove(M.queue,i)
+   local why=now>e.expires and 'expired' or 'cancelled';M.metrics[why]=M.metrics[why]+1;report(e,why=='cancelled' and e.invalidReason or why);table.remove(M.queue,i)
   elseif e.nextTry and now<e.nextTry then
    M.metrics.retrySkipped=(M.metrics.retrySkipped or 0)+1
    if e.blocked~='retry_wait' then e.blocked='retry_wait';report(e,'retry_wait')end

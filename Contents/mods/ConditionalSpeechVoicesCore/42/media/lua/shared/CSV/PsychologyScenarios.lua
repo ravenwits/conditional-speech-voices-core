@@ -17,14 +17,14 @@ function S.cases()
     local pool=e.verified and meanings[experience=='practiced' and 2 or 1] or nil
     if kind=='zombieKill' and e.verified and f.sneaking then pool='Kill' end
     local silent=mode=='concealed' or mode=='unverified' or mode=='danger' and aftermath[kind]
-    out[#out+1]={name='Psychology '..kind..' '..experience..' '..mode,group='Psychology',level=1,max=1,state=f,prefs={whisper=mode=='whisper'},expect=pool or 'none',mode=silent and 'silent' or 'spoken',newPsychology=true,kate='none'}
+    out[#out+1]={name='Psychology '..kind..' '..experience..' '..mode,group='Psychology',level=1,max=1,state=f,prefs={whisper=mode=='whisper'},expect=pool or 'none',mode=silent and 'silent' or 'spoken',newPsychology=true,limited='none'}
    end
   end
  end
  for _,row in ipairs({{'pursuit',false,0,1,0,'spoken'},{'direct attack',false,1,1,0,'silent'},{'hidden observer',true,0,0,1,'silent'},{'unverified',false,0,0,0,'silent'}})do
   out[#out+1]={name='Fresh zombie kill: '..row[1],group='Psychology',level=1,max=1,
    state={psychology={kind='zombieKill',verified=row[1]~='unverified',experience='practiced'},sneaking=row[2],directAttack=row[3],activePursuit=row[4],whisperRisk=row[5],near=2,visible=2,recentThreat=true,panic=0},
-   prefs={whisper=true},expect=row[1]=='unverified' and 'none' or row[2] and 'Kill' or 'KillControlled',mode=row[6],newPsychology=true,kate='none'}
+   prefs={whisper=true},expect=row[1]=='unverified' and 'none' or row[2] and 'Kill' or 'KillControlled',mode=row[6],newPsychology=true,limited='none'}
  end
  for _,experience in ipairs({'uncertain','practiced'})do
   for _,mode in ipairs({'safe','renewed danger','unknown safety'})do
@@ -33,7 +33,7 @@ function S.cases()
     near=renewed and 1 or 0,visible=renewed and 1 or 0,recentThreat=renewed,humanThreat=false,panic=0}
    if safe then f.encounterThreat=false elseif renewed then f.encounterThreat=true;f.directAttack=1 end
    out[#out+1]={name='Zombie aftermath '..experience..' '..mode,group='Psychology',level=1,max=1,state=f,
-    prefs={whisper=false},expect=safe and (experience=='practiced' and 'AfterZombieSteady' or 'AfterZombieShaken') or 'none',mode=safe and 'spoken' or 'silent',newPsychology=true,kate='none'}
+    prefs={whisper=false},expect=safe and (experience=='practiced' and 'AfterZombieSteady' or 'AfterZombieShaken') or 'none',mode=safe and 'spoken' or 'silent',newPsychology=true,limited='none'}
   end
  end
  for _,row in ipairs({
@@ -46,7 +46,7 @@ function S.cases()
  })do
   local f={psychology={kind='zombieKill',verified=true,experience=row.experience or 'practiced'},sneaking=false,near=2,visible=2,recentThreat=true,encounterThreat=true,activePursuit=1,health=100}
   for key,value in pairs(row.state)do f[key]=value end
-  out[#out+1]={name='Kill context: '..row.name,group='Psychology',level=1,max=1,state=f,prefs={whisper=false},expect=row.expect,mode=row.silent and 'silent' or 'spoken',newPsychology=true,kate='none'}
+  out[#out+1]={name='Kill context: '..row.name,group='Psychology',level=1,max=1,state=f,prefs={whisper=false},expect=row.expect,mode=row.silent and 'silent' or 'spoken',newPsychology=true,limited='none'}
  end
  table.sort(out,function(a,b)return a.name<b.name end);return out
 end

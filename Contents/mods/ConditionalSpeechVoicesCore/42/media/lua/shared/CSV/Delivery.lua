@@ -145,6 +145,7 @@ function P.decide(group,intensity,s,prefs)
  if group=='GunJammed' and s.jammed==true or group=='OutOfAmmo' and s.empty==true then
   return result('spoken','verified_firearm_problem',4,2)
  end
+ if group=='TraitFumble' and (s.attacking or 0)==0 and not s.fire then return result('spoken','verified_transfer_pressure',4,2) end
  if danger then return result('silent','danger_defer_'..kind) end
  if require('CSV/OutcomeRules').urgent(group) and s.near==0 and s.visible==0 and s.recentThreat==false then return result('spoken',group=='WeaponBroken' and 'verified_weapon_break' or 'verified_vehicle_problem',6,2) end
  if kind=='loot' then return result('spoken','useful_loot',4,1) end
