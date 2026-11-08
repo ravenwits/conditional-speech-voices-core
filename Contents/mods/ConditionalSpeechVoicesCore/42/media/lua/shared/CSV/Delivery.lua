@@ -62,6 +62,19 @@ function P.decide(group,intensity,s,prefs)
  if group=='Panic' and s.fire==true then return result('spoken','on_fire',15,4,true) end
  if group=='AcutePain' and s.acute==true then return result('spoken','fresh_injury',8,4,true) end
  local concealment=require 'CSV/Concealment'
+ if kind=='relief' and not require('CSV/Safety').settled(s) then return result('silent','recovery_wait_for_safety') end
+ local critical=require('CSV/CriticalHealth').stage(s.health)
+ if critical>0 then
+  if group=='Injured' or group=='Bleeding' and (intensity or 0)>=3 then
+   if s.sneaking==true and not concealment.active(s) then
+    if (s.whisperRisk or 0)>0 then return result('silent','whisper_would_reveal') end
+    if prefs.whisper and s.contextWhisperAvailable then return result('spoken','recorded_context_whisper',2,4,true) end
+    return result('silent','concealment')
+   end
+   return result('spoken','critical_health',4,4)
+  end
+  if kind=='relief' or kind=='routine' or kind=='loot' or kind=='emotion' then return result('silent','critical_health_defer') end
+ end
  if group=='Startle' then
   if not s.nativeAlert then return result('silent','unverified_alert')end
   if concealment.active(s) then local d=result('spoken','native_alert_attack',6,3);d.engaged=true;return d end
@@ -98,7 +111,7 @@ function P.decide(group,intensity,s,prefs)
   local R=require('CSV/PsychologyRules');local e=s.psychology
   if not R.pool(e,s) then return result('silent','unverified_psychology')end
   local danger=s.humanThreat==true or s.recentThreat==true or (s.near or 0)>0 or (s.visible or 0)>0
-  if R.defer(e) and (danger or s.near~=0 or s.visible~=0 or s.recentThreat~=false) then return result('silent','aftermath_wait_for_safety')end
+  if R.defer(e) and not require('CSV/Safety').settled(s) then return result('silent','aftermath_wait_for_safety')end
   if s.sneaking==true then
    if prefs.whisper and s.contextWhisperAvailable then return result('spoken','recorded_context_whisper',2,2,true)end
    return result('silent','concealment')
@@ -146,6 +159,10 @@ function P.decide(group,intensity,s,prefs)
   return result('spoken','verified_firearm_problem',4,2)
  end
  if group=='TraitFumble' and (s.attacking or 0)==0 and not s.fire then return result('spoken','verified_transfer_pressure',4,2) end
+ if kind=='relief' then
+  if not require('CSV/Safety').settled(s) then return result('silent','recovery_wait_for_safety') end
+  return result('spoken','verified_relief',4,1)
+ end
  if danger then return result('silent','danger_defer_'..kind) end
  if require('CSV/OutcomeRules').urgent(group) and s.near==0 and s.visible==0 and s.recentThreat==false then return result('spoken',group=='WeaponBroken' and 'verified_weapon_break' or 'verified_vehicle_problem',6,2) end
  if kind=='loot' then return result('spoken','useful_loot',4,1) end

@@ -14,7 +14,9 @@ end
 function R.observe(player,s)
  if not player or not player:isLocalPlayer() or player:isDead() or not V.voice(player) then return end
  s=s or State.capture(player)
- local now=V.now();local state=R.players[player] or {pending={}};R.players[player]=state
+ local now=V.now()
+ if V.config.enabled and V.languageSupported() and require('CSV/Activity').read(player)~='sleeping' then require('CSV/CriticalHealth').observe(player,s,now) end
+ local state=R.players[player] or {pending={}};R.players[player]=state
  state.peaks=state.peaks or {}
  for _,rule in pairs(require('CSV/RecoveryRules'))do
   local key=rule.field

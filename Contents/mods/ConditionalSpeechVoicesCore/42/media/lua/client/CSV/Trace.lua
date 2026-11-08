@@ -1,7 +1,7 @@
 local function emit(f,fn)if type(f)=='table' and f.defer then f:defer(fn)else f:write(fn())end end
 -- Local diagnostic history. Never replicate IDs or retain world objects in records.
 local T={records={},assets={},assetCount=0,assetLimit=4096,droppedAssets=0,sequence=0,evicted=0,context=setmetatable({},{__mode='k'}),limit=256}
-local keys={'injuryEvent','nativeAlert','encounterThreat','humanThreat','fire','acute','exposureChecked','attackGrace','near','visible','panic','sneaking','targeted','attacking','directAttack','activePursuit','recentThreat','whisperRisk','hunger','thirst','bleeding','endurance','pain','unhappy'}
+local keys={'health','injuryEvent','nativeAlert','encounterThreat','humanThreat','fire','acute','exposureChecked','attackGrace','near','visible','panic','sneaking','targeted','attacking','directAttack','activePursuit','recentThreat','whisperRisk','hunger','thirst','bleeding','endurance','pain','unhappy'}
 local known={};for _,key in ipairs(keys)do known[key]=true end
 for _,rule in pairs(require('CSV/RecoveryRules'))do if not known[rule.field] then keys[#keys+1]=rule.field;known[rule.field]=true end end
 local function now()return getTimestampMs()end

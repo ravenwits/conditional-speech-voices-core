@@ -24,14 +24,15 @@ function M.submit(fn,p,g,i,max,args)
  local outcome=S.outcome and S.outcome[p];local psych=require('CSV/Psychology').context[p]
  local injury=require('CSV/Injury').context[p]
  local reload=S.reload and S.reload[p]
- local token=reload or outcome or psych or injury or recovery and recovery.pending[g] or loot and loot.pending[g] or g
+ local healthEvent=g=='Injured' and require('CSV/CriticalHealth').pending(p)
+ local token=healthEvent or reload or outcome or psych or injury or recovery and recovery.pending[g] or loot and loot.pending[g] or g
  for _,old in ipairs(M.queue)do if old.player==p and old.token==token then return end end
  M.serial=M.serial+1
  local now=V.now();local event={player=p,group=g,intensity=i,maximum=max,args=args,fn=fn,token=token,at=now,serial=M.serial,
- reload=reload,outcome=outcome,psychology=psych,injury=injury,alert=S.nativeAlert and S.nativeAlert[p],loot=S.loot and S.loot[p],
+ healthEvent=healthEvent,reload=reload,outcome=outcome,psychology=psych,injury=injury,alert=S.nativeAlert and S.nativeAlert[p],loot=S.loot and S.loot[p],
  recovery=recovery and recovery.pending[g],lootEvent=loot and loot.pending[g],trace=require('CSV/Trace').request(p,g)}
  if g=='GunJammed' or g=='OutOfAmmo' then event.firearm=A.call(p,'getPrimaryHandItem')end
- event.expires=outcome and outcome.expires or event.recovery and event.recovery.at+12000 or event.lootEvent and event.lootEvent.at+90000 or psych and psych.at+(require('CSV/PsychologyRules').defer(psych) and require('CSV/PsychologyPolicy').aftermathLifetime or require('CSV/PsychologyPolicy').eventLifetime) or now+(g=='AcutePain' and 1000 or g=='Startle' and 1500 or psych and 8000 or 2000)
+ event.expires=healthEvent and healthEvent.expires or outcome and outcome.expires or event.recovery and event.recovery.at+12000 or event.lootEvent and event.lootEvent.at+90000 or psych and psych.at+(require('CSV/PsychologyRules').defer(psych) and require('CSV/PsychologyPolicy').aftermathLifetime or require('CSV/PsychologyPolicy').eventLifetime) or now+(g=='AcutePain' and 1000 or g=='Startle' and 1500 or psych and 8000 or 2000)
  if #M.queue>=128 then M.metrics.cancelled=M.metrics.cancelled+1;report(event,'queue_full');return end
  M.queue[#M.queue+1]=event;M.metrics.submitted=M.metrics.submitted+1
  V.client.lastAttempt[p]={group=g,outcome='manager_pending'};report(event,'submitted')
@@ -39,9 +40,11 @@ end
 function M.valid(e)
  local p=e.player
  if not V.config.enabled or not V.languageSupported() or A.call(p,'isDead')~=false or A.call(p,'isLocalPlayer')~=true then return false end
+ if e.healthEvent and not require('CSV/CriticalHealth').valid(p,e.healthEvent,S.capture(p)) then return false end
  if e.group=='Threat' or e.group=='Panic' or e.group=='PanicCallback' then
   local f=S.capture(p)
-  if e.group=='Threat' and not ((f.near or 0)>0 or require('CSV/Concealment').active(f)) then e.invalidReason='threat_cleared';return false end
+  if e.healthEvent and not require('CSV/CriticalHealth').valid(p,e.healthEvent,S.capture(p)) then return false end
+ if e.group=='Threat' and not ((f.near or 0)>0 or require('CSV/Concealment').active(f)) then e.invalidReason='threat_cleared';return false end
   if require('CSV/Encounter').blocked(p,e.group,f) then e.invalidReason='encounter_already_reacted';return false end
  end
  if e.group=='GunJammed' or e.group=='OutOfAmmo' then
@@ -70,6 +73,7 @@ function M.valid(e)
 end
 function M.accept(e)
  local p=e.player;local now=V.now()
+ if e.healthEvent then require('CSV/CriticalHealth').accept(p,e.healthEvent) end
  if e.reload then e.reload.consumed=true end
  if e.outcome then
   e.outcome.consumed=true

@@ -66,7 +66,8 @@ local function generateSpeechFrom(player,group,intensity,maximum,...)
         phraseSets.Phrases[group]=own
     end
     local oldCooldown
-    local ownedEvent=policy.mode=='spoken' and (group=='AcutePain' and facts.acute==true or group=='Startle' and facts.nativeAlert or recoveryRule~=nil or group=='Psychology' and facts.psychology and facts.psychology.verified==true or facts.outcome and require('CSV/OutcomeRules').groups[group]~=nil)
+    local healthEvent=group=='Injured' and require('CSV/CriticalHealth').pending(player)
+    local ownedEvent=policy.mode=='spoken' and (healthEvent~=nil and healthEvent~=false or group=='AcutePain' and facts.acute==true or group=='Startle' and facts.nativeAlert or recoveryRule~=nil or group=='Psychology' and facts.psychology and facts.psychology.verified==true or facts.outcome and require('CSV/OutcomeRules').groups[group]~=nil)
     if ownedEvent then oldCooldown=player:getModData().cs_lastspoke;player:getModData().cs_lastspoke={0,''}end
     local encounter=require('CSV/Encounter')
     local escalation=encounter.reaction(group,facts) and encounter.escalation(encounter.players[player],facts)
@@ -113,7 +114,8 @@ local function ProcessSpeech(player,dialogue,group,...)
     end
     if ctx and type(text)=='string' then
         local decision=ctx.policy
-        local remaining=NeedTiming.remaining(player,group,ctx.intensity,C.preferences().frequency,V.now())
+        local criticalEvent=group=='Injured' and require('CSV/CriticalHealth').pending(player)
+        local remaining=criticalEvent and 0 or NeedTiming.remaining(player,group,ctx.intensity,C.preferences().frequency,V.now())
         ctx.remainingMs=remaining
         if decision.mode~='silent' and (decision.priority or 1)==1 then
             local intervals={[0]=60000,[1]=30000,[2]=10000};local gap=group:match('^Relief') and 10000 or (intervals[C.preferences().frequency] or 30000)

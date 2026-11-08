@@ -1,3 +1,11 @@
+## 0.42.4
+
+- Added health warning episodes at 25 and 10 HP. Worsening health takes priority over ordinary comments and bypasses unrelated cooldowns. Stable low health does not repeatedly trigger warnings.
+- Critical injury uses the existing frightened performance for every voice, even without a panic moodle. No new recordings.
+- Defer routine relief and loot comments during critical health. Preserve sleep, consuming, stealth and native pain rules.
+- Apply shared safety evidence to the final relief and aftermath delivery decision, including whispered relief.
+- Add the observed 8 HP injury/relief sequence, escalation, recovery, stale event and four-voice regression checks. Include health in event traces.
+
 ## 0.42.3
 
 - Commit encounter and repeat history when the engine reports playback started. Retain valid queued events for one retry after a failed start.

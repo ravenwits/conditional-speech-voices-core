@@ -47,6 +47,10 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
         if not f.nativeAlert then return nil end
         return C.extraLine(player,voice,require('CSV/Traits').startle(f),function(id)return require('CSV/Traits').startleAllowed(id,f)end,function(id)local n=tonumber(id:match('_(%d+)$'));return n>=3 and n-3 or n+6 end)
     end
+    if group=='Injured' and require('CSV/CriticalHealth').stage(f.health)>0 then
+        local line=(V.bank(voice).data.groups.Injured or {})[3]
+        if line then return {id=line.id,text=line.text,group='Injured',critical=true} end
+    end
     local traitGroup=require('CSV/Traits').context(group,f)
     if traitGroup then
         local line=C.extraLine(player,voice,traitGroup)
@@ -122,6 +126,7 @@ function C.chooseLine(player,voice,group,intensity,maximum,facts)
     local f=facts or State.capture(player)
     local line=C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
     if line and line.needTier then return line end
+    if line and line.critical then return V.localize(voice,require('CSV/Expressions').pick(V,voice,line,f,'frightened',player)) end
     line=Semantic.shared(C,V,player,voice,line,group,f)
     -- Base bank group entries do not carry a group field.
     if line and not line.group then line={id=line.id,text=line.text,group=group}end
@@ -144,7 +149,7 @@ local function plan(player,voice,group,intensity,maximum,facts,prefs)
     line=V.localize(voice,line)
     if line and not require('CSV/Profanity').allowed(line.id,C.preferences(),voice) then return nil,{mode='silent',reason='profanity_disabled'}end
     if line and not Semantic.allowed(line,s) then return nil,{mode='silent',reason='unproven_final_content'}end
-    if line and not (group=='AcutePain' and s.acute==true and type(s.injuryEvent)=='number') and Semantic.recent(C.history[player] or {},line,V.now()) then return line,{mode='silent',reason='semantic_repeat'}end
+    if line and not (group=='Injured' and require('CSV/CriticalHealth').pending(player)) and not (group=='AcutePain' and s.acute==true and type(s.injuryEvent)=='number') and Semantic.recent(C.history[player] or {},line,V.now()) then return line,{mode='silent',reason='semantic_repeat'}end
     return line,decision
 end
 function C.plan(player,voice,group,intensity,maximum,facts,prefs)

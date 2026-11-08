@@ -98,6 +98,7 @@ function V.outputGain(voice,id,requested)
     return math.max(0,math.min(peakLimits[voice..'_'..id] or 1,requested))
 end
 function V.maxPriority(id)
+    if id=='Injured_3' or id=='Bleeding_3' then return 4 end
     if id:match('^KillControlled_') or id:match('^KillUneasy_') or id:match('^KillDesperate_') then return 2 end
     if id:match('^Reload') then return 3 end
     local canonical=pack.semanticAliases[id]
