@@ -142,8 +142,8 @@ local function collect(player)
  Concealment.finish(s,player)
  local now=getTimestampMs()
  local clock=S.threatClock[player] or {};S.threatClock[player]=clock
- if (s.near or 0)>0 or (s.visible or 0)>0 then clock.hadThreat=true;clock.clearSince=nil;s.recentThreat=true
- elseif s.near==0 and s.visible==0 then
+ if s.encounterThreat==true or (s.near or 0)>0 or s.humanThreat==true or require('CSV/Concealment').active(s) then clock.hadThreat=true;clock.clearSince=nil;s.recentThreat=true
+ elseif require('CSV/Safety').clear(s) then
   clock.clearSince=clock.clearSince or now;s.recentThreat=clock.hadThreat==true and now-clock.clearSince<10000
  else clock.clearSince=nil;s.recentThreat=nil end
  local e=S.events[player] or {}

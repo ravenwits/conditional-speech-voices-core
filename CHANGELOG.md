@@ -1,3 +1,10 @@
+## 0.42.3
+
+- Commit encounter and repeat history when the engine reports playback started. Retain valid queued events for one retry after a failed start.
+- Let a new native startle interrupt equal-priority speech, while preserving previews and acute pain.
+- Use shared safety evidence for encounter endings and recovery. Distant unrelated zombies no longer hold recovery indefinitely; unknown evidence and active attacks remain blocked.
+- Update public test fixtures and fail the observer isolation test on unexpected errors. Refresh pack authoring guidance.
+
 # 0.42.2
 
 

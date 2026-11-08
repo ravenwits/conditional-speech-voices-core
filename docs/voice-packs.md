@@ -1,6 +1,8 @@
 # Adding a voice pack
 
-Core 0.41.2 supports independently authored voice packs. No Core patch is required. Existing English and Turkish packs retain their IDs and save compatibility.
+Start with the [current authoring guide](../Contents/mods/ConditionalSpeechVoicesCore/authoring/README.md) and its `prepare_voice_pack.py` and `build_voice_pack.py` tools. Run commands from that authoring directory. The complete contract is the authority for required slots, rather than counts copied into documentation. The small example below explains registration only; it is not a complete pack.
+
+Core 0.42.3 supports independently authored voice packs. No Core patch is required. Existing English and Turkish packs retain their IDs and save compatibility.
 
 Create a B42 mod requiring `Conditional-Speech-Voices-Core`. Give it a unique ModID starting with `CSV-Voice-`, followed by letters, digits, underscores or hyphens. This opt-in prefix avoids probing every unrelated installed mod. Put a provider at `42/media/lua/shared/CSV_Packs/<ModID>.lua`. Core requires this module explicitly for each activated mod using that prefix, once during loading. Return a schema-1 definition with a bank and a voices array. Do not require CSV/Core or CSV/Pack from your provider. Registration after Core loads is rejected; restart after changing packs.
 
@@ -17,7 +19,7 @@ The bank follows the existing schema-1 recording contract:
 
 Use the established semantic line IDs for existing gameplay situations, and use unique sound event names `CSV_<voice>_<line>` and the matching self-playback definitions. Supply scripts and audio in your own package. Every media file path must be unique across packs, including the sound script filename. Use a pack-specific name such as `media/scripts/CSV_MyPack_Sounds.txt`. The game overlays matching paths; different sound event names inside the same script filename do not prevent one pack replacing another. Core does not synthesize recordings. An absent recording must remain absent rather than point at another speaker. Shared line IDs mean shared semantics, not shared audio. The registry adds voices to existing situations; it does not register arbitrary new gameplay observers.
 
-Do not edit provider tables after load. Core discovers providers in sorted ModID order and rejects duplicate voice identities. Shared semantic catalogs use the first definition for an existing ID; avoid changing the meaning of an existing ID. Clip lookup and captions use the selected voice's bank.
+Do not edit provider tables after load. Core discovers providers in sorted ModID order and rejects duplicate voice identities. Core owns shared slot semantics. Conflicting meanings are rejected at registration; never rely on load order to replace a slot. Clip lookup and captions use the selected voice's bank.
 
 Test alone, with English, with Turkish, and without any voice pack. Check character creation, pitch, save/reload, ordinary speech, stealth, injury and both Q and radial shout. The current automated tests do not establish multiplayer compatibility.
 

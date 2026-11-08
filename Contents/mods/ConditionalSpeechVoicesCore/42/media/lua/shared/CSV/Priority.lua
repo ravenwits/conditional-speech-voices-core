@@ -6,4 +6,7 @@ function P.before(a,b,rank,time)
  return time(a)>time(b)
 end
 function P.interrupt(incoming,current)return incoming>=3 and incoming>current end
+function P.startle(group,native,current,preview,currentGroup)
+ return group=='Startle' and native==true and not preview and currentGroup~='AcutePain' and current<4
+end
 return P

@@ -8,9 +8,9 @@ function E.observe(p,s)
  local e=E.players[p]
  -- An empty current scan is not a new encounter. State retains recentThreat
  -- across brief occlusion; unknown evidence must not clear speech history.
- local clear=s.encounterThreat~=true and s.near==0 and s.visible==0 and s.recentThreat==false
+ local clear=require('CSV/Safety').settled(s)
  if e then
-  local inactive=s.encounterThreat==false and s.near==0 and type(s.visible)=='number'
+  local inactive=require('CSV/Safety').clear(s)
    and not s.nativeAlert and not e.soundPlaying and not s.humanThreat and not require('CSV/Concealment').active(s)
   if inactive then
    local now=require('CSV/Core').now();e.clearSince=e.clearSince or now

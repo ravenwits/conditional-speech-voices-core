@@ -4,7 +4,7 @@ local A=require 'CSV/Actors'
 local call=A.call
 local Policy=require 'CSV/PsychologyPolicy'
 function M.update(P,p,s,f,now)
- local safeKnown=f.near==0 and f.visible==0 and f.recentThreat==false and (s.humanUntil or 0)<=now
+ local safeKnown=require('CSV/Safety').settled(f) and (s.humanUntil or 0)<=now
  if safeKnown then s.safeSince=s.safeSince or now else s.safeSince=nil end
  if s.pursuer and call(s.pursuer,'isDead')==true then s.pursuer=nil;s.pursuerSeen=false end
  if s.pursuer and s.pursuerSeen and call(p,'CanSee',s.pursuer)==false and f.sneaking==true and (s.humanUntil or 0)>now then

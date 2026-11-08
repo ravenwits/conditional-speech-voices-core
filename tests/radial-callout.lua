@@ -1,6 +1,6 @@
 package.path='Contents/mods/ConditionalSpeechVoicesCore/42/media/lua/client/?.lua;'..package.path
 package.loaded['CSV/Core']={voice=function()return 'test'end}
-package.loaded['CSV/NativeVoice']={supported=function(v)return v=='test'end}
+package.loaded['CSV/NativeVoice']={supported=function(v)return v=='test'end,ready=function()return true end}
 local M=require 'CSV/AlpCallout';local count,vanilla=0,0
 M.call=function()count=count+1;return true end
 local menu={emote=function()vanilla=vanilla+1 end,onKeyPressed=function()end,onKeyReleased=function()end}

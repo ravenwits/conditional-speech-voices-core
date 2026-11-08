@@ -4,7 +4,7 @@ function R.pool(e,f)
  if not e or e.verified~=true or not R.events[e.kind] then return nil end
  local practiced=e.experience=='practiced'
  if e.kind=='zombieKill' then
-  local safe=f.encounterThreat==false and f.near==0 and f.visible==0 and f.recentThreat==false and f.humanThreat~=true and f.fire~=true and not require('CSV/Concealment').active(f)
+  local safe=f.encounterThreat==false and require('CSV/Safety').settled(f) and f.fire~=true and not require('CSV/Concealment').active(f)
   if safe then return practiced and not require('CSV/KillSpeech').distressed(f) and 'AfterZombieSteady' or 'AfterZombieShaken' end
   if e.aftermath then return nil end
   return 'Kill'

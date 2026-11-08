@@ -58,7 +58,7 @@ function M.valid(e)
  end
  if e.recovery then
   local owner=require('CSV/Recovery').players[p];local rule=require('CSV/RecoveryRules')[e.group];local f=S.capture(p)
-  return owner and owner.pending[e.group]==e.recovery and (rule and f[rule.field]==0 or e.group=='ReliefThreat' and f.recentThreat==false and f.near==0 and f.visible==0)
+  return owner and owner.pending[e.group]==e.recovery and (rule and f[rule.field]==0 or e.group=='ReliefThreat' and require('CSV/Safety').settled(f))
  end
  if e.lootEvent then
   local owner=require('CSV/Loot').players[p]
@@ -91,7 +91,9 @@ function M.flush()
  local candidates={};local now=V.now()
  for i=#M.queue,1,-1 do
   local e=M.queue[i]
-  if now>e.expires or not M.valid(e) then
+  if e.playback and not e.playback.finishedReason then
+   -- Reserved: no duplicate dispatch while the engine is starting or playing.
+  elseif now>e.expires or not M.valid(e) then
    local why=now>e.expires and 'expired' or 'cancelled';M.metrics[why]=M.metrics[why]+1;report(e,why=='cancelled' and e.invalidReason or why);table.remove(M.queue,i)
   elseif e.nextTry and now<e.nextTry then
    M.metrics.retrySkipped=(M.metrics.retrySkipped or 0)+1
@@ -110,7 +112,7 @@ function M.flush()
  local spoken={}
  for _,e in ipairs(candidates)do
  local busy=false
- for _,active in ipairs(V.client.active)do if active.player==e.player and (active.preview or not require('CSV/Priority').interrupt(e.rank,active.priority or 1)) then busy=true;break end end
+ for _,active in ipairs(V.client.active)do if active.player==e.player and (active.preview or not require('CSV/Priority').interrupt(e.rank,active.priority or 1) and not require('CSV/Priority').startle(e.group,e.alert,active.priority or 1,active.preview,active.group)) then busy=true;break end end
  if not spoken[e.player] and not busy then
   e.nextTry=now+250
   M.dispatching=true
@@ -119,8 +121,23 @@ function M.flush()
   if not ok then report(e,'dispatch_error');for i=#M.queue,1,-1 do if M.queue[i]==e then table.remove(M.queue,i)end end;error(err)end
   local attempt=V.client.lastAttempt[e.player]
   if require('CSV/Pending').accepted(attempt,e.group) then
-   M.accept(e);M.metrics.played=M.metrics.played+1;spoken[e.player]=true;report(e,'accepted')
-   for i=#M.queue,1,-1 do if M.queue[i]==e then table.remove(M.queue,i);break end end
+   local function accept()
+    M.accept(e);M.metrics.played=M.metrics.played+1;report(e,'started')
+    for i=#M.queue,1,-1 do if M.queue[i]==e then table.remove(M.queue,i);break end end
+   end
+   spoken[e.player]=true
+   local entry=attempt.playbackEntry
+   if entry and not entry.started then
+    e.playback=entry;e.tries=(e.tries or 0)+1
+    local started,failed=entry.onStarted,entry.onFailed
+    entry.onStarted=function() if started then started() end;accept() end
+    entry.onFailed=function(reason)
+     if failed then failed(reason) end
+     e.nextTry=V.now()+250
+     if e.tries>=2 or (reason~='start_timeout' and reason~='ended_before_start' and reason~='emitter_check_error') then e.expires=0 end
+     report(e,'start_failed_'..tostring(reason))
+    end
+   else accept() end
   end
  end end
 end

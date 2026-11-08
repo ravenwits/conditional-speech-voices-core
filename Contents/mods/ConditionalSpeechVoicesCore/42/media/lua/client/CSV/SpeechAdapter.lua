@@ -82,6 +82,11 @@ local function generateSpeechFrom(player,group,intensity,maximum,...)
     local result={pcall(generate,player,group,intensity,maximum,...)}
     if oldCooldown and (ownedEvent or attempt.outcome~='played') then player:getModData().cs_lastspoke=oldCooldown end
     if attempt.playbackFailed then player:getModData().cs_lastspoke=sourceLast end
+    local entry=attempt.playbackEntry
+    if entry and not entry.started then
+        local assigned=player:getModData().cs_lastspoke
+        entry.onFailed=function() if player:getModData().cs_lastspoke==assigned then player:getModData().cs_lastspoke=sourceLast end end
+    end
     if supplied then phraseSets.Phrases[group]=originalPhrases end
     C.contexts[player]=previous
     attempt.info=attempt.info or {line=line and line.id or '-'}

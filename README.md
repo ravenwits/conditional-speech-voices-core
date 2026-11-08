@@ -6,7 +6,7 @@ Core handles speech rules, playback, settings and debug reports. It requires [Co
 
 ## Status
 
-Version 0.41.2. Single-player beta, tested with Project Zomboid 42.21.0. Multiplayer is not yet verified. The latest character-specific pitch setting still needs a live save/reload check.
+Version 0.42.3. Single-player beta, tested with Project Zomboid 42.21.0. Multiplayer is not yet verified. The latest character-specific pitch setting still needs a live save/reload check.
 
 ## Install
 
@@ -18,7 +18,7 @@ Mod ID: `Conditional-Speech-Voices-Core`
 
 [Open a bug report](https://github.com/ravenwits/conditional-speech-voices-core/issues/new?template=bug-report.yml). English and Turkish reports are welcome.
 
-Enable Speech Debug in Mod Options, reproduce the issue, then use **Debug > Speech > Save report** from the world right-click menu. Attach `Zomboid/Lua/CSV-report.txt` and relevant `console.txt` lines. Remove private information before posting. If export fails, explain that in the form.
+Enable Speech Debug in Mod Options, reproduce the issue, then use **Debug > Conditional Voices > Save report** from the world right-click menu. Attach `Zomboid/Lua/CSV-report.txt` and relevant `console.txt` lines. Remove private information before posting. If export fails, explain that in the form.
 
 ## Development
 

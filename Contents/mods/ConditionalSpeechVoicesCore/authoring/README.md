@@ -1,8 +1,8 @@
-# Voice framework 0.42.0
+# Voice framework 0.42.3
 
 Core owns observation, priorities, interruption, repetition, stealth, playback and networking.
 Packs own voice identities, localized lines, acting, audio, captions and measured calibration.
-Every official voice implements contract 1 with 1,494 semantic slots and 46 native event mappings.
+Every official voice implements contract 1. The bundled voice-contract-v1.json defines the current semantic slots and native event mappings.
 
 Bob, Kate, Alp and Mujde use the same native playback, pitch and Q caption code.
 Saved built-in voices are resolved through provider-declared builtinPrefix bindings.

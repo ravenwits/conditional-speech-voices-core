@@ -8,7 +8,7 @@ local function bank(id,language,revision,voices)
  for _,voice in ipairs(voices)do b.data.clips[voice.id..'_Thirst_1']={sound='Example_'..voice.id..'_Thirst_1',duration=1000}end
  registry.register('Test'..language,{schema=1,bank=b,voices=voices})
 end
-bank('csv.en','EN','english-2',{{id='bob',name='Bob',vanilla=true},{id='kate',name='Kate',vanilla=true}})
+bank('csv.en','EN','english-2',{{id='bob',name='Bob',vanilla=true,builtinPrefix='VoiceMale'},{id='kate',name='Kate',vanilla=true,builtinPrefix='VoiceFemale'}})
 bank('csv.tr','TR','turkish-9',{{id='alp',name='Alp',prefix='VoiceCSVAlpP',base='VoiceMale',preview='Thirst_1'},{id='mujde',name='Mujde',prefix='VoiceCSVMujdeP',base='VoiceFemale',preview='Thirst_1'}})
 local mode='both'
 local clock=100000;getTimestampMs=function()return clock end
@@ -18,6 +18,7 @@ assert(V.languageSupported())
 local en=mode~='tr';local tr=mode~='en'
 local sounds={}
 local emitter={playSoundImpl=function(_,name)sounds[#sounds+1]=name;return #sounds end,setVolume=function()end,setPitch=function()end,setPos=function()end,set3D=function()end,tick=function()end,isPlaying=function()return false end}
+emitter.playVocals=emitter.playSoundImpl
 local function actor(id,voice,localPlayer,noData)
  local definition=V.pack.voices[voice]
  local prefix=voice=='bob' and 'VoiceMale' or voice=='kate' and 'VoiceFemale' or definition and definition.prefix..'100' or 'VoiceCSVAlpP100'
@@ -70,7 +71,7 @@ C.active={};C.seen={};C.seenCount=0
 local self={version=1,actor=0,seq=77,voice='bob',line='Thirst_1',pitch=0,radius=10,pack='csv.en',packRevision=V.bank('bob').revision}
 assert(C.play(self,listener),'local prediction starts once')
 local count=#sounds
-assert(sounds[count]=='Example_bob_Thirst_1_Self','local speaker uses 2D variant')
+assert(sounds[count]=='Example_bob_Thirst_1','local speaker uses character vocals')
 recipients={listener};outgoing={}
 assert(S.receive('CSV','speak',listener,self))
 assert(#outgoing==1 and not C.play(outgoing[1].p,listener) and #sounds==count,'local server echo does not duplicate prediction')

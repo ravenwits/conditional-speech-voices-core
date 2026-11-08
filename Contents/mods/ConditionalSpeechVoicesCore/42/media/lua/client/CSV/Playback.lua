@@ -8,6 +8,7 @@ local function stop(entry)
     if entry.emitter and entry.handle then pcall(entry.emitter.stopSoundLocal,entry.emitter,entry.handle) end
 end
 function C.cancel(entry,reason,broadcast)
+    if not entry.started and entry.onFailed then entry.onFailed(reason) end
     Trace.step(entry.trace,'ended',reason,{started=entry.started~=nil,elapsed=V.now()-entry.queued})
     entry.finishedReason=reason
     stop(entry)
@@ -79,6 +80,7 @@ function C.sweep()
         if not e.started and now-e.queued<5000 and ok and playing and not pending then
             Trace.step(e.trace,'engine_active','engine_observed')
             e.started=now;e.deadline=now+e.duration+300
+            if e.onStarted then e.onStarted();e.onStarted=nil end
             print('[CSV] playback observed line='..e.line..' handle='..tostring(e.handle)..' (engine active; not proof of audibility)')
         end
         local reason
@@ -146,7 +148,7 @@ function C.play(p,actor,localPreview,details)
     local priority=V.packetPriority(p)
     for i=#C.active,1,-1 do local e=C.active[i]
         if e.player==actor then
-            if not localPreview and not e.preview and require('CSV/Priority').interrupt(priority,e.priority or 1) then C.cancel(e,'urgent_interrupt',actor:isLocalPlayer())
+            if not localPreview and not e.preview and (require('CSV/Priority').interrupt(priority,e.priority or 1) or require('CSV/Priority').startle(details.group,details.nativeAlert,e.priority or 1,e.preview,e.group)) then C.cancel(e,'urgent_interrupt',actor:isLocalPlayer())
             else return false,'already_speaking' end
         end
     end
@@ -186,7 +188,7 @@ function C.play(p,actor,localPreview,details)
     if self2d then emitter:tick()end
     Trace.step(details.trace,'queued','engine_handle',{line=p.line,voice=p.voice,handle=handle,private=details.private==true,preview=localPreview==true and not details.private,gain=finalGain,requestedGain=requestedGain,peakLimited=finalGain+0.00001<requestedGain})
     C.active[#C.active+1]={self2d=self2d,originX=actor:getX(),originY=actor:getY(),originZ=actor:getZ(),trace=details.trace,player=actor,emitter=emitter,handle=handle,baseVolume=baseVolume,balance=balance,contextFacts=details.contextFacts,ownVoice=ownVoice,line=p.line,priority=priority,preview=localPreview==true and not details.private,private=details.private,allowStealth=p.allowStealth==true and V.allowStealth(p.line),exposed=p.exposed==true and p.radius<=require('CSV/Hearing').quietRadius,engaged=p.engaged==true and p.radius<=12,packet=p,queued=now,duration=clip.duration/(V.config.followPitch and V.pitchMultiplier(p.pitch,p.voice) or 1),deadline=now+clip.duration/(V.config.followPitch and V.pitchMultiplier(p.pitch,p.voice) or 1)+300}
-    return true,'played',{line=p.line,delivery=V.delivery(p.voice,p.line),gain=finalGain,pitch=p.pitch}
+    return true,'played',{line=p.line,delivery=V.delivery(p.voice,p.line),gain=finalGain,pitch=p.pitch},C.active[#C.active]
 end
 function C.emit(player,ctx,volume)
     if not V.finite(volume) or volume<=0 then return end
@@ -195,11 +197,14 @@ function C.emit(player,ctx,volume)
     local p={version=1,pack=V.bank(ctx.voice).id,packRevision=V.bank(ctx.voice).revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,line=ctx.line.id,
         voice=ctx.voice,pitch=V.pitch(player),radius=math.min(V.config.maxDistance,volume),priority=ctx.policy.priority,allowStealth=ctx.policy.allowStealth,exposed=ctx.policy.exposed,engaged=ctx.policy.engaged}
     Trace.step(ctx.trace,'play_requested','spoken',{line=p.line,radius=p.radius,noiseRadius=ctx.policy.noiseRadius})
-    local played,reason,info=C.play(p,player,false,{trace=ctx.trace})
+    local played,reason,info,entry=C.play(p,player,false,{trace=ctx.trace,group=ctx.group,nativeAlert=ctx.facts.nativeAlert})
+    ctx.playbackEntry=entry
+    if entry then entry.group=ctx.group end
     if not played then Trace.step(ctx.trace,'blocked',reason or 'rejected')end
     ctx.outcome=played and 'played' or (reason or 'rejected')
     ctx.info=info or {line=p.line,delivery=V.delivery(p.voice,p.line),pitch=p.pitch}
     ctx.info.upstreamVolume=ctx.upstreamVolume;ctx.info.sourceVolume=volume;ctx.info.volumeBlock=ctx.volumeBlock;ctx.info.intensity=ctx.intensity
+    local function commit()
     if played and (ctx.group=='Panic' or ctx.group=='PanicCallback' or ctx.group=='Threat') then
         C.lastThreat[player]=V.now();C.lastThreatPhase[player]=(ctx.facts.panic or 0)>=3 and 'high' or ((ctx.facts.panic or 0)>0 and 'tense' or 'calm')
     end
@@ -211,8 +216,19 @@ function C.emit(player,ctx,volume)
         if (ctx.policy.priority or 1)==1 then
             if require('CSV/LootRules').groups[ctx.group] or ctx.group=='FoundLoot' then C.lastLoot[player]=V.now() else C.lastOrdinary[player]=V.now() end
         end
-        if isClient() then sendClientCommand(player,'CSV','speak',p) end
     end
+    end
+    if entry then
+        entry.onStarted=commit
+        local ok,playing=pcall(entry.emitter.isPlaying,entry.emitter,entry.handle)
+        local pending=false
+        if entry.emitter.hasSoundsToStart then local checked,value=pcall(entry.emitter.hasSoundsToStart,entry.emitter);pending=not checked or value==true end
+        if ok and playing and not pending then
+            entry.started=V.now();entry.deadline=entry.started+entry.duration+300
+            Trace.step(entry.trace,'engine_active','engine_observed');entry.onStarted();entry.onStarted=nil
+        end
+    end
+    if played and isClient() then sendClientCommand(player,'CSV','speak',p) end
     return played
 end
 end
