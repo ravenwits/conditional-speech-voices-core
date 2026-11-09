@@ -3,6 +3,10 @@ local N={history=setmetatable({},{__mode='k'}),seconds={
  Hypothermia=180,Hyperthermia=180,Wet=240,Windchill=180,HeavyLoad=180,HasACold=240,
  Sick=180,SickFromFood=180,NoxiousSmell=180,Uncomfortable=180,Stress=180,Unhappy=240,
  Angry=120,Bored=300,Drunk=240,Agoraphobic=180,Claustrophobic=180}}
+function N.ordinaryInterval(group,frequency)
+ if group and group:match('^Relief') then return 10000 end
+ return ({[0]=60000,[1]=30000,[2]=10000})[frequency] or 30000
+end
 function N.interval(group,level,frequency)
  if group=='GunJammed' then return 15000 end
  local base=N.seconds[group];if not base then return nil end

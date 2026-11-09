@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "Spelstem",
   "UI_CSV_Short_ModVoice": "Modstem",
   "UI_CSV_PitchOffset": "Stemhoogte aanpassen",
-  "UI_CSV_PitchOffsetHelp": "De werkelijke stemhoogte van het huidige personage wordt automatisch geladen. Toepassen wijzigt alleen dit personage. Zonder personage uitgeschakeld."
+  "UI_CSV_PitchOffsetHelp": "De werkelijke stemhoogte van het huidige personage wordt automatisch geladen. Toepassen wijzigt alleen dit personage. Zonder personage uitgeschakeld.",
+  "UI_CSV_Short_Compatibility": "Alleen compatibiliteit - niet beoordeeld",
+  "UI_CSV_Short_SelectionOnly": "Controleert alleen de keuze. Afspelen wordt apart weergegeven."
 }

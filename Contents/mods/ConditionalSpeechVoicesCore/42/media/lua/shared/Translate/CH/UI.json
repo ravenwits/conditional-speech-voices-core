@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "遊戲聲音",
   "UI_CSV_Short_ModVoice": "模組聲音",
   "UI_CSV_PitchOffset": "聲調調整",
-  "UI_CSV_PitchOffsetHelp": "自動讀取目前存檔角色的實際音調。套用僅更改此角色。沒有角色時停用。"
+  "UI_CSV_PitchOffsetHelp": "自動讀取目前存檔角色的實際音調。套用僅更改此角色。沒有角色時停用。",
+  "UI_CSV_Short_Compatibility": "僅相容性 - 不計成敗",
+  "UI_CSV_Short_SelectionOnly": "僅檢查台詞選擇。播放狀態另行顯示。"
 }

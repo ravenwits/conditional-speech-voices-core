@@ -16,9 +16,10 @@ local function hasShoutItem(player)
 end
 
 function M.call(player)
+    if player and player.isDead and player:isDead() then return true end
     if not require('CSV/NativeVoice').ready(player) then return false end
     M.metrics.requested=M.metrics.requested+1
-    if require('CSV/NativeVoice').painActive(player) then M.metrics.blocked=M.metrics.blocked+1;return true end
+    if not require('CSV/VoiceOwnership').calloutAllowed(player) then M.metrics.blocked=M.metrics.blocked+1;return true end
     local sneaking = player:isSneaking()
     if not sneaking and hasShoutItem(player) then return false end
     if not player:isCanShout() then return true end
@@ -36,6 +37,7 @@ function M.call(player)
     local radius = sneaking and (mega and 18 or 6) or (mega and 90 or 30)
     local handle=player:transmitPlayerVoiceSound('CSV'..id)
     if not handle or handle==0 then M.metrics.failed=M.metrics.failed+1;return true end
+    M.stopSpeech(player)
     recent[player] = id
     local entry={voice=V.voice(player),id=id,text=bank.lines[id],radius=radius,sneaking=sneaking,megaphone=mega==true,at=getTimestampMs(),handle=handle,state='queued'}
     M.history[#M.history+1]=entry
@@ -45,6 +47,30 @@ function M.call(player)
     addSound(player,player:getX(),player:getY(),player:getZ(),radius,radius)
     player:playEmote('shout')
     return true
+end
+
+function M.stopSpeech(player)
+    require('CSV/VoiceOwnership').claimCallout(player)
+end
+
+function M.busy(player)
+    if not player then return false end
+    M.observe(player)
+    if playing[player] then return true end
+    if not require('CSV/NativeVoice').ready(player) then return false end
+    local emitter=player:getEmitter();local prefix=player:getDescriptor():getVoicePrefix()
+    if not emitter or not prefix then return false end
+    -- Includes engine-owned calls, special shout items and remote characters.
+    for _,suffix in ipairs({'ShoutHey','ShoutMegaphoneHey','WhisperHey','WhisperPsst','WhisperMegaphoneHey','WhisperMegaphonePsst'})do
+        if emitter:isPlaying(prefix..suffix) then return true end
+    end
+    local native=V.bank(V.voice(player)).native
+    for _,source in ipairs({'ShoutHey','WhisperHey'})do
+        for _,id in ipairs(native.replacements[source] or {})do
+            if emitter:isPlaying(prefix..'CSV'..id) then return true end
+        end
+    end
+    return false
 end
 
 function M.interrupt(player)
@@ -59,6 +85,7 @@ end
 function M.observe(player)
     local entry=playing[player]
     if not entry then return end
+    if player.isDead and player:isDead() then M.interrupt(player);entry.state='actor_dead';return end
     if require('CSV/NativeVoice').painActive(player) then M.interrupt(player);return end
     local emitter=player:getEmitter()
     if not emitter then entry.state='emitter_unavailable';playing[player]=nil;return end

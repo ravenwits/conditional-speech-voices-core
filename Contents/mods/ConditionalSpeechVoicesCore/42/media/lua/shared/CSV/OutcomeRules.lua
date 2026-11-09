@@ -20,6 +20,10 @@ function R.classify(e)
   if not R.ready(a) and R.ready(b) then return 'WeaponReady' end
  elseif e.kind=='bandage' and a.bandaged==false and b.bandaged==true then return 'BandageDone'
  elseif e.kind=='disinfect' and type(a.alcohol)=='number' and type(b.alcohol)=='number' and b.alcohol>a.alcohol then return 'DisinfectDone'
+ elseif e.kind=='window' and a.open==false and b.open==false and b.destroyed~=true then
+  if b.blocked==true then return 'DoorBlocked' end
+  if b.locked==true and e.nativeSound=='locked' then return 'DoorLocked' end
+ elseif e.kind=='car_door' and a.open==false and b.open==false and b.locked==true then return 'DoorLocked'
  elseif e.kind=='door' and a.open==false and b.open==false then
   if b.blocked==true then return 'DoorBlocked' end
   if b.locked==true then return 'DoorLocked' end
@@ -27,5 +31,9 @@ function R.classify(e)
   if b.battery==0 then return 'BatteryDead' end
   return 'EngineFailed'
  elseif e.kind=='fuel' and b.running==true and type(b.fuel)=='number' and b.fuel>=0 and b.fuel<15 then return 'FuelLow' end
+end
+-- Only the object-neutral blocked-passage line fits a barricaded window.
+function R.allowedLine(id,e)
+ return not (e and e.kind=='window' and R.classify(e)=='DoorBlocked') or id=='DoorBlocked_3'
 end
 return R

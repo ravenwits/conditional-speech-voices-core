@@ -2,7 +2,6 @@ local M={}
 local V=require 'CSV/Core'
 local A=require 'CSV/Actors'
 local call=A.call
-local Policy=require 'CSV/PsychologyPolicy'
 function M.update(P,p,s,f,now)
  local visible=0
  local function person(body)

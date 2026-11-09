@@ -2073,6 +2073,26 @@
         "id": "KillAngry_3",
         "group": "KillAngry",
         "text": "Son of a bitch!"
+      },
+      "CriticalWound_1": {
+        "id": "CriticalWound_1",
+        "group": "CriticalWound",
+        "text": "That really hurt... I need to get somewhere safe."
+      },
+      "CriticalWound_2": {
+        "id": "CriticalWound_2",
+        "group": "CriticalWound",
+        "text": "I'm hurt bad. I can't keep going like this."
+      },
+      "CriticalFading_1": {
+        "id": "CriticalFading_1",
+        "group": "CriticalFading",
+        "text": "No... not here. I don't want to die here."
+      },
+      "CriticalFading_2": {
+        "id": "CriticalFading_2",
+        "group": "CriticalFading",
+        "text": "Come on... stay with it. Just a little longer."
       }
     }
   },
@@ -4253,6 +4273,26 @@
         "id": "Whisper_Panic_1",
         "group": "Panic",
         "text": "Easy. Keep breathing."
+      },
+      "CriticalWound_1": {
+        "id": "Whisper_CriticalWound_1",
+        "group": "CriticalWound",
+        "text": "That really hurt... I need to get somewhere safe."
+      },
+      "CriticalWound_2": {
+        "id": "Whisper_CriticalWound_2",
+        "group": "CriticalWound",
+        "text": "I'm hurt bad. I can't keep going like this."
+      },
+      "CriticalFading_1": {
+        "id": "Whisper_CriticalFading_1",
+        "group": "CriticalFading",
+        "text": "No... not here. I don't want to die here."
+      },
+      "CriticalFading_2": {
+        "id": "Whisper_CriticalFading_2",
+        "group": "CriticalFading",
+        "text": "Come on... stay with it. Just a little longer."
       }
     }
   },
@@ -10636,8 +10676,17 @@
     "NeedPanic_4": "I think I am gonna die. I can barely breathe.",
     "NeedBored_4": "I am going out of my mind. Gotta find something to do.",
     "NeedUnhappy_2": "I miss having someone to come home to.",
-    "NeedUnhappy_4": "Some days I do not even know why I get out of bed."
+    "NeedUnhappy_4": "Some days I do not even know why I get out of bed.",
+    "CriticalWound_1": "That really hurt... I need to get somewhere safe.",
+    "Whisper_CriticalWound_1": "That really hurt... I need to get somewhere safe.",
+    "CriticalWound_2": "I'm hurt bad. I can't keep going like this.",
+    "Whisper_CriticalWound_2": "I'm hurt bad. I can't keep going like this.",
+    "CriticalFading_1": "No... not here. I don't want to die here.",
+    "Whisper_CriticalFading_1": "No... not here. I don't want to die here.",
+    "CriticalFading_2": "Come on... stay with it. Just a little longer.",
+    "Whisper_CriticalFading_2": "Come on... stay with it. Just a little longer."
   },
   "contract": 1,
-  "needTiers": 1
+  "needTiers": 1,
+  "criticalHealth": 1
 }

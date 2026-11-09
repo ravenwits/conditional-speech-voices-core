@@ -4,7 +4,7 @@ local R=require 'CSV/PsychologyRules'
 local Policy=require 'CSV/PsychologyPolicy'
 local call=require('CSV/Actors').call
 function Q.update(P,p,s,f,now)
- table.sort(s.queue,function(a,b)return require('CSV/Priority').before(a,b,R.priority,function(e)return e.at end)end)
+ require('CSV/Sort').sort(s.queue,function(a,b)return require('CSV/Priority').before(a,b,R.priority,function(e)return e.at end)end)
  for i=#s.queue,1,-1 do
   local e=s.queue[i]
   -- A kill that leaves known-clear surroundings is an aftermath, not an in-combat

@@ -8,7 +8,7 @@ function R.transitions(before,after)
  for group,rule in pairs(require('CSV/RecoveryRules'))do
   if type(before[rule.field])=='number' and before[rule.field]>=rule.threshold and after[rule.field]==0 then events[#events+1]=group end
  end
- table.sort(events)
+ require('CSV/Sort').sort(events)
  return events
 end
 function R.observe(player,s)
@@ -33,7 +33,7 @@ function R.observe(player,s)
  state.before=s
  local pending={};for group in pairs(state.pending)do pending[#pending+1]=group end
  local priority={ReliefBleeding=10,ReliefPain=9,ReliefThirst=8,ReliefHunger=7,ReliefThreat=6,ReliefEndurance=5,ReliefRest=4}
- table.sort(pending,function(a,b)
+ require('CSV/Sort').sort(pending,function(a,b)
   local x,y=state.pending[a].at,state.pending[b].at
   if x~=y then return x>y end
   if (priority[a] or 1)~=(priority[b] or 1) then return (priority[a] or 1)>(priority[b] or 1)end

@@ -1,11 +1,7 @@
 local V=require 'CSV/Core'
 local Speech=require 'ConditionalSpeech_Core'
-local phraseSets=require 'ConditionalSpeech_PhraseSet'
 local State=require 'CSV/State'
-local Delivery=require 'CSV/Delivery'
 local Extras=require 'CSV/Extras'
-local NeedTiming=require 'CSV/NeedTiming'
-local Evidence=require 'CSV/ThreatEvidence'
 local extraGroups={AmmoCount=true,ChamberEmpty=true,Threat=true,AcutePain=true,ReliefThreat=true,ReliefBleeding=true,ReliefEndurance=true,ReliefThirst=true,NoxiousSmell=true,Uncomfortable=true,CantSprint=true,Angry=true}
 for group in pairs(require('CSV/RecoveryRules'))do extraGroups[group]=true end
 for group in pairs(require('CSV/LootRules').groups)do extraGroups[group]=true end
@@ -14,9 +10,7 @@ for group in pairs(require('CSV/ReloadRules').groups)do extraGroups[group]=true 
 extraGroups.Psychology=true;extraGroups.Startle=true
 if Speech._csvInstalled then return end
 local C={active={},seen={},seenCount=0,sequence=0,contexts=setmetatable({},{__mode='k'}),errors=0}
-C.lastEngagement=setmetatable({},{__mode='k'})
-C.lastThreat=setmetatable({},{__mode='k'})
-C.lastThreatPhase=setmetatable({},{__mode='k'})
+C.gameReady=false
 C.lastOrdinary=setmetatable({},{__mode='k'})
 C.lastLoot=setmetatable({},{__mode='k'})
 C.lastAttempt=setmetatable({},{__mode='k'})
@@ -82,7 +76,7 @@ function C.previewCandidates(voice)
     if V.extended(voice) and require('CSV/Whispers').approved then for _,line in pairs(require('CSV/Whispers').catalog)do if V.clip(voice,line.id) then ids[#ids+1]=line.id end end end
     if V.extended(voice) and require('CSV/Expressions').approved then for _,entry in pairs(require('CSV/Expressions').catalog)do if V.clip(voice,entry.id) then ids[#ids+1]=entry.id end end end
     local unique,seen={},{};for _,id in ipairs(ids)do if not seen[id]then unique[#unique+1]=id;seen[id]=true end end
-    table.sort(unique)
+    require('CSV/Sort').sort(unique)
     return unique
 end
 local function randomPreview(voice)
@@ -104,23 +98,6 @@ function C.contextPreview(player,voice,group,level,facts)
     if decision.mode~='spoken' then trace.step(record,'blocked',decision.reason);C.lastPreviewReason=decision.reason;return false,decision.reason,line end
     local ok,reason=C.preview(player,line.id,voice,decision.radius,nil,{contextFacts=facts,trace=record})
     return ok,reason,line
-end
-function C.randomContextPreview(player,voice)
-    voice=voice or V.voice(player);local facts=State.capture(player);local candidates={}
-    local groups={}
-    for group,level in pairs(facts.levels or {})do if level>0 then groups[group]=level end end
-    if (facts.near or 0)>0 then groups[(facts.panic or 0)>=3 and 'Panic' or 'Threat']=math.max(1,facts.panic or 0) end
-    if facts.fire then groups.Panic=4 end
-    if facts.acute then groups.AcutePain=4 end
-    local hasSituation=false;for _ in pairs(groups)do hasSituation=true;break end
-    if not hasSituation and facts.near==0 and facts.visible==0 and facts.recentThreat==false then groups.Explore=1 end
-    for group,level in pairs(groups)do
-        local line,decision=C.plan(player,voice,group,level,4,facts,C.preferences())
-        if line and decision.mode=='spoken' and V.clip(voice,line.id) then candidates[#candidates+1]={line=line,decision=decision}end
-    end
-    if #candidates==0 then C.lastPreviewReason='no_audible_recording_for_current_state';print('[CSV] contextual preview silent: '..C.lastPreviewReason);return false,C.lastPreviewReason end
-    local choice=candidates[ZombRand(#candidates)+1]
-    return C.preview(player,choice.line.id,voice,choice.decision.radius,nil,{contextFacts=facts})
 end
 -- Local listening preview: no server message, subtitle, cooldown or zombie noise.
 function C.preview(player,lineID,selectedVoice,previewRadius,previewPitch,details)
@@ -158,11 +135,9 @@ local function onContextMenu(playerIndex,context,worldobjects,test)
     if not player or not player:isLocalPlayer() or player:isDead() then return end
     local voice=V.voice(player)
     local submenu=require('CSV/DebugMenu').speech(context)
+    submenu:addOption(getText('UI_CSV_SaveReport'),nil,Debug.export)
     require('CSV/DebugMenu').health(submenu,player)
-    if not voice or #C.previewCandidates(voice)==0 then
-        submenu:addOption(getText('UI_CSV_SaveReport'),nil,Debug.export)
-        return
-    end
+    if not voice or not V.pack.voiceBanks[voice] then return end
     submenu:addOption(getText('UI_CSV_Scenarios'),player,function(p)require('CSV/Scenarios').open(p)end)
     submenu:addOption(getText('UI_CSV_Pitch'),player,function(p)require('CSV/Pitch').open(p)end)
     submenu:addOption(getText('UI_CSV_Audition'),player,function(p)require('CSV/Audition').open(p)end)
@@ -178,7 +153,6 @@ local function onContextMenu(playerIndex,context,worldobjects,test)
         local item=statsMenu:addOption(g.name..': '..g.attempts..' / '..g.played,nil,nil)
         item.notAvailable=true
     end
-    submenu:addOption(getText('UI_CSV_SaveReport'),nil,Debug.export)
 end
 Events.OnFillWorldObjectContextMenu.Add(onContextMenu)
 Events.OnServerCommand.Add(onServer)
@@ -188,7 +162,7 @@ if Events.OnTickEvenPaused then Events.OnTickEvenPaused.Add(function()
     local ok,err=pcall(function()C.pauseClock();C.observeSettings()end)
     if not ok then C.errors=C.errors+1;diagnostic('settings-monitor-error',err)end
 end)end
-if Events.OnGameStart then Events.OnGameStart.Add(function()require('CSV/Observers').install()end) end
+if Events.OnGameStart then Events.OnGameStart.Add(function()C.gameReady=true;require('CSV/Observers').install()end) end
 return C
 
 

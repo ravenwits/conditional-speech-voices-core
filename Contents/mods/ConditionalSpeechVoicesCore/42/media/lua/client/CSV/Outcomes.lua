@@ -11,6 +11,11 @@ local function eligible(p)
  return p and call(p,'isLocalPlayer')==true and call(p,'isDead')==false and V.config.enabled and V.extended(V.voice(p)) and require('CSV/Core').languageSupported()
 end
 function O.snapshot(kind,obj,p)
+ if kind=='car_door' then
+  local door=call(obj,'getDoor')
+  return {open=call(door,'isOpen'),locked=call(door,'isLocked'),broken=call(door,'isLockBroken')}
+ end
+ if kind=='window' then return {open=call(obj,'IsOpen'),locked=call(obj,'isLocked')==true or call(obj,'isPermaLocked')==true,blocked=call(obj,'isBarricaded')==true,destroyed=call(obj,'isDestroyed')} end
  if kind=='trait' then return require('CSV/TraitReactions').snapshot(p) end
  if kind=='darkness' then return require('CSV/Darkness').snapshot(p) end
  if kind=='vehicle_combat' then return {occupied=call(p,'getVehicle')==obj} end
@@ -25,7 +30,12 @@ function O.snapshot(kind,obj,p)
 end
 function O.begin(kind,p,obj)
  if not eligible(p) or not obj then return end
- return {kind=kind,player=p,obj=obj,before=O.snapshot(kind,obj,p),at=V.now()}
+ local e={kind=kind,player=p,obj=obj,before=O.snapshot(kind,obj,p),at=V.now()}
+ if kind=='car_door' then
+  local car=call(obj,'getVehicle');local x,y=call(car,'getX'),call(car,'getY')
+  if type(x)=='number' and type(y)=='number' then e.offsetX=call(p,'getX')-x;e.offsetY=call(p,'getY')-y end
+ end
+ return e
 end
 function O.finish(e)
  if not e or e.cancelled or e.finished then return end
@@ -53,7 +63,14 @@ function O.valid(e)
  if e.kind:match('^vehicle_') then return require('CSV/Vehicles').valid(e) end
  if e.kind=='gun' then return call(p,'getPrimaryHandItem')==e.obj end
  if e.kind=='start' or e.kind=='fuel' then return call(p,'getVehicle')==e.obj and call(e.obj,'isDriver',p)==true end
- if e.kind=='door' then local d=call(p,'DistTo',call(e.obj,'getX'),call(e.obj,'getY'));return type(d)=='number' and d<=3 end
+ if e.kind=='car_door' then
+  local car=call(e.obj,'getVehicle');local x,y=call(car,'getX'),call(car,'getY')
+  if type(x)~='number' or type(y)~='number' then return false end
+  -- Keep the attempted door's position relative to the vehicle, including long vans.
+  local d=call(p,'DistTo',x+(e.offsetX or 0),y+(e.offsetY or 0))
+  return type(d)=='number' and d<=3
+ end
+ if e.kind=='door' or e.kind=='window' then local d=call(p,'DistTo',call(e.obj,'getX'),call(e.obj,'getY'));return type(d)=='number' and d<=3 end
  return true
 end
 function O.update()
@@ -72,10 +89,10 @@ function O.update()
    if group then
     if e.kind=='start' then require('CSV/Vehicles').failed(e) end
     O.queue(e,group);table.remove(O.watch,i)
-   elseif e.kind=='door' or e.kind=='start' and e.after.running==true then table.remove(O.watch,i) end
+   elseif e.kind=='door' or (e.kind=='window' or e.kind=='car_door') and e.after.open==true or e.kind=='start' and e.after.running==true then table.remove(O.watch,i) end
   end
  end
- table.sort(O.pending,function(a,b)return require('CSV/Priority').before(a,b,function(e)return require('CSV/Priority').rank(R.urgent(e.group))end,function(e)return e.queued end)end)
+ require('CSV/Sort').sort(O.pending,function(a,b)return require('CSV/Priority').before(a,b,function(e)return require('CSV/Priority').rank(R.urgent(e.group))end,function(e)return e.queued end)end)
  for i=#O.pending,1,-1 do
   local e=O.pending[i];local p=e.player;local s=O.players[p]
   e.after=O.snapshot(e.kind,e.obj,p)
@@ -128,13 +145,16 @@ function O.nativeDoor(p)
  local s=O.players[p] or {last={}};O.players[p]=s
  local door=call(p,'getContextDoorOrWindowOrWindowFrame',call(p,'getDir'))
  local prefix=call(door,'getSoundPrefix');local emitter=call(p,'getEmitter')
+ local window=call(door,'isPermaLocked')~=nil
+ local kind=window and 'window' or 'door'
  local token
- if type(prefix)=='string' and call(door,'IsOpen')==false then
+ if window and call(door,'IsOpen')==false and call(p,'getVariableBoolean','bOpenWindow')==true and (call(emitter,'isPlaying','WindowIsLocked')==true or call(emitter,'isPlaying','BreakLockOnWindow')==true) then token='locked'
+ elseif type(prefix)=='string' and call(door,'IsOpen')==false then
   if call(emitter,'isPlaying',prefix..'Blocked')==true then token='blocked'
   elseif call(emitter,'isPlaying',prefix..'Locked')==true then token='locked' end
  end
  if token and (s.nativeDoor~=door or s.nativeToken~=token) then
-  local e=O.begin('door',p,door);e.completed=true;e.after=O.snapshot('door',door,p);e.nativeSound=token
+  local e=O.begin(kind,p,door);e.completed=true;e.after=O.snapshot(kind,door,p);e.nativeSound=token
   local group=R.classify(e);if group then O.queue(e,group)end
  end
  s.nativeDoor=token and door or nil;s.nativeToken=token
@@ -166,9 +186,29 @@ function O.hook(path,name,kind,key)
  end)
  O.hooks[name]=installed
 end
+function O.installVehicleLock()
+ local loaded=pcall(require,'Vehicles/TimedActions/ISUnlockVehicleDoor')
+ local class=_G.ISUnlockVehicleDoor
+ if not loaded or not class or not class.start then return false end
+ return require('CSV/Connections').install('outcome.vehicle-lock',function(t)
+  local start=class.start
+  t:replace(class,'start',function(self,...)
+   local e;safe(function()e=O.begin('car_door',self.character,self.part)end)
+   local result={start(self,...)}
+   safe(function()
+    if e and not isClient() and not isServer() then
+     e.after=O.snapshot(e.kind,e.obj,e.player);e.completed=true;e.nativeSound='unlock_failed'
+     local group=R.classify(e);if group then O.queue(e,group)end
+    end
+   end)
+   return unpack(result)
+  end)
+ end)
+end
 function O.install()
  if O.installed then return true end
- for _,row in ipairs({{'TimedActions/ISRackFirearm','ISRackFirearm','gun','gun'},{'TimedActions/ISReloadWeaponAction','ISReloadWeaponAction','gun','gun'},{'TimedActions/ISInsertMagazine','ISInsertMagazine','gun','gun'},{'Vehicles/TimedActions/ISStartVehicleEngine','ISStartVehicleEngine','start'}, {'TimedActions/ISApplyBandage','ISApplyBandage','bandage','bodyPart'},{'TimedActions/ISDisinfect','ISDisinfect','disinfect','bodyPart'},{'TimedActions/ISOpenCloseDoor','ISOpenCloseDoor','door','item'}})do O.hook(unpack(row))end
+ O.hooks.ISUnlockVehicleDoor=O.installVehicleLock()
+ for _,row in ipairs({{'TimedActions/ISRackFirearm','ISRackFirearm','gun','gun'},{'TimedActions/ISReloadWeaponAction','ISReloadWeaponAction','gun','gun'},{'TimedActions/ISInsertMagazine','ISInsertMagazine','gun','gun'},{'Vehicles/TimedActions/ISStartVehicleEngine','ISStartVehicleEngine','start'}, {'TimedActions/ISApplyBandage','ISApplyBandage','bandage','bodyPart'},{'TimedActions/ISDisinfect','ISDisinfect','disinfect','bodyPart'},{'TimedActions/ISOpenCloseDoor','ISOpenCloseDoor','door','item'},{'TimedActions/ISOpenCloseWindow','ISOpenCloseWindow','window','object'},{'Vehicles/TimedActions/ISOpenVehicleDoor','ISOpenVehicleDoor','car_door','part'}})do O.hook(unpack(row))end
  O.installed=require('CSV/Connections').install('outcome-events',function(t)
   if Events.OnWeaponSwing then t:event(Events.OnWeaponSwing,function(...)safe(O.swing,...)end)end
   if Events.OnPlayerUpdate then t:event(Events.OnPlayerUpdate,function(p)safe(O.nativeDoor,p)end)end

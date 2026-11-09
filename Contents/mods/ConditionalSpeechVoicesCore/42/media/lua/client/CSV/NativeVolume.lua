@@ -43,7 +43,7 @@ function M.update()
  end
 end
 function M.export(writer)
- local names={};for name in pairs(M.changed)do names[#names+1]=name end;table.sort(names)
+ local names={};for name in pairs(M.changed)do names[#names+1]=name end;require('CSV/Sort').sort(names)
  writer:write('NATIVE_VOLUME mode=user-volume-only definitionsRebuilt=0\n')
  for _,name in ipairs(names)do
   local r=M.changed[name]

@@ -297,10 +297,18 @@ function T.summary(player,visit)
 end
 function T.export(f,player)
  f:write('\nSCENARIOS: simulated selection, not proof of live events.\n')
- local counts=T.summary(player,function(result,voice,step)
-  f:write(voice..' | '..result.name..' step '..step..' | '..string.upper(result.status)..' | '..(result.line and result.line.id or 'none')..' | '..result.decision.mode..' | '..result.decision.reason..'\n')
+ local function emit(fn)if type(f)=='table' and f.defer then f:defer(fn)else f:write(fn())end end
+ local counts={passed=0,failed=0,skipped=0,compatibility=0}
+ -- Evaluation itself belongs inside the writer's time budget, not just formatting.
+ T.each(function(index,voice,step)
+  emit(function()
+   local result=T.evaluate(player,voice,index,false,step)
+   local key=({pass='passed',fail='failed'})[result.status] or result.status
+   counts[key]=counts[key]+1
+   return voice..' | '..result.name..' step '..step..' | '..string.upper(result.status)..' | '..(result.line and result.line.id or 'none')..' | '..result.decision.mode..' | '..result.decision.reason..'\n'
+  end)
  end)
- f:write('SCENARIO_SUMMARY passed='..counts.passed..' failed='..counts.failed..' skipped='..counts.skipped..' compatibility='..counts.compatibility..' total='..T.totalChecks()..'\n')
+ emit(function()return 'SCENARIO_SUMMARY passed='..counts.passed..' failed='..counts.failed..' skipped='..counts.skipped..' compatibility='..counts.compatibility..' total='..T.totalChecks()..'\n'end)
  local result=T.panel and T.panel.result
  if result then
   f:write('Last scenario '..result.name..' live='..tostring(result.live)..'\n')
@@ -311,7 +319,7 @@ function T.open(player)
  require 'ISUI/ISPanel';require 'ISUI/ISComboBox';require 'ISUI/ISButton'
  local V=require 'CSV/Core'
  if T.panel then if T.panel.stopPreview then T.panel.stopPreview()end;T.panel:removeFromUIManager()end
- local panel=ISPanel:new(100,80,760,350);panel:initialise();panel:instantiate();panel.moveWithMouse=true
+ local panel=ISPanel:new(100,80,900,425);panel:initialise();panel:instantiate();panel.moveWithMouse=true
  panel.backgroundColor={r=.06,g=.06,b=.06,a=.97};T.panel=panel
  local choice=ISComboBox:new(20,55,490,28,panel,nil);choice:initialise();panel:addChild(choice)
  for i,c in ipairs(T.cases)do local event=c.group or (c.steps and c.steps[1].group) or '?';choice:addOption(tostring(i)..' - '..event)end
@@ -323,10 +331,11 @@ function T.open(player)
  end
  panel.stopPreview=stopPreview
  local function evaluate(live,advance)
+  panel.summary=nil
   if not advance then panel.step=1 end
   panel.result=T.evaluate(player,require('CSV/Pack').voiceOrder[voice.selected],choice.selected,live,panel.step)
   panel.result.voice=require('CSV/Pack').voiceOrder[voice.selected]
-  panel.message=panel.result.status=='compatibility' and 'COMPAT' or panel.result.status=='live' and tr('Live') or panel.result.skipped and getText('UI_CSV_Aud_Unavailable') or panel.result.pass and tr('Pass') or tr('Fail')
+  panel.message=panel.result.status=='compatibility' and tr('Compatibility') or panel.result.status=='live' and tr('Live') or panel.result.skipped and getText('UI_CSV_Aud_Unavailable') or panel.result.pass and tr('Pass') or tr('Fail')
  end
  local function button(x,y,w,label,fn)local o=ISButton:new(x,y,w,30,label,panel,fn);o:initialise();panel:addChild(o)end
  button(20,100,210,tr('Run'),function()evaluate(false)end)
@@ -340,14 +349,12 @@ function T.open(player)
   if ok then for _,e in ipairs(V.client.active)do if e.player==player and e.preview then panel.playback=e end end end
   panel.message=ok and getText('UI_CSV_Aud_Queued') or (getText('UI_CSV_Aud_NotStarted'))
  end)
- button(20,300,260,tr('All'),function()
+ button(20,375,260,tr('All'),function()
   local counts=T.summary(player);panel.summary=counts
-  panel.message=tr('Pass')..': '..counts.passed..' / '..T.totalChecks()..' - '..tr('Fail')..': '..counts.failed
-  if counts.compatibility>0 then panel.message=panel.message..' - '..'COMPAT '..counts.compatibility end
-  if counts.skipped>0 then panel.message=panel.message..' - '..getText('UI_CSV_Aud_Unavailable')..' '..counts.skipped end
+  panel.message=tr('Pass')..': '..counts.passed..' - '..tr('Fail')..': '..counts.failed
  end)
- button(590,300,150,getText('UI_CSV_Aud_Close') ,function()stopPreview();panel:removeFromUIManager();T.panel=nil end)
- button(20,255,230,tr('Next'),function()
+ button(730,375,150,getText('UI_CSV_Aud_Close') ,function()stopPreview();panel:removeFromUIManager();T.panel=nil end)
+ button(20,330,230,tr('Next'),function()
   local c=T.cases[choice.selected];panel.step=((panel.step or 1)%#(c.steps or {c}))+1;evaluate(false,true)
  end)
  choice.onChange=function()evaluate(false)end
@@ -355,12 +362,18 @@ function T.open(player)
  panel.prerender=function(self)
   ISPanel.prerender(self);self:drawText(getText('UI_CSV_Scenarios'),20,15,1,1,1,1,UIFont.Medium)
   self:drawText(self.message,20,145,1,1,1,1,UIFont.Small)
-
-  if self.playback then local e=self.playback;self:drawText(getText('UI_CSV_Playback')..': '..e.line..' / '..UI.playback(e),270,260,.8,.8,.8,1,UIFont.Small) end
+  self:drawText(tr('SelectionOnly'),20,175,.8,.8,.8,1,UIFont.Small)
+  if self.playback then local e=self.playback;self:drawText(getText('UI_CSV_Playback')..': '..e.line..' / '..UI.playback(e),270,335,.8,.8,.8,1,UIFont.Small) end
+  if self.summary then
+   self:drawText(tr('Compatibility')..': '..self.summary.compatibility,20,205,1,1,1,1,UIFont.Small)
+   self:drawText(getText('UI_CSV_Aud_Unavailable')..': '..self.summary.skipped,20,235,1,1,1,1,UIFont.Small)
+   return
+  end
   local r=self.result;if not r then return end
-  self:drawText(tostring(choice.selected)..' - '..r.case.group..' - '..r.step..'/'..r.stepCount,20,175,1,1,1,1,UIFont.Small)
-  self:drawText(getText('UI_CSV_Clip')..': '..(r.line and r.line.id or '-'),20,200,1,1,1,1,UIFont.Small)
-  self:drawText(r.line and r.line.text or getText('UI_CSV_Aud_NoMatch'),20,225,1,1,1,1,UIFont.Small)
+  local status=r.status=='compatibility' and tr('Compatibility') or r.status=='live' and tr('Live') or r.skipped and getText('UI_CSV_Aud_Unavailable') or r.pass and tr('Pass') or tr('Fail')
+  self:drawText(status..' - '..tostring(choice.selected)..' - '..r.case.group..' - '..r.step..'/'..r.stepCount,20,205,1,1,1,1,UIFont.Small)
+  self:drawText(getText('UI_CSV_Clip')..': '..(r.line and r.line.id or '-'),20,235,1,1,1,1,UIFont.Small)
+  self:drawText(r.line and r.line.text or getText('UI_CSV_Aud_NoMatch'),20,265,1,1,1,1,UIFont.Small)
 
  end
  panel:addToUIManager()

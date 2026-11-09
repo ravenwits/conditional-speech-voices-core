@@ -1,5 +1,4 @@
 local M={}
-local V=require 'CSV/Core'
 local A=require 'CSV/Actors'
 local call=A.call
 local Policy=require 'CSV/PsychologyPolicy'

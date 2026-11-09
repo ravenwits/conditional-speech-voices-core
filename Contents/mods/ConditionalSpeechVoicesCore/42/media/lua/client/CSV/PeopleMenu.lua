@@ -11,7 +11,7 @@ function Menu.fill(P,index,menu,objects,test)
   sub:addOption(getText('UI_CSV_MarkShelter'),p,function(x)x:getModData().csvShelter={x=x:getX(),y=x:getY(),z=x:getZ()}end)
   sub:addOption(getText('UI_CSV_StopTracking'),p,function(x)state(x).track=nil end)
   local candidates={};for body,t in pairs(state(p).people)do if V.now()-t<1000 and call(p,'CanSee',body)==true then candidates[#candidates+1]=body end end
-  table.sort(candidates,function(a,b)return p:DistTo(a)<p:DistTo(b)end)
+  require('CSV/Sort').sort(candidates,function(a,b)return p:DistTo(a)<p:DistTo(b)end)
   for i=1,math.min(6,#candidates)do
    local b=candidates[i];local label=tostring(call(b,'getFullName') or getText(A.kind(b)=='npc' and 'UI_CSV_Npc' or 'UI_CSV_Player'))..' ('..math.floor(p:DistTo(b))..'m)'
    sub:addOption(getText('UI_CSV_FollowPerson',label),p,function(x)P.intent(x,b,'pursuit')end)

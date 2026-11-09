@@ -17,6 +17,13 @@ local function owns(player)
   and not player:isDead() and V.voice(player)~=nil
 end
 local function generateSpeechFrom(player,group,intensity,maximum,...)
+    if C.gameReady==false and owns(player) then
+        local trace=Trace.request(player,group)
+        Trace.step(trace,'blocked','game_not_ready')
+        C.lastAttempt[player]={group=group,outcome='game_not_ready',trace=trace}
+        Debug.record('gameplay',group,'game_not_ready',{voice=V.voice(player)})
+        return
+    end
     local manager=require('CSV/SpeechManager')
     if manager.enabled and not manager.dispatching and owns(player) then return manager.submit(generateSpeechFrom,player,group,intensity,maximum,{n=select('#',...),...})end
     local trace=Trace.request(player,group)
@@ -72,7 +79,7 @@ local function generateSpeechFrom(player,group,intensity,maximum,...)
     local encounter=require('CSV/Encounter')
     local escalation=encounter.reaction(group,facts) and encounter.escalation(encounter.players[player],facts)
     if escalation then Trace.step(trace,'encounter',escalation)end
-    if not ownedEvent and (policy.engaged or policy.mode=='spoken' and escalation) and not encounter.blocked(player,group,facts) then oldCooldown=player:getModData().cs_lastspoke;player:getModData().cs_lastspoke={0,''}end
+    if not ownedEvent and (policy.engaged or policy.mode=='spoken' and escalation) then oldCooldown=player:getModData().cs_lastspoke;player:getModData().cs_lastspoke={0,''}end
     if not oldCooldown and (attempt.policy.priority or 1)>=3 then
         for _,active in ipairs(C.active)do
             if active.player==player and not active.preview and (active.priority or 1)<attempt.policy.priority then
@@ -118,7 +125,7 @@ local function ProcessSpeech(player,dialogue,group,...)
         local remaining=criticalEvent and 0 or NeedTiming.remaining(player,group,ctx.intensity,C.preferences().frequency,V.now())
         ctx.remainingMs=remaining
         if decision.mode~='silent' and (decision.priority or 1)==1 then
-            local intervals={[0]=60000,[1]=30000,[2]=10000};local gap=group:match('^Relief') and 10000 or (intervals[C.preferences().frequency] or 30000)
+            local gap=NeedTiming.ordinaryInterval(group,C.preferences().frequency)
             local last=C.lastOrdinary[player];local reason='ordinary_cooldown'
             if require('CSV/LootRules').groups[group] or group=='FoundLoot' then local _,gaps=require('CSV/LootRules').settings(C.preferences());gap=gaps.between;last=C.lastLoot[player];reason='loot_cooldown' end
             if last and V.now()-last<gap then decision={mode='silent',reason=reason};ctx.policy=decision end
@@ -131,12 +138,7 @@ local function ProcessSpeech(player,dialogue,group,...)
             ctx.outcome=channel.allowed and 'private_only' or ('policy_'..channel.reason)
             return '('..ctx.line.text..')',0
         end
-        if decision.mode=='silent' then
-            Trace.step(ctx.trace,'blocked',decision.reason,{remainingMs=remaining})
-            ctx.outcome='policy_'..decision.reason
-            ctx.info={line=ctx.line.id,sourceVolume=0,volumeBlock=ctx.volumeBlock,intensity=ctx.intensity}
-            return '('..ctx.line.text..')',0
-        elseif decision.mode=='spoken' then
+        if decision.mode=='spoken' then
             volume=decision.radius;text=ctx.line.text
         end
     end
@@ -172,7 +174,7 @@ local function Say(player,text,volume)
         return say(player,ok and played and text or ('('..text..')'),ok and played and (ctx.policy.noiseRadius or volume) or 0)
     end
     local result=say(player,text,volume)
-    if ctx and ctx.line and channel.allowed and channel.channel=='private' and not require('CSV/LootRules').groups[ctx.group] and ctx.group~='FoundLoot' and (not C.lastOrdinary[player] or V.now()-C.lastOrdinary[player]>=(({[0]=60000,[1]=30000,[2]=10000})[C.preferences().frequency] or 30000)) then
+    if ctx and ctx.line and channel.allowed and channel.channel=='private' and not require('CSV/LootRules').groups[ctx.group] and ctx.group~='FoundLoot' and (not C.lastOrdinary[player] or V.now()-C.lastOrdinary[player]>=NeedTiming.ordinaryInterval(nil,C.preferences().frequency)) then
         C.sequence=C.sequence+1
         local p={version=1,pack=V.bank(ctx.voice).id,packRevision=V.bank(ctx.voice).revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,line=ctx.line.id,voice=ctx.voice,pitch=V.pitch(player),radius=15}
         local ok,played,reason=pcall(C.play,p,player,true,{private=true,gain=.35,trace=ctx.trace})

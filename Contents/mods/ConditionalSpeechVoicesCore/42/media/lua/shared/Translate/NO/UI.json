@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "Spillstemme",
   "UI_CSV_Short_ModVoice": "Modstemme",
   "UI_CSV_PitchOffset": "Juster stemmeleie",
-  "UI_CSV_PitchOffsetHelp": "Gjeldende figurs stemmeleie lastes automatisk. Bruk endrer bare denne figuren. Deaktivert uten figur."
+  "UI_CSV_PitchOffsetHelp": "Gjeldende figurs stemmeleie lastes automatisk. Bruk endrer bare denne figuren. Deaktivert uten figur.",
+  "UI_CSV_Short_Compatibility": "Kun kompatibilitet - ikke vurdert",
+  "UI_CSV_Short_SelectionOnly": "Kontrollerer bare valg av replikk. Avspilling vises separat."
 }

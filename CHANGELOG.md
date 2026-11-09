@@ -1,3 +1,46 @@
+## 0.42.7
+
+- Reject loading-time dialogue before GameStart without allocating a sound handle, consuming cooldowns or replaying stale events after entry.
+- Evaluate exported scenarios inside the report writer's per-tick budget. Session exports include observed recordings instead of rebuilding the complete voice inventory.
+- Separate ungraded compatibility counts from passing scenarios in the UI. Keep selection evidence and playback status distinct in all 29 interface locales.
+
+- Remove unused threat bookkeeping, a retired contextual random-preview function and the unused recording-level classifier. Audition keeps its current contextual preview path.
+- Keep only the strict observer/installation regression test; remove the outdated duplicate that tolerated unrelated setup errors. Require every standalone development test to be listed.
+- Remove the obsolete per-recording native gain hook and redundant speech checks. Keep final playback safety checks.
+- Share ordinary speech timing between spoken and private reactions. Existing intervals stay unchanged.
+- Retire two historical implementation tests and check localization against the current voice contract instead of archived generation plans.
+- Repair malformed experience counters without dropping unrelated saved data. Preserve unknown save schemas and use session-only progress when downgrading.
+- Keep provider metadata separate from Core's runtime voice registry without mutating provider-owned tables.
+- Keep the previous combined report when preparation fails. Report experience from a normalized snapshot.
+- Keep the current line when a replacement cannot obtain or configure a sound handle. Failed requests can retry without being mistaken for duplicates.
+- Check death, sleep and concealment before committing playback history.
+- Continue completion and timeout checks during crouched combat.
+- Clean up failed sound setup/update handles and make cancellation idempotent.
+- Tolerate missing character descriptors in native pain observation.
+
+- Centralize Q, native injury and speech ownership. An urgent line checks all active owners before cancelling any voice.
+- Native pain also stops audition playback for that character. Other actors and environmental sounds stay untouched.
+- Separate speech scheduling from observer context and completion handling.
+- Rename the psychology-only queue and remove the obsolete Alp callout alias and inactive native gain writer.
+- Isolate development test setup. Tests no longer execute older test suites to initialize the game.
+- Replace release copying with exact tree synchronization, backups and stale-file removal. Workshop descriptions and previews are preserved.
+
+## 0.42.6
+
+- Q calls interrupt the same character's spoken line. Ordinary dialogue waits until the call finishes. Whispered calls use the same rule; native injury reactions retain priority.
+- Fix the stack overflow that left the debug menu incomplete and hid Save report. Core lists now use an iterative sort, and opening the menu no longer builds the full recording list.
+- Keep Save report available before building diagnostic sections. Test menu creation after character replacement.
+- Connect existing four-voice recordings to verified locked-window and vehicle-door attempts. Successful opening, cancellation, distance and repeated attempts are checked. Window reactions use wording that does not claim the object is a door.
+- Add four-voice callout/respawn and access-attempt checks, plus a 12,000-entry sorting test. No new audio files.
+
+## 0.42.5
+
+- Added 32 recordings across Bob, Kate, Alp and Mujde: severe injury and fading strength, with two alternatives and whispered counterparts per situation.
+- Critical speech uses dedicated acting and captions. Unknown causes of low health do not invent a wound.
+- Unheard critical warnings can retry after their queue window. A warning that actually starts remains suppressed until worsening or sustained recovery.
+- Added the optional criticalHealth voice-pack extension and included it in the pack authoring tools. Existing independent packs keep their previous fallback.
+- Added four-voice selection, whisper, health-cause and deferred-warning regression checks.
+
 ## 0.42.4
 
 - Added health warning episodes at 25 and 10 HP. Worsening health takes priority over ordinary comments and bypasses unrelated cooldowns. Stable low health does not repeatedly trigger warnings.

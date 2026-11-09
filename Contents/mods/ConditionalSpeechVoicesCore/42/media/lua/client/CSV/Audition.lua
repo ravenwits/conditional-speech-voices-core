@@ -88,11 +88,11 @@ function A.bank(V,group,voice)
   local list={};local index=({Bored=2,Explore=2,AnimalTracks=1,FoodRotten=1})[group]
   if index then list[1]=data.groups[group][index] end
   for _,entry in pairs(catalog)do if entry.group==X.replacements[group] then list[#list+1]=entry end end
-  table.sort(list,function(a,b)if group=='AmmoCount' then return tonumber(a.id:match('_(%d+)$'))<tonumber(b.id:match('_(%d+)$')) end;return a.id<b.id end);return list
+  require('CSV/Sort').sort(list,function(a,b)if group=='AmmoCount' then return tonumber(a.id:match('_(%d+)$'))<tonumber(b.id:match('_(%d+)$')) end;return a.id<b.id end);return list
  end
  if data.groups[group] then return data.groups[group]end
  local list={};for _,entry in pairs(catalog)do if entry.group==group then list[#list+1]=entry end end
- table.sort(list,function(a,b)if group=='AmmoCount' then return tonumber(a.id:match('_(%d+)$'))<tonumber(b.id:match('_(%d+)$')) end;return a.id<b.id end);return list
+ require('CSV/Sort').sort(list,function(a,b)if group=='AmmoCount' then return tonumber(a.id:match('_(%d+)$'))<tonumber(b.id:match('_(%d+)$')) end;return a.id<b.id end);return list
 end
 function A.open(player,selectedGroup)
  require 'ISUI/ISPanel'
@@ -112,7 +112,7 @@ function A.open(player,selectedGroup)
   for group in pairs(bank.native and bank.native.groups or {})do if not seen[group] then more[group]=true end end
  end
  for _,entry in pairs(require('CSV/Extras').catalog)do if not seen[entry.group] then more[entry.group]=true end end
- local names={};for group in pairs(more)do names[#names+1]=group end;table.sort(names)
+ local names={};for group in pairs(more)do names[#names+1]=group end;require('CSV/Sort').sort(names)
  for _,group in ipairs(names)do panel.entries[#panel.entries+1]={group=group}end
  local delivery=ISComboBox:new(20,65,350,28,panel,nil);delivery:initialise();panel:addChild(delivery)
  if delivery.setEditable then delivery:setEditable(true)end

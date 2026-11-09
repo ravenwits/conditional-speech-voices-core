@@ -38,7 +38,7 @@ local function json(value)
   end
  end
  for key,item in pairs(value)do rows[#rows+1]=json(tostring(key))..':'..json(item) end
- table.sort(rows)
+ require('CSV/Sort').sort(rows)
  return '{'..table.concat(rows,',')..'}'
 end
 function R.capture(V,C,plan,player,voice,group,level,maximum,facts,prefs)

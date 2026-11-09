@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "Hlas hry",
   "UI_CSV_Short_ModVoice": "Hlas modu",
   "UI_CSV_PitchOffset": "Úprava výšky hlasu",
-  "UI_CSV_PitchOffsetHelp": "Výška hlasu aktuální postavy se načte automaticky. Použít změní jen tuto postavu. Bez postavy je vypnuto."
+  "UI_CSV_PitchOffsetHelp": "Výška hlasu aktuální postavy se načte automaticky. Použít změní jen tuto postavu. Bez postavy je vypnuto.",
+  "UI_CSV_Short_Compatibility": "Pouze kompatibilita - nehodnoceno",
+  "UI_CSV_Short_SelectionOnly": "Kontrola výběru repliky. Přehrávání se zobrazuje zvlášť."
 }

@@ -16,24 +16,7 @@ end
 function R.observe(name,facts)
  local o=R.observations[name] or {count=0};R.observations[name]=o;o.count=o.count+1;o.last=getTimestampMs();o.facts=factsText(facts)
 end
--- Kahlua's recursive quicksort can overflow on the grouped full audio bank.
-local function sortInventory(keys)
- local count=#keys;local width=1;local buffer={}
- while width<count do
-  for left=1,count,width*2 do
-   local middle=math.min(left+width,count+1)
-   local finish=math.min(left+width*2,count+1)
-   local a,b=left,middle
-   for index=left,finish-1 do
-    if a<middle and (b>=finish or keys[a]<=keys[b]) then
-     buffer[index]=keys[a];a=a+1
-    else buffer[index]=keys[b];b=b+1 end
-   end
-  end
-  for index=1,count do keys[index]=buffer[index]end
-  width=width*2
- end
-end
+local sortInventory=require('CSV/Sort').sort
 local function buildReport(f,compact)
  local preparationStarted=getTimestampMs()
  local V=require 'CSV/Core';local C=V.client;local N=require 'CSV/NeedTiming'
@@ -46,8 +29,8 @@ local function buildReport(f,compact)
  local psychology=require 'CSV/Psychology'
  emit(f,function()return 'PSYCHOLOGY installed='..tostring(psychology.installed==true)..' error='..tostring(psychology.error==true)..' alifeBridge='..tostring(ProjectALife and ProjectALife.Executor and ProjectALife.Executor._csvWoundObserved==true)..'\n' end)
  for player,state in pairs(psychology.players)do
-  local md=require('CSV/Actors').call(player,'getModData') or {};local e=md.csvExperience or {zombie=0,human=0,injury=0,raid=0,historyUnknown=true}
-  emit(f,function()return 'EXPERIENCE zombie='..e.zombie..' nativeZombieKills='..tostring(e.nativeZombieKills)..' zombieEncounters='..tostring(e.zombieEncounters or 0)..' humanEncounters='..tostring(e.humanEncounters or 0)..' human='..e.human..' injury='..e.injury..' raid='..e.raid..' pastUnknown='..tostring(e.historyUnknown)..' queued='..#state.queue..' tracking='..tostring(state.track and state.track.mode)..'\n' end)
+  local e=require('CSV/Experience').snapshot(player)
+  emit(f,function()return 'EXPERIENCE zombie='..e.zombie..' nativeZombieKills='..tostring(e.nativeZombieKills)..' zombieEncounters='..tostring(e.zombieEncounters or 0)..' humanEncounters='..tostring(e.humanEncounters or 0)..' human='..e.human..' injury='..e.injury..' raid='..e.raid..' pastUnknown='..tostring(e.historyUnknown)..' unsupportedSchema='..tostring(e.unsupportedVersion)..' queued='..#state.queue..' tracking='..tostring(state.track and state.track.mode)..'\n' end)
  end
  for name,status in pairs(require('CSV/Observers').status)do
   emit(f,function()return 'OBSERVER '..name..' calls='..status.calls..' errors='..status.errors..' failed='..tostring(status.failed)..' lastError='..tostring(status.lastError)..' totalMs='..tostring(status.totalMs or 0)..' maxMs='..tostring(status.maxMs or 0)..'\n' end)
@@ -79,7 +62,7 @@ local function buildReport(f,compact)
  local manager=require('CSV/SpeechManager');local m=manager.metrics
  emit(f,function()return 'SPEECH_MANAGER pending='..#manager.queue..' submitted='..m.submitted..' accepted='..m.played..' expired='..m.expired..' cancelled='..m.cancelled..' blocked='..m.blocked..' retryPlansSkipped='..(m.retrySkipped or 0)..'\n' end)
  local writes=require('CSV/ReportWriter').metrics
- emit(f,function()return 'REPORT_WRITER completed='..writes.completed..' failed='..writes.failed..' maxSliceMs='..writes.maxSliceMs..' maxOpenMs='..(writes.maxOpenMs or 0)..' maxCommitMs='..(writes.maxCommitMs or 0)..' maxPrepareMs='..(R.maxPrepareMs or 0)..'\n' end)
+ emit(f,function()return 'REPORT_WRITER completed='..writes.completed..' failed='..writes.failed..' maxSliceMs='..writes.maxSliceMs..' maxOpenMs='..(writes.maxOpenMs or 0)..' maxCommitMs='..(writes.maxCommitMs or 0)..' maxPrepareMs='..(R.maxPrepareMs or 0)..' maxCombinedPrepareMs='..(require('CSV/Debug').maxPrepareMs or 0)..'\n' end)
  require('CSV/Callout').export(f)
  require('CSV/NativeVolume').export(f)
  local native=require 'CSV/NativeVoice'
@@ -101,7 +84,7 @@ local function buildReport(f,compact)
  for name,ok in pairs(observer.hooks)do emit(f,function()return 'ACTION_HOOK '..name..' installed='..tostring(ok)..'\n' end)end
  local coverage={}
  for key,row in pairs(R.rows)do local group=key:match('^[^|]+|([^|]+)|');if group then coverage[group]=(coverage[group] or 0)+row.count end end
- local groups={};for group in pairs(require('CSV/Delivery').groups)do groups[#groups+1]=group end;table.sort(groups)
+ local groups={};for group in pairs(require('CSV/Delivery').groups)do groups[#groups+1]=group end;require('CSV/Sort').sort(groups)
  for _,group in ipairs(groups)do
   local count=coverage[group] or 0
   emit(f,function()return 'COVERAGE '..group..' attempts='..count..' status='..(count==0 and 'NOT_OBSERVED' or 'OBSERVED')..' mildNormalIntervalSeconds='..tostring(N.seconds[group] or 'event-specific')..'\n' end)

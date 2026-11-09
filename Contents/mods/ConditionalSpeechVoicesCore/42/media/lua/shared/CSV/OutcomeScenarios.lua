@@ -38,6 +38,16 @@ function S.cases()
    cases[#cases+1]={name=group..': '..mode,group=group,level=1,max=1,state=f,prefs={whisper=mode=='whisper'},expect=(mode=='cancelled' or mode=='unknown') and 'none' or group,mode=muted and 'silent' or 'spoken',newOutcomes=true,limited='none'}
   end
  end
+ for _,kind in ipairs({'window','car_door'})do
+  for _,mode in ipairs({'locked','opened','cancelled','unknown','whisper'})do
+   local e={kind=kind,completed=true,before={open=false},after={open=false,locked=true},nativeSound='locked'}
+   if mode=='opened' then e.after.open=true end
+   if mode=='cancelled' then e.cancelled=true end
+   if mode=='unknown' then e.after.locked=nil end
+   local blocked=mode=='opened' or mode=='cancelled' or mode=='unknown'
+   cases[#cases+1]={name='DoorLocked: '..kind..' '..mode,group='DoorLocked',level=1,max=1,state={outcome=e,sneaking=mode=='whisper',near=0,visible=0,recentThreat=false,panic=0},prefs={whisper=true},expect=blocked and 'none' or 'DoorLocked',mode=blocked and 'silent' or 'spoken',newOutcomes=true,limited='none'}
+  end
+ end
  local negatives={
   {'Darkness','light_restored',function(e)e.after.light=.8 end},
   {'Darkness','asleep',function(e)e.after.awake=false end},
@@ -73,6 +83,6 @@ function S.cases()
   local e=S.evidence(row[1]);row[3](e)
   cases[#cases+1]={name=row[1]..': '..row[2],group=row[1],level=1,max=1,state={outcome=e,sneaking=false,near=0,visible=0,recentThreat=false,panic=0},expect='none',mode='silent',newOutcomes=true}
  end
- table.sort(cases,function(a,b)return a.name<b.name end);return cases
+ require('CSV/Sort').sort(cases,function(a,b)return a.name<b.name end);return cases
 end
 return S

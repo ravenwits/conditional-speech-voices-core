@@ -48,6 +48,6 @@ function S.cases()
   for key,value in pairs(row.state)do f[key]=value end
   out[#out+1]={name='Kill context: '..row.name,group='Psychology',level=1,max=1,state=f,prefs={whisper=false},expect=row.expect,mode=row.silent and 'silent' or 'spoken',newPsychology=true,limited='none'}
  end
- table.sort(out,function(a,b)return a.name<b.name end);return out
+ require('CSV/Sort').sort(out,function(a,b)return a.name<b.name end);return out
 end
 return S

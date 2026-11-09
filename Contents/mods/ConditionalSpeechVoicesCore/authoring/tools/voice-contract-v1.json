@@ -1577,6 +1577,19 @@
         "Unhappy_1",
         "Unhappy_3"
       ]
+    },
+    "criticalHealth": {
+      "version": 1,
+      "slots": [
+        "CriticalWound_1",
+        "Whisper_CriticalWound_1",
+        "CriticalWound_2",
+        "Whisper_CriticalWound_2",
+        "CriticalFading_1",
+        "Whisper_CriticalFading_1",
+        "CriticalFading_2",
+        "Whisper_CriticalFading_2"
+      ]
     }
   }
 }

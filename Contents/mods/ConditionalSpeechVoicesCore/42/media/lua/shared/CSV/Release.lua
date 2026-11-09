@@ -1,1 +1,1 @@
-return {version='0.42.4'}
+return {version='0.42.7'}

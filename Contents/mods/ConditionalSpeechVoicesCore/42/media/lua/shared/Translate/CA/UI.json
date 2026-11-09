@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "Veu del joc",
   "UI_CSV_Short_ModVoice": "Veu del mod",
   "UI_CSV_PitchOffset": "Ajust del to de veu",
-  "UI_CSV_PitchOffsetHelp": "El to real del personatge actual es carrega automàticament. Aplicar només canvia aquest personatge. Desactivat sense personatge."
+  "UI_CSV_PitchOffsetHelp": "El to real del personatge actual es carrega automàticament. Aplicar només canvia aquest personatge. Desactivat sense personatge.",
+  "UI_CSV_Short_Compatibility": "Només compatibilitat - sense avaluar",
+  "UI_CSV_Short_SelectionOnly": "Només es comprova la selecció. La reproducció es mostra a part."
 }

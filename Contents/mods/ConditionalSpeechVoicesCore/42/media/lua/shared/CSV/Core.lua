@@ -61,11 +61,6 @@ function V.near(a,b,radius)
     local x,y=a:getX()-b:getX(),a:getY()-b:getY()
     return x*x+y*y<=radius*radius
 end
--- A small recording-specific lift, independent of mood or incoming packet fields.
-function V.recordedLevel(voice,id)
-    if id=='ThirstCritical_1' or id=='PanicGrounding_1' or id=='PanicEscape_1' then return false end
-    return V.extended(voice) and ((require('CSV/Extras').approved and require('CSV/Extras').catalog[id]~=nil) or require('CSV/Whispers').contains(id) or require('CSV/Expressions').source(id)~=nil)
-end
 function V.deliveryGain(voice,id)
     id=require('CSV/Expressions').source(id) or id
     local levels=(pack.voices[voice] or {}).deliveryGains or {}
@@ -98,6 +93,7 @@ function V.outputGain(voice,id,requested)
     return math.max(0,math.min(peakLimits[voice..'_'..id] or 1,requested))
 end
 function V.maxPriority(id)
+    if id:match('^CriticalWound_') or id:match('^CriticalFading_') then return 4 end
     if id=='Injured_3' or id=='Bleeding_3' then return 4 end
     if id:match('^KillControlled_') or id:match('^KillUneasy_') or id:match('^KillDesperate_') then return 2 end
     if id:match('^Reload') then return 3 end

@@ -92,5 +92,7 @@
   "UI_CSV_Short_GameVoice": "Oyun sesi",
   "UI_CSV_Short_ModVoice": "Mod sesi",
   "UI_CSV_PitchOffset": "Ses perdesi ayarı",
-  "UI_CSV_PitchOffsetHelp": "Açık kayıttaki karakterin gerçek perde değeri otomatik yüklenir. Uygula yalnız bu karakteri değiştirir. Karakter yokken pasiftir."
+  "UI_CSV_PitchOffsetHelp": "Açık kayıttaki karakterin gerçek perde değeri otomatik yüklenir. Uygula yalnız bu karakteri değiştirir. Karakter yokken pasiftir.",
+  "UI_CSV_Short_Compatibility": "Yalnız uyumluluk - başarı sayılmaz",
+  "UI_CSV_Short_SelectionOnly": "Yalnız replik seçimi kontrol edilir. Oynatma ayrıca gösterilir."
 }

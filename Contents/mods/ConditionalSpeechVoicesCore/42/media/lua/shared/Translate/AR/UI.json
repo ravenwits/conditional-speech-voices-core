@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "صوت اللعبة",
   "UI_CSV_Short_ModVoice": "صوت التعديل",
   "UI_CSV_PitchOffset": "ضبط حدة الصوت",
-  "UI_CSV_PitchOffsetHelp": "تُحمّل حدة صوت الشخصية الحالية تلقائياً. تطبيق يغيّر هذه الشخصية فقط. معطل دون شخصية."
+  "UI_CSV_PitchOffsetHelp": "تُحمّل حدة صوت الشخصية الحالية تلقائياً. تطبيق يغيّر هذه الشخصية فقط. معطل دون شخصية.",
+  "UI_CSV_Short_Compatibility": "توافق فقط - بلا تقييم",
+  "UI_CSV_Short_SelectionOnly": "فحص اختيار العبارة فقط. يعرض التشغيل بشكل منفصل."
 }

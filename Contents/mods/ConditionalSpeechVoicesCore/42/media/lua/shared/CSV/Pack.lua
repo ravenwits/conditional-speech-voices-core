@@ -38,18 +38,19 @@ end
 if type(getActivatedMods)=='function' then
  local active=getActivatedMods()
  if active and active.size and active.get then
-  local ids={};for i=0,active:size()-1 do ids[#ids+1]=active:get(i)end;table.sort(ids)
+  local ids={};for i=0,active:size()-1 do ids[#ids+1]=active:get(i)end;require('CSV/Sort').sort(ids)
   for _,id in ipairs(ids)do if not R.providers[id] and id:match('^CSV%-Voice%-[%w_%-]+$')then provider(id,'CSV_Packs/'..id)end end
  end
 end
 R.locked=true
+local keys={};for id in pairs(R.providers)do keys[#keys+1]=id end;require('CSV/Sort').sort(keys)
 local bank={};for k,v in pairs(empty)do bank[k]=v end
+if keys[1] then for k,v in pairs(R.providers[keys[1]].bank)do bank[k]=v end end
+-- Runtime registry tables never alias similarly named provider metadata.
 bank.extraVoices={};bank.voices={};bank.voiceBanks={};bank.voiceOrder={};bank.hasCustomVoices=false;bank.semanticAliases={}
-local keys={};for id in pairs(R.providers)do keys[#keys+1]=id end;table.sort(keys)
 for _,id in ipairs(keys)do
  local p=R.providers[id]
  for canonical,recording in pairs(p.bank.aliases or {})do bank.semanticAliases[recording]=canonical end
- if bank.id==false then for k,v in pairs(p.bank)do bank[k]=v end end
  for _,v in ipairs(p.voices)do
   bank.voices[v.id]=v;bank.voiceBanks[v.id]=p.bank;bank.voiceOrder[#bank.voiceOrder+1]=v.id
   if not v.vanilla then bank.extraVoices[v.id]=p.bank;bank.hasCustomVoices=true end

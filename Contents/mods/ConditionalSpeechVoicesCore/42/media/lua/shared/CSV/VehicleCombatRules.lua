@@ -6,7 +6,7 @@ end
 -- at least four threats and no empty angular half-circle around the vehicle.
 function R.surrounded(angles)
  if #angles<4 then return false end
- local sorted={};for i,a in ipairs(angles)do sorted[i]=a end;table.sort(sorted)
+ local sorted={};for i,a in ipairs(angles)do sorted[i]=a end;require('CSV/Sort').sort(sorted)
  local gap=sorted[1]+math.pi*2-sorted[#sorted]
  for i=2,#sorted do gap=math.max(gap,sorted[i]-sorted[i-1])end
  return gap<math.pi

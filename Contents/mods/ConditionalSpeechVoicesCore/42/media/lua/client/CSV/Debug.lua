@@ -21,7 +21,7 @@ function D.record(kind,group,outcome,info)
 end
 function D.top()
     local list={};for name,g in pairs(D.groups)do list[#list+1]={name=name,attempts=g.attempts,played=g.played} end
-    table.sort(list,function(a,b)if a.attempts==b.attempts then return a.name<b.name end;return a.attempts>b.attempts end)
+    require('CSV/Sort').sort(list,function(a,b)if a.attempts==b.attempts then return a.name<b.name end;return a.attempts>b.attempts end)
     return list
 end
 local function writeReport(f)
@@ -45,16 +45,24 @@ local function writeReport(f)
     for _,g in ipairs(D.top())do f:write(g.name..' attempts='..g.attempts..' played='..g.played..'\n') end
     for name,count in pairs(D.outcomes)do f:write('outcome '..name..'='..count..'\n') end
     for _,e in ipairs(D.recent)do f:write(e.kind..' '..e.group..' '..e.line..' '..e.delivery..' '..e.outcome..' gain='..tostring(e.gain)..' sourceVolume='..tostring(e.sourceVolume)..' volumeBlock='..tostring(e.volumeBlock)..' intensity='..tostring(e.intensity)..' upstreamVolume='..tostring(e.upstreamVolume)..' policy='..tostring(e.policy)..' panic='..tostring(e.panic)..' near='..tostring(e.near)..' sneaking='..tostring(e.sneaking)..' whisperRisk='..tostring(e.whisperRisk)..' directAttack='..tostring(e.directAttack)..' activePursuit='..tostring(e.activePursuit)..' noiseRadius='..tostring(e.noiseRadius)..' hearingRiskRadius='..tostring(e.hearingRiskRadius)..' exposed='..tostring(e.exposed)..' concealmentRisk='..tostring(e.concealmentRisk)..' targeted='..tostring(e.targeted)..' approaching='..tostring(e.approaching)..' blockedNear='..tostring(e.blockedNear)..'\n') end
-    require('CSV/ProductionReport').export(f)
+    -- Session diagnostics need observed clips; the complete inventory belongs to
+    -- the package audit, not a repeated scan of thousands of untouched assets.
+    require('CSV/ProductionReport').export(f,true)
     local player=getSpecificPlayer(0);if player then require('CSV/Scenarios').export(f,player)end
 end
 function D.export()
+    local started=getTimestampMs()
     local f=require('CSV/ReportWriter').open('CSV-report.txt')
     if not f then print('[CSV] stats export failed');return false end
     local ok,err=pcall(writeReport,f)
-    if not ok then f:write('REPORT_PREPARATION_ERROR '..tostring(err)..'\n')end
+    D.maxPrepareMs=math.max(D.maxPrepareMs or 0,getTimestampMs()-started)
+    if not ok then
+        f:abort()
+        print('[CSV] report preparation failed; previous report kept: '..tostring(err))
+        return false
+    end
     f:close()
-    print(ok and '[CSV] queued combined CSV-report.txt' or '[CSV] report preparation failed: '..tostring(err))
-    return ok
+    print('[CSV] queued combined CSV-report.txt')
+    return true
 end
 return D

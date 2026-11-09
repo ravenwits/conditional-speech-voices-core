@@ -29,6 +29,13 @@ function Contract.check(definition)
                 end
             end
         end
+        if bank.criticalHealth~=nil then
+            if bank.criticalHealth~=1 then errors[#errors+1]='Unsupported critical health extension' end
+            for _,id in ipairs({'CriticalWound_1','CriticalWound_2','CriticalFading_1','CriticalFading_2','Whisper_CriticalWound_1','Whisper_CriticalWound_2','Whisper_CriticalFading_1','Whisper_CriticalFading_2'})do
+                local clip=bank.data.clips[voice.id..'_'..id]
+                if not clip or type(clip.duration)~='number' or clip.duration<=0 or type((bank.lines or {})[id])~='string' then errors[#errors+1]=voice.id..': missing critical health slot '..id end
+            end
+        end
         for _, slot in ipairs(requirements.slots) do
             local id = aliases[slot] or slot
             local clip = bank.data.clips[voice.id .. '_' .. id]

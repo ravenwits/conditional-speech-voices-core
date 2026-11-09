@@ -202,7 +202,7 @@ function L.update(player)
  if mode==0 then s.pending={};return end
  if player:isDead() or not V.extended(voice) or not V.config.enabled or not require('CSV/Core').languageSupported() then s.pending={};return end
  local candidates={};for _,e in pairs(s.pending)do candidates[#candidates+1]=e end
- table.sort(candidates,function(a,b)if a.at==b.at then return a.group<b.group end;return a.at<b.at end)
+ require('CSV/Sort').sort(candidates,function(a,b)if a.at==b.at then return a.group<b.group end;return a.at<b.at end)
  for _,e in ipairs(candidates)do
   local f=L.snapshot(player,e.item);local group=Rules.classify(f)
   local pendingStatus=require('CSV/Pending').status(now,group==e.group and Rules.allowed(e.group,prefs),e.at+90000,s.nextAttempt)

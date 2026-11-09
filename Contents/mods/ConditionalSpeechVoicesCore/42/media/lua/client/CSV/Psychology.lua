@@ -107,7 +107,7 @@ function P.observe(p)
  require('CSV/PeoplePerception').update(P,p,s,f,now)
  require('CSV/RecoveryEpisodes').update(P,p,s,f,now)
  require('CSV/Tracking').update(P,p,s,f,now)
- require('CSV/SpeechQueue').update(P,p,s,f,now)
+ require('CSV/PsychologyQueue').update(P,p,s,f,now)
 end
 
 local function safe(fn,...)

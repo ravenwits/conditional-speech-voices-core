@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "ゲームの声",
   "UI_CSV_Short_ModVoice": "Modの声",
   "UI_CSV_PitchOffset": "声の高さ調整",
-  "UI_CSV_PitchOffsetHelp": "現在のキャラクターの音程を自動で読み込みます。適用するとこのキャラクターだけが変更されます。キャラクターがいない場合は無効です。"
+  "UI_CSV_PitchOffsetHelp": "現在のキャラクターの音程を自動で読み込みます。適用するとこのキャラクターだけが変更されます。キャラクターがいない場合は無効です。",
+  "UI_CSV_Short_Compatibility": "互換性のみ - 成否判定なし",
+  "UI_CSV_Short_SelectionOnly": "セリフの選択のみを確認します。再生状態は別に表示されます。"
 }

@@ -48,6 +48,10 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
         return C.extraLine(player,voice,require('CSV/Traits').startle(f),function(id)return require('CSV/Traits').startleAllowed(id,f)end,function(id)local n=tonumber(id:match('_(%d+)$'));return n>=3 and n-3 or n+6 end)
     end
     if group=='Injured' and require('CSV/CriticalHealth').stage(f.health)>0 then
+        local wound=(f.bleeding or 0)>0 or f.acute==true
+        local group=(f.health<=10 or not wound) and 'CriticalFading' or 'CriticalWound'
+        local dedicated=C.extraLine(player,voice,group)
+        if dedicated then dedicated.critical=true;dedicated.dedicatedCritical=true;return dedicated end
         local line=(V.bank(voice).data.groups.Injured or {})[3]
         if line then return {id=line.id,text=line.text,group='Injured',critical=true} end
     end
@@ -62,7 +66,7 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
         return pool and C.extraLine(player,voice,pool,function(id)return require('CSV/PsychologyRules').allowed(id,f)end) or nil
     end
     if require('CSV/OutcomeRules').groups[group] then
-        if V.extended(voice) and require('CSV/OutcomeRules').classify(f.outcome)==group then return C.extraLine(player,voice,group) end
+        if V.extended(voice) and require('CSV/OutcomeRules').classify(f.outcome)==group then return C.extraLine(player,voice,group,function(id)return require('CSV/OutcomeRules').allowedLine(id,f.outcome)end) end
         return nil
     end
     if require('CSV/LootRules').groups[group] then
@@ -126,6 +130,7 @@ function C.chooseLine(player,voice,group,intensity,maximum,facts)
     local f=facts or State.capture(player)
     local line=C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
     if line and line.needTier then return line end
+    if line and line.dedicatedCritical then return V.localize(voice,line) end
     if line and line.critical then return V.localize(voice,require('CSV/Expressions').pick(V,voice,line,f,'frightened',player)) end
     line=Semantic.shared(C,V,player,voice,line,group,f)
     -- Base bank group entries do not carry a group field.

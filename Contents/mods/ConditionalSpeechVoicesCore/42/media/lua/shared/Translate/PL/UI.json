@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "Głos gry",
   "UI_CSV_Short_ModVoice": "Głos moda",
   "UI_CSV_PitchOffset": "Regulacja wysokości głosu",
-  "UI_CSV_PitchOffsetHelp": "Wysokość głosu bieżącej postaci jest wczytywana automatycznie. Zastosuj zmienia tylko tę postać. Bez postaci opcja jest nieaktywna."
+  "UI_CSV_PitchOffsetHelp": "Wysokość głosu bieżącej postaci jest wczytywana automatycznie. Zastosuj zmienia tylko tę postać. Bez postaci opcja jest nieaktywna.",
+  "UI_CSV_Short_Compatibility": "Tylko zgodność - bez oceny",
+  "UI_CSV_Short_SelectionOnly": "Sprawdza tylko wybór kwestii. Odtwarzanie jest pokazane osobno."
 }

@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "Voce del gioco",
   "UI_CSV_Short_ModVoice": "Voce del mod",
   "UI_CSV_PitchOffset": "Regolazione del tono di voce",
-  "UI_CSV_PitchOffsetHelp": "Tono assoluto del personaggio attuale, caricato automaticamente. Applica modifica solo questo personaggio. Disattivato senza personaggio."
+  "UI_CSV_PitchOffsetHelp": "Tono assoluto del personaggio attuale, caricato automaticamente. Applica modifica solo questo personaggio. Disattivato senza personaggio.",
+  "UI_CSV_Short_Compatibility": "Solo compatibilità - non valutata",
+  "UI_CSV_Short_SelectionOnly": "Verifica solo la selezione. La riproduzione è mostrata a parte."
 }

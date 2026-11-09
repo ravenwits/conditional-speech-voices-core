@@ -19,7 +19,6 @@ end
 local silentChoices={MeleeAttack=6,MeleeStab=6,MeleeStabOnGround=6,MeleeAttackHeavy=3,
  MeleeShove=6,MeleeStomp=6,Exercise=6,CorpseDragging=6,CorpseHighEffort=3,CorpseLowEffort=6}
 -- Gain is applied by NativeVolume for all voices, never baked into native clips.
-function N.recordingGain(voice,id)return 1 end
 function N.ensure(pitch,voice)
  if not voice then return nil end
  local data=spec(voice);if not data then return nil end
@@ -44,7 +43,7 @@ function N.ensure(pitch,voice)
    -- IsoPlayer.updateVocalProperties keeps this parameter-driven event alive.
    -- A finite breath sample here restarts even when the character is resting.
    local clip=original:getRandomClip()
-   body[#body+1]='clip { event = '..clip:getEvent()..', volume = '..tostring(clip:getVolume()*N.recordingGain(voice,''))..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
+   body[#body+1]='clip { event = '..clip:getEvent()..', volume = '..tostring(clip:getVolume())..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
   else
    local ids=event.ids
    if not ids or #ids==0 then error('Missing custom voice replacement '..suffix)end
@@ -54,7 +53,7 @@ function N.ensure(pitch,voice)
     local clip=source and source:getRandomClip()
     local file=clip and clip:getFile()
     if not file or not file:match('^media/sound/CSV/[%w_]+%.mp3$') then error('Missing custom voice file '..id)end
-    body[#body+1]='clip { file = '..file..', volume = '..tostring(index<=#ids and clip:getVolume()*N.recordingGain(voice,id) or 0)..', pitch = '..tostring(V.pitchMultiplier(pitch,voice))..', distanceMin = '..tostring(clip:getMinDistance())..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
+    body[#body+1]='clip { file = '..file..', volume = '..tostring(index<=#ids and clip:getVolume() or 0)..', pitch = '..tostring(V.pitchMultiplier(pitch,voice))..', distanceMin = '..tostring(clip:getMinDistance())..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
    end
   end
   body[#body+1]='}'
@@ -92,12 +91,17 @@ function N.safeApply(player)
  if not ok then N.disabled=true;N.disabledVoices[voice]=true;N.failures[voice]=tostring(err):sub(1,240);N.errors=N.errors+1;print('[CSV] '..(voice)..' native voice setup disabled for this session: '..tostring(err))end
 end
 function N.painActive(player)
- if not player or not N.supported(V.voice(player)) then return false end
- local e=player:getEmitter();if not e then return false end
- local prefix=player:getDescriptor():getVoicePrefix() or ''
- for _,suffix in ipairs(spec(V.voice(player)).pain)do if e:isPlaying(prefix..suffix) then return true,suffix end end
+ if not player then return false end
+ local voice=V.voice(player);local data=spec(voice)
+ if not data then return false end
+ local descriptor=player:getDescriptor()
+ local prefix=descriptor and descriptor:getVoicePrefix()
+ local emitter=player:getEmitter()
+ if not emitter or type(prefix)~='string' or prefix=='' then return false end
+ for _,suffix in ipairs(data.pain)do if emitter:isPlaying(prefix..suffix) then return true,suffix end end
  return false
 end
+
 local activity=setmetatable({},{__mode='k'})
 N.activity={}
 N.ambient={windows=0,scans=0,activeScans=0}
@@ -105,7 +109,6 @@ local lastPain=setmetatable({},{__mode='k'})
 function N.update(player)
  N.safeApply(player)
  if N.ready(player) then
-  require('CSV/Callout').observe(player)
   local now=V.now();local state=activity[player]
   if not state then state={nextScan=0,seen={}};activity[player]=state end
   if now>=state.nextScan then
@@ -128,11 +131,6 @@ function N.update(player)
  local active,suffix=N.painActive(player)
  if suffix and suffix~=lastPain[player] then require('CSV/ProductionReport').observe(V.voice(player)..'_native_active_'..suffix,{})end
  lastPain[player]=suffix
- if not active or not V.client then return end
- local C=V.client
- for i=#C.active,1,-1 do
-  local e=C.active[i]
-  if e.player==player and not e.preview then C.cancel(e,'native_'..V.voice(player)..'_pain',true)end
- end
+ require('CSV/VoiceOwnership').nativeUpdate(player,active)
 end
 return N

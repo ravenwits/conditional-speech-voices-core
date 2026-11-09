@@ -23,7 +23,7 @@ function M.healthRows(player,write,localize)
  local registry=require 'CSV/Registry'
  local native=require 'CSV/NativeVoice'
  write('CORE '..V.version)
- local ids={};for id in pairs(registry.providers)do ids[#ids+1]=id end;table.sort(ids)
+ local ids={};for id in pairs(registry.providers)do ids[#ids+1]=id end;require('CSV/Sort').sort(ids)
  for _,id in ipairs(ids)do
   local pack=registry.providers[id]
   write(id..' | '..pack.bank.revision..' | '..tostring(pack.contract or '-'))

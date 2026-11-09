@@ -49,7 +49,7 @@ end
 function I.fallback(p,t,sequence)
  local trace=require 'CSV/Trace'
  trace.step(t,'fallback','native_pain_unavailable')
- require('CSV/Callout').interrupt(p)
+ require('CSV/VoiceOwnership').injury(p)
  local previous=I.context[p];I.context[p]=sequence
  local ok,err=pcall(trace.call,t,p,require('ConditionalSpeech_Core').generateSpeechFrom,p,'AcutePain',4,4,false,true)
  I.context[p]=previous

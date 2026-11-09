@@ -76,4 +76,12 @@ recipients={listener};outgoing={}
 assert(S.receive('CSV','speak',listener,self))
 assert(#outgoing==1 and not C.play(outgoing[1].p,listener) and #sounds==count,'local server echo does not duplicate prediction')
 self.voice='missing';assert(not V.validPacket(self),'missing provider rejected without fallback')
+local prior=S.last[listener];local sent=#outgoing
+for _,payload in ipairs({false,{}, {voice={}}, {voice='bob',line={}},
+ {version=1,actor=0,seq=78,voice='bob',line='Thirst_1',pitch=0,radius=0/0},
+ {version=1,actor=0,seq=math.huge,voice='bob',line='Thirst_1',pitch=0,radius=10},
+ {version=1,actor=999,seq=78,voice='bob',line='Thirst_1',pitch=0,radius=10}})do
+ local ok,accepted=pcall(S.receive,'CSV','speak',listener,payload or nil)
+ assert(ok and not accepted and #outgoing==sent and S.last[listener]==prior,'malformed requests must not relay or mutate sender history')
+end
 print('PASS '..mode..': speaker bank routing, different UI, remote descriptor, missing packs, revision checks and duplicate protection')

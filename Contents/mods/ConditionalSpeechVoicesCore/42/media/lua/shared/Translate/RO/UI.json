@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "Vocea jocului",
   "UI_CSV_Short_ModVoice": "Vocea modului",
   "UI_CSV_PitchOffset": "Reglarea tonalității vocii",
-  "UI_CSV_PitchOffsetHelp": "Tonalitatea personajului curent se încarcă automat. Aplicare modifică doar acest personaj. Dezactivat fără personaj."
+  "UI_CSV_PitchOffsetHelp": "Tonalitatea personajului curent se încarcă automat. Aplicare modifică doar acest personaj. Dezactivat fără personaj.",
+  "UI_CSV_Short_Compatibility": "Doar compatibilitate - fără evaluare",
+  "UI_CSV_Short_SelectionOnly": "Verifică doar alegerea replicii. Redarea este afișată separat."
 }

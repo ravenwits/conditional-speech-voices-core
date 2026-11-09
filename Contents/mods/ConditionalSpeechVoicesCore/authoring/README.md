@@ -81,3 +81,7 @@ has those inputs. It reports the number of transcripts checked separately.
 New templates enable needTiers version 1. The extension provides four distinct
 takes for each of the seven needs. Earlier contract-1 packs retain their
 existing selection rules. Core validates every extension slot and caption.
+
+## Critical health recordings
+
+New templates declare `criticalHealth=1`. This optional extension requires eight captioned slots: two CriticalWound lines, two CriticalFading lines and their whispered counterparts. Use restrained pain for wounds and weak, interrupted breathing for fading strength. Do not claim bleeding, bites or infection without matching evidence. Existing packs without the extension retain the older injury recordings.

@@ -21,6 +21,8 @@ def initialize(output, voice, language, female=False):
     required = set(CONTRACT['slots'])
     if bank.get('needTiers') == 1:
         required.update(CONTRACT['extensions']['needTiers']['slots'])
+    if bank.get('criticalHealth') == 1:
+        required.update(CONTRACT['extensions']['criticalHealth']['slots'])
     for line in sorted(required):
         key = voice + '_' + line
         sound = 'CSV_' + key

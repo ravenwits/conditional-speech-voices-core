@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "Voix du jeu",
   "UI_CSV_Short_ModVoice": "Voix du mod",
   "UI_CSV_PitchOffset": "Réglage de la hauteur de voix",
-  "UI_CSV_PitchOffsetHelp": "Hauteur absolue du personnage actuel, chargée automatiquement. Appliquer ne change que ce personnage. Désactivé sans personnage."
+  "UI_CSV_PitchOffsetHelp": "Hauteur absolue du personnage actuel, chargée automatiquement. Appliquer ne change que ce personnage. Désactivé sans personnage.",
+  "UI_CSV_Short_Compatibility": "Compatibilité seule - non évaluée",
+  "UI_CSV_Short_SelectionOnly": "Seule la sélection est vérifiée. La lecture est affichée séparément."
 }

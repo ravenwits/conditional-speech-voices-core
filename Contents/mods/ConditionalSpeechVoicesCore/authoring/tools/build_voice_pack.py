@@ -50,6 +50,11 @@ def validate(config, directory):
         required.update(extension['slots'])
         if any(not bank['lines'].get(line) for line in extension['slots']):
             raise ValueError('Missing need tier caption')
+    if 'criticalHealth' in bank:
+        extension = CONTRACT['extensions']['criticalHealth']
+        if bank['criticalHealth'] != 1 or any(not bank['lines'].get(line) for line in extension['slots']):
+            raise ValueError('Invalid critical health extension or captions')
+        required.update(extension['slots'])
     voices = set()
     prefixes = set()
     for voice in bank['voices']:

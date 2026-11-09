@@ -89,5 +89,7 @@
   "UI_CSV_Short_GameVoice": "Pelin ääni",
   "UI_CSV_Short_ModVoice": "Modin ääni",
   "UI_CSV_PitchOffset": "Äänenkorkeuden säätö",
-  "UI_CSV_PitchOffsetHelp": "Nykyisen hahmon äänenkorkeus ladataan automaattisesti. Käytä muuttaa vain tätä hahmoa. Ei käytössä ilman hahmoa."
+  "UI_CSV_PitchOffsetHelp": "Nykyisen hahmon äänenkorkeus ladataan automaattisesti. Käytä muuttaa vain tätä hahmoa. Ei käytössä ilman hahmoa.",
+  "UI_CSV_Short_Compatibility": "Vain yhteensopivuus - ei arvioitu",
+  "UI_CSV_Short_SelectionOnly": "Vain repliikin valinta tarkistetaan. Toisto näytetään erikseen."
 }

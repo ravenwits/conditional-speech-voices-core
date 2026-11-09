@@ -87,7 +87,7 @@ function T.block(state,player,group,source,reason,facts)
  return record
 end
 local function fields(values)
- local names={};for key in pairs(values)do names[#names+1]=key end;table.sort(names)
+ local names={};for key in pairs(values)do names[#names+1]=key end;require('CSV/Sort').sort(names)
  local out={};for _,key in ipairs(names)do out[#out+1]=key..'='..clean(values[key])end;return table.concat(out,' ')
 end
 function T.asset(key)return T.assets[key] or {}end

@@ -1,10 +1,10 @@
 local U={installed=false,trees=setmetatable({},{__mode='k'}),needs=setmetatable({},{__mode='k'}),nextScan=0}
 local function safe(fn)local ok,value=pcall(fn);if ok then return value end end
-local function localBob(p)
+local function eligiblePlayer(p)
  return p and p:isLocalPlayer() and not p:isDead() and require('CSV/Core').extended(require('CSV/Core').voice(p))
 end
 function U.countSpeech(player,text)
- if not require('CSV/Core').config.enabled or not require('CSV/Core').languageSupported() or not require('CSV/Conditions').enabled or not localBob(player) or type(text)~='string' then return false end
+ if not require('CSV/Core').config.enabled or not require('CSV/Core').languageSupported() or not require('CSV/Conditions').enabled or not eligiblePlayer(player) or type(text)~='string' then return false end
  local f=require('CSV/State').capture(player)
  if type(f.rounds)~='number' or f.rounds<1 or f.jammed==true then return false end
  local suffix=safe(function()return getText('UI_shotsLeft')end)
@@ -14,13 +14,13 @@ function U.countSpeech(player,text)
 end
 function U.trackTree(action)
  local p,tree=action.character,action.tree
- if not localBob(p) or not tree or tree:getObjectIndex()<0 then return end
+ if not eligiblePlayer(p) or not tree or tree:getObjectIndex()<0 then return end
  local square=tree:getSquare();if not square then return end
  U.trees[p]={tree=tree,x=square:getX(),y=square:getY(),z=square:getZ(),at=getTimestampMs()}
 end
 function U.scanTrees(now)
  for p,t in pairs(U.trees)do
-  if now-t.at>8000 or not localBob(p) or p:getZ()~=t.z or (p:getX()-t.x)^2+(p:getY()-t.y)^2>36 then U.trees[p]=nil
+  if now-t.at>8000 or not eligiblePlayer(p) or p:getZ()~=t.z or (p:getX()-t.x)^2+(p:getY()-t.y)^2>36 then U.trees[p]=nil
   elseif safe(function()return t.tree:getObjectIndex()<0 end) then
    local square=safe(function()return getCell():getGridSquare(t.x,t.y,t.z)end)
    -- Object disappearance in an unloaded chunk is not proof of a felled tree.
@@ -34,7 +34,7 @@ function U.scanTrees(now)
  end
 end
 function U.observeNeeds(p,f,now)
- if not localBob(p) then return end
+ if not eligiblePlayer(p) then return end
  local old=U.needs[p];local levels=f.levels or {}
  if not old then U.needs[p]={levels=levels,pending={},at=now};return end
  local N=require('CSV/NeedTiming');local C=require('CSV/Core').client
@@ -67,7 +67,7 @@ function U.tick()
  if not U.installed or not require('CSV/Conditions').enabled then return end
  local now=getTimestampMs();if now<U.nextScan then return end;U.nextScan=now+1000
  U.scanTrees(now)
- for i=0,getNumActivePlayers()-1 do local p=getSpecificPlayer(i);if localBob(p) then U.observeNeeds(p,require('CSV/State').capture(p),now) end end
+ for i=0,getNumActivePlayers()-1 do local p=getSpecificPlayer(i);if eligiblePlayer(p) then U.observeNeeds(p,require('CSV/State').capture(p),now) end end
 end
 function U.install()
  if U.installed then return true end

@@ -6,7 +6,7 @@ Core handles speech rules, playback, settings and debug reports. It requires [Co
 
 ## Status
 
-Version 0.42.4. Single-player beta, tested with Project Zomboid 42.21.0. Multiplayer is not yet verified. The latest character-specific pitch setting still needs a live save/reload check.
+Version 0.42.7. Single-player beta, tested with Project Zomboid 42.21.0. Multiplayer is not yet verified. The latest character-specific pitch setting still needs a live save/reload check.
 
 ## Install
 
@@ -23,6 +23,8 @@ Enable Speech Debug in Mod Options, reproduce the issue, then use **Debug > Cond
 ## Development
 
 Run `python tools/check.py` with Lua 5.1 available. These checks cover syntax and isolated Core behavior. They do not prove live audio playback, multiplayer behavior or coverage of every recording. See [testing](docs/testing.md).
+
+See [Core boundaries](docs/architecture.md) for scheduling, event context, Q calls and native injury ownership.
 
 ## License
 
