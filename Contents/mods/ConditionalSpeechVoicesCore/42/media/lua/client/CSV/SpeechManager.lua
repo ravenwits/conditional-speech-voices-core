@@ -30,12 +30,20 @@ function M.flush()
    M.metrics.retrySkipped=(M.metrics.retrySkipped or 0)+1
    if e.blocked~='retry_wait' then e.blocked='retry_wait';report(e,'retry_wait')end
   else
-   local line,policy=contexts(e,function()return V.client.plan(e.player,V.voice(e.player),e.group,e.intensity,e.maximum,nil,V.client.preferences())end)
-   local channel=require('CSV/Channel').resolve(policy,require('CSV/Activity').read(e.player),V.client.preferences())
-   if line and channel.allowed and channel.channel~='none' then e.rank=policy.priority or 1;candidates[#candidates+1]=e
+   local waiting=Request.waitReason(e)
+   if waiting then
+    if e.blocked~=waiting then e.blocked=waiting;report(e,waiting)end
+   elseif not Request.refresh(e) then
+    M.metrics.cancelled=M.metrics.cancelled+1;report(e,e.invalidReason);table.remove(M.queue,i)
    else
-    local reason=not line and 'no_eligible_recording' or channel.reason
-    if e.blocked~=reason then e.blocked=reason;M.metrics.blocked=M.metrics.blocked+1;report(e,reason)end
+    if e.lootEvent then e.nextTry=now+250 end
+    local line,policy=contexts(e,function()return V.client.plan(e.player,V.voice(e.player),e.group,e.intensity,e.maximum,nil,V.client.preferences())end)
+    local channel=require('CSV/Channel').resolve(policy,require('CSV/Activity').read(e.player),V.client.preferences())
+    if line and channel.allowed and channel.channel~='none' then e.rank=policy.priority or 1;candidates[#candidates+1]=e
+    else
+     local reason=not line and 'no_eligible_recording' or channel.reason
+     if e.blocked~=reason then e.blocked=reason;M.metrics.blocked=M.metrics.blocked+1;report(e,reason)end
+    end
    end
   end
  end

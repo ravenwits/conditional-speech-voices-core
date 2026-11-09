@@ -1,4 +1,20 @@
+## 0.43
+
+- Validate built voice packs with the Core registry and report loudness outliers.
+- Include build identity, active voice and mod directories in diagnostics.
+- Prefer shorter equally suitable reactions under pressure and group common Audition sounds together.
+- Improve loot queue checks, repetition and distress continuity. Expand character creation previews and authoring checks.
+
 ## 0.42.7
+
+- Skip full inventory classification while loot speech waits for a voice, safety or retry time. Check item ownership immediately and refresh inventory facts before selection. Remove duplicate selection in the loot observer.
+- Give audited equivalent water, food and survival lines a short shared repeat window, preserving need severity and urgent injury reactions.
+- Retain verified startle/injury/high-panic context for 12 seconds. Avoid an immediate return to joking or calm warnings without inventing a panic moodle. Add four aftermath scenarios and four-voice sequence tests.
+- Include recent distress and explicit loot wait/cancellation reasons in diagnostic traces. Add a portable meaning/continuity test to public checks.
+
+- Cycle through six character-creation previews for all four official voices, with five random samples followed by an injury sample. Include panic acting, preserve selected pitch, and avoid repeats within each round.
+- Let each voice pack declare its preview list and optional final sample. Apply saved own-voice volume, recording balance and peak limits. Failed preview handles do not consume a sample.
+- Validate preview lists in the runtime and builder. Run portable authoring-tool checks in the public test gate instead of leaving the old production-dependent builder test outside release verification.
 
 - Reject loading-time dialogue before GameStart without allocating a sound handle, consuming cooldowns or replaying stale events after entry.
 - Evaluate exported scenarios inside the report writer's per-tick budget. Session exports include observed recordings instead of rebuilding the complete voice inventory.

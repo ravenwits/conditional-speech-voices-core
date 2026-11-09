@@ -80,7 +80,7 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
     local extraGroup
     if group=='Threat' then
         if type(f.panic)=='number' and f.panic<3 and ((f.accessibleNear or f.near or 0)>0 or require('CSV/Concealment').active(f)) then
-            extraGroup=f.panic==0 and not require('CSV/Concealment').active(f) and 'ThreatCalm' or 'ThreatTense'
+            extraGroup=f.panic==0 and not f.recentDistress and not require('CSV/Concealment').active(f) and 'ThreatCalm' or 'ThreatTense'
             return C.extraLine(player,voice,extraGroup) or (V.bank(voice).data.groups.Panic or {})[2]
         end
         return nil
@@ -148,7 +148,7 @@ local function plan(player,voice,group,intensity,maximum,facts,prefs)
     end
     s.whisperAvailable=whisper~=nil;s.contextWhisperAvailable=contextualWhisper~=nil
     local decision=Delivery.decide(group,intensity,s,prefs)
-    if decision.reason=='observed_calm_warning' and not require('CSV/Traits').context(group,s) then line=C.extraLine(player,voice,'ThreatCalm') or (V.bank(voice).data.groups.Panic or {})[2] end
+    if decision.reason=='observed_calm_warning' and not require('CSV/Traits').context(group,s) then line=C.extraLine(player,voice,s.recentDistress and 'ThreatTense' or 'ThreatCalm') or (V.bank(voice).data.groups.Panic or {})[2] end
     if decision.reason=='recorded_whisper' then line=whisper
     elseif decision.reason=='recorded_context_whisper' then line=contextualWhisper end
     line=V.localize(voice,line)

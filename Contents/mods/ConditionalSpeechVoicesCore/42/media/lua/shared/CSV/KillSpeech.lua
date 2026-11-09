@@ -6,7 +6,7 @@ function K.distressed(f)
 end
 function K.dark(f,experience)
  local t=f.traits or {}
- return experience=='practiced' and t.desensitized==true and (f.panic or 0)<=1
+ return f.recentDistress~=true and experience=='practiced' and t.desensitized==true and (f.panic or 0)<=1
   and (f.unhappy or 0)<2 and (f.endurance or 0)<2 and (f.health or 0)>65 and not K.distressed(f)
 end
 function K.angry(f)return (f.anger or 0)>=2 and not K.distressed(f)end

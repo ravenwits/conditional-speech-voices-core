@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,4 +40,6 @@ assert len(ids) == len(set(ids)) and len(ids) == 5
 assert not list(CORE.rglob("*.mp3")), "Core must not bundle voice recordings"
 for test in sorted((ROOT / "tests").glob("*.lua")):
     run(test.relative_to(ROOT))
+for test in sorted((ROOT / "tests").glob("*.py")):
+    subprocess.run([sys.executable, str(test)], check=True)
 print(f"PASS {len(files)} Lua files parsed, {len(locales)} locale files, issue form and isolated Core tests")

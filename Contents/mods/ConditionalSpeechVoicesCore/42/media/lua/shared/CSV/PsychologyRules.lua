@@ -2,7 +2,7 @@ local R={groups={Psychology='Panic'}}
 R.events={zombieKill=true,humanKill=true,humanAttack=true,escape=true,hiddenPursuer=true,lostTarget=true,reacquired=true,pursuit=true,friendSearch=true,humanGroup=true,injurySurvived=true,raid=true,raidSurvived=true}
 function R.pool(e,f)
  if not e or e.verified~=true or not R.events[e.kind] then return nil end
- local practiced=e.experience=='practiced'
+ local practiced=e.experience=='practiced' and f.recentDistress~=true
  if e.kind=='zombieKill' then
   local safe=f.encounterThreat==false and require('CSV/Safety').settled(f) and f.fire~=true and not require('CSV/Concealment').active(f)
   if safe then return practiced and not require('CSV/KillSpeech').distressed(f) and 'AfterZombieSteady' or 'AfterZombieShaken' end

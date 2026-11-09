@@ -26,6 +26,30 @@ function M.created(index,player)
  if choice.voice then require('CSV/NativeVoice').safeApply(player)end
  if player.transmitModData then player:transmitModData()end
 end
+local function nextPreview(screen,voice,core)
+ local definition=pack.voices[voice]
+ screen.csvPreviews=screen.csvPreviews or {}
+ local state=screen.csvPreviews[voice] or {remaining={}}
+ screen.csvPreviews[voice]=state
+ local remaining=state.remaining
+ if #remaining==0 then
+  for _,line in ipairs(definition.previewLines or {definition.preview})do
+   if core.clip(voice,line) then remaining[#remaining+1]=line end
+  end
+ end
+ local candidates={}
+ for index,line in ipairs(remaining)do
+  if #remaining==1 or line~=definition.previewLast then candidates[#candidates+1]=index end
+ end
+ -- Avoid a repeat across rounds when another eligible sample exists.
+ if #candidates>1 then
+  for i=#candidates,1,-1 do if remaining[candidates[i]]==state.last then table.remove(candidates,i)end end
+ end
+ if #candidates==0 then return end
+ local index=candidates[ZombRand(#candidates)+1]
+ return remaining[index],state,index
+end
+
 function M.install(screen)
  if screen.csvVoiceInstalled then return end
  screen.csvVoiceInstalled=true
@@ -50,14 +74,27 @@ function M.install(screen)
  end
  local click=screen.onOptionMouseDown
  screen.onOptionMouseDown=function(self,button,...)
-  if button.internal~='PLAYDEMOVOICE' or not M.selected(self) then return click(self,button,...)end
+  if button.internal~='PLAYDEMOVOICE' then return click(self,button,...)end
+  local voice=M.choice(self)
+  if not voice then return click(self,button,...)end
+  local core=require 'CSV/Core'
+  local line,state,index=nextPreview(self,voice,core)
+  if not line then return click(self,button,...)end
+  local clip=core.clip(voice,line)
+  local mix={packet={voice=voice},line=line,ownVoice=true,preview=true,
+   baseVolume=core.deliveryGain(voice,line),balance=clip.gain or 1}
+  local client=core.client
+  local gain=client and client.entryGain and client.entryGain(mix)
+   or core.outputGain(voice,line,mix.baseVolume*mix.balance)
   if self.soundRef and self.soundPlayer:isPlaying(self.soundRef) then self.soundPlayer:stopSound(self.soundRef)end
   local manager=getSoundManager()
   manager:setMusicState('InGame');manager:resumeSoundAndMusic()
-  self.soundRef=manager:playUISound('CSV_'..M.choice(self)..'_'..pack.voices[M.choice(self)].preview..'_Self')
-  if self.soundRef~=0 then
-   self.soundPlayer:setPitch(self.soundRef,require('CSV/Core').pitchMultiplier(self:getVoicePitch(),M.choice(self)))
+  self.soundRef=manager:playUISound(clip.sound..'_Self')
+  if self.soundRef and self.soundRef~=0 then
+   self.soundPlayer:setVolume(self.soundRef,gain)
+   self.soundPlayer:setPitch(self.soundRef,core.pitchMultiplier(self:getVoicePitch(),voice))
    self.soundPlayer:tick()
+   table.remove(state.remaining,index);state.last=line
   end
   self:disableBtn()
  end

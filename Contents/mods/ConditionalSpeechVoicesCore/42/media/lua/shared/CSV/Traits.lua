@@ -43,7 +43,7 @@ function T.startleAllowed(id,s)
 end
 function T.dryCoping(s)
  local e=s.psychology;local t=s.traits or {}
- return e and e.verified and e.kind=='zombieKill' and e.experience=='practiced' and t.desensitized==true
+ return s.recentDistress~=true and e and e.verified and e.kind=='zombieKill' and e.experience=='practiced' and t.desensitized==true
   and s.sneaking==false and s.near==0 and s.visible==0 and s.recentThreat==false and not s.humanThreat and not s.fire
   and s.panic==0 and s.pain==0 and s.bleeding==0 and (s.endurance or 4)<2 and s.drunk==0 and s.coldSymptoms==0
 end

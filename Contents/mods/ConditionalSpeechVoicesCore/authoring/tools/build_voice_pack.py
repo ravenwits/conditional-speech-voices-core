@@ -73,6 +73,15 @@ def validate(config, directory):
                 raise ValueError(name + ': missing slot ' + slot)
         if name + '_' + voice['preview'] not in bank['data']['clips']:
             raise ValueError(name + ': missing preview')
+        previews = voice.get('previewLines')
+        if previews is not None:
+            if (not isinstance(previews, list) or not previews
+                    or any(not isinstance(line, str) for line in previews)
+                    or len(set(previews)) != len(previews)
+                    or any(name + '_' + line not in bank['data']['clips'] for line in previews)):
+                raise ValueError(name + ': invalid preview playlist')
+        if 'previewLast' in voice and (not previews or voice['previewLast'] not in previews):
+            raise ValueError(name + ': preview closing recording must belong to playlist')
         for event in CONTRACT['nativeEvents']:
             pool = bank['native']['replacements'].get(event)
             if not pool:
@@ -110,7 +119,7 @@ def validate(config, directory):
     return files
 
 
-def build(config_path, output):
+def build(config_path, output, core=None):
     config = json.loads(config_path.read_text(encoding='utf-8'))
     files = validate(config, config_path.parent)
     if output.exists():
@@ -176,6 +185,9 @@ def build(config_path, output):
             (location / 'mod.info').write_text(info, encoding='utf-8')
             if config.get('poster'):
                 shutil.copy2(config_path.parent / config['poster'], location / 'poster.png')
+        if core is not None:
+            from verify_runtime import verify
+            verify(temporary, core)
         temporary.rename(output)
     except BaseException:
         assert temporary.resolve().parent == output.parent.resolve() and temporary.name.startswith('voice-build-')
@@ -188,5 +200,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('manifest', type=Path)
     parser.add_argument('output', type=Path)
+    parser.add_argument("--core", type=Path, required=True, help="Core mod folder used for runtime acceptance")
     args = parser.parse_args()
-    print('Built', build(args.manifest.resolve(), args.output.resolve()), 'audio files')
+    print('Built', build(args.manifest.resolve(), args.output.resolve(), args.core.resolve()), 'audio files')

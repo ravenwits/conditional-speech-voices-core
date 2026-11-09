@@ -1,4 +1,13 @@
-local M={repeatMs=90000}
+local M={repeatMs=90000,meaningRepeatMs=30000}
+-- Only audited equivalents share a short cooldown. Needs keep their severity,
+-- and danger/injury events are not placed behind this additional gate.
+local meanings={StillAlive_1='survived',StillAlive_2='survived',StillAlive_3='survived',
+ AfterZombieSteady_2='survived',InjuryAftermath_1='survived',InjuryAftermath_3='survived',
+ Thirst_1='water1',Thirst_2='water2',Thirst_3='water3',NeedThirst_3='water3',
+ ThirstCritical_1='water4',ThirstCritical_2='water4',ThirstCritical_3='water4',
+ Hungry_1='food1',Hungry_2='food2',Hungry_3='food3',NeedHungry_4='food4',
+ HungerSevere_1='food3',HungerSevere_2='food3',HungerSevere_3='food3'}
+function M.meaning(line)return meanings[M.source(line.id)]end
 function M.source(id)
  local nextId=require('CSV/Expressions').source(id) or id:match('^Whisper_(.+)$')
  if nextId and nextId~=id then return M.source(nextId)end
@@ -12,7 +21,10 @@ function M.stamp(history,line)
  return math.max(history[M.key(line)] or 0,history[M.source(line.id)] or 0,history[line.id] or 0)
 end
 function M.recent(history,line,now)
- local at=M.stamp(history,line);return at>0 and now>=at and now-at<M.repeatMs
+ local at=M.stamp(history,line)
+ if at>0 and now>=at and now-at<M.repeatMs then return true end
+ local meaning=M.meaning(line);local used=meaning and history['meaning:'..meaning]
+ return used~=nil and now>=used and now-used<M.meaningRepeatMs
 end
 function M.allowed(line,f)
  local id=M.source(line.id)
@@ -41,5 +53,6 @@ function M.shared(C,V,player,voice,line,group,f)
 end
 function M.remember(h,line,now)
  h[M.key(line)]=now;h[M.source(line.id)]=now
+ local meaning=M.meaning(line);if meaning then h['meaning:'..meaning]=now end
 end
 return M

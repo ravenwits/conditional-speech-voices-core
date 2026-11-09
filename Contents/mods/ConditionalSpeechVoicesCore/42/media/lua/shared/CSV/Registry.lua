@@ -63,6 +63,17 @@ function R.register(mod,definition)
  for _,v in ipairs(definition.voices)do
   assert(type(v.id)=='string' and v.id:match('^[a-z][a-z0-9_]*$') and not ids[v.id],'Invalid or duplicate voice ID')
   assert(type(v.name)=='string','Missing voice name');ids[v.id]=true
+  if v.previewLines~=nil then
+   assert(type(v.previewLines)=='table' and #v.previewLines>0,'Invalid preview playlist')
+   local seen={};local count=0
+   for index,line in pairs(v.previewLines)do
+    assert(type(index)=='number' and index%1==0 and index>=1 and index<=#v.previewLines,'Invalid preview playlist index')
+    assert(type(line)=='string' and not seen[line] and type(b.data.clips[v.id..'_'..line])=='table','Missing or duplicate preview recording')
+    seen[line]=true;count=count+1
+   end
+   assert(count==#v.previewLines,'Sparse preview playlist')
+   assert(v.previewLast==nil or seen[v.previewLast],'Preview closing recording must belong to playlist')
+  else assert(v.previewLast==nil,'Preview closing recording needs a playlist')end
   if v.builtinPrefix then
    assert((v.builtinPrefix=='VoiceMale' or v.builtinPrefix=='VoiceFemale') and not builtins[v.builtinPrefix],'Invalid or duplicate built-in voice binding')
    builtins[v.builtinPrefix]=true

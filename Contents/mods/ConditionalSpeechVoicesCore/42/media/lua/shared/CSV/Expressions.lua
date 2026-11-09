@@ -34,6 +34,14 @@ function M.pick(V,voice,line,facts,forced,player)
   if (f.coldSymptoms or levels.HasACold or 0)>=1 then choices[#choices+1]='congested' end
  end
  local history=player and V.client and V.client.history[player] or {}
+ local hurried=(f.directAttack or 0)>0 or (f.activePursuit or 0)>0 or (f.endurance or 0)>=3
+ local function earlier(a,b)
+  if hurried then
+   local ac,bc=V.clip(voice,a.id),V.clip(voice,b.id)
+   if ac.duration~=bc.duration then return ac.duration<bc.duration end
+  end
+  return a.id<b.id
+ end
  for _,profile in ipairs(choices)do
   local entry=options[profile]
   if entry and V.clip(voice,entry.id) and (forced or require('CSV/SemanticSpeech').allowed(entry,f)) then return entry end
@@ -42,7 +50,7 @@ function M.pick(V,voice,line,facts,forced,player)
    local best,stamp
    for _,candidate in ipairs(fallback[profile] or {})do
     local used=history[candidate.id] or 0
-    if V.clip(voice,candidate.id) and require('CSV/SemanticSpeech').allowed(candidate,f) and not require('CSV/SemanticSpeech').recent(history,candidate,getTimestampMs()) and (not best or used<stamp or (used==stamp and candidate.id<best.id)) then best=candidate;stamp=used end
+    if V.clip(voice,candidate.id) and require('CSV/SemanticSpeech').allowed(candidate,f) and not require('CSV/SemanticSpeech').recent(history,candidate,getTimestampMs()) and (not best or used<stamp or (used==stamp and earlier(candidate,best))) then best=candidate;stamp=used end
    end
    if best then return best end
   end

@@ -1,4 +1,4 @@
-# Voice framework 0.42.3
+# Voice framework
 
 Core owns observation, priorities, interruption, repetition, stealth, playback and networking.
 Packs own voice identities, localized lines, acting, audio, captions and measured calibration.
@@ -6,8 +6,7 @@ Every official voice implements contract 1. The bundled voice-contract-v1.json d
 
 Bob, Kate, Alp and Mujde use the same native playback, pitch and Q caption code.
 Saved built-in voices are resolved through provider-declared builtinPrefix bindings.
-Old Turkish filenames remain stable through explicit aliases. Core has a compatibility
-require shim for the previous callout module name; it contains no character-specific behavior.
+Old Turkish filenames remain stable through explicit aliases. The obsolete callout module shim has been removed. Use the documented provider interface.
 
 ## Create a voice pack
 
@@ -27,7 +26,7 @@ effort clips are brief grunts, pain clips are involuntary reactions, and breathi
 clips contain breaths. Do not read stage directions aloud. Provide mono MP3.
 
     python tools/prepare_voice_pack.py measure MyVoice/pack.json --ffmpeg C:/Tools/ffmpeg.exe
-    python tools/build_voice_pack.py MyVoice/pack.json build/MyVoice
+    python tools/build_voice_pack.py MyVoice/pack.json build/MyVoice --core /path/to/ConditionalSpeechVoicesCore
 
 Measurement fills durations and per-file peak limits. The builder checks the complete
 contract, voice ownership, captions, files and identity uniqueness before writing.
@@ -38,6 +37,18 @@ The generated CSV-Voice-myvoice provider is discovered by Core automatically.
 Each additional voice follows the same contract. It requires a unique ID, native
 prefix, preview recording and complete clips. Native pitch and volume are managed
 by Core. The voice selection determines spoken language independently of UI language.
+
+Each voice can declare `previewLines`, a nonempty list of unique recording IDs from
+its own bank. Character creation shuffles these without repeating within a round.
+Set `previewLast` to one of those IDs to reserve it for the end of each round.
+The official packs use six samples and end with injury. Other packs choose their
+own samples without changing Core. Older packs with only `preview` keep their
+single sample. Invalid playlists reject the provider before it loads.
+
+Previews apply the recording gain, delivery calibration, own-voice volume setting
+and peak limit used for dialogue. They use the menu emitter without nearby-threat
+boost or world distance effects. Preview loudness therefore does not demonstrate
+how audible a voice will be during combat.
 
 ## Compatibility
 
@@ -85,3 +96,5 @@ existing selection rules. Core validates every extension slot and caption.
 ## Critical health recordings
 
 New templates declare `criticalHealth=1`. This optional extension requires eight captioned slots: two CriticalWound lines, two CriticalFading lines and their whispered counterparts. Use restrained pain for wounds and weak, interrupted breathing for fading strength. Do not claim bleeding, bites or infection without matching evidence. Existing packs without the extension retain the older injury recordings.
+
+Measurement also writes a .loudness.json report. It does not normalize acting or alter recordings. Before distributing a built pack, run tools/verify_runtime.py with the pack folder and installed Core folder. This invokes the actual Core registry, not a second semantic validator.

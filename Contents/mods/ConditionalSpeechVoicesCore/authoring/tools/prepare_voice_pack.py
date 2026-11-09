@@ -2,6 +2,7 @@
 import argparse
 import json
 import math
+import statistics
 from pathlib import Path
 import re
 import subprocess
@@ -16,7 +17,9 @@ def initialize(output, voice, language, female=False):
     bank = json.loads(Path(__file__).with_name('voice-template-v1.json').read_text(encoding='utf-8'))
     bank.update(id='csv.' + voice, language=language, revision='1.0.0', contract=1)
     bank['voices'] = [dict(id=voice, name=voice.title(), prefix='VoiceCSV' + voice.title().replace('_', '') + 'P',
-                          base='VoiceFemale' if female else 'VoiceMale', preview='NativeCall_1')]
+                          base='VoiceFemale' if female else 'VoiceMale', preview='NativeCall_1',
+                          previewLines=['Explore_2', 'Explore_3', 'FoodEaten_1', 'Panic_3', 'Thirst_1', 'Injured_3'],
+                          previewLast='Injured_3')]
     assets = {}
     required = set(CONTRACT['slots'])
     if bank.get('needTiers') == 1:
@@ -38,6 +41,7 @@ def initialize(output, voice, language, female=False):
 def measure(manifest, ffmpeg):
     config = json.loads(manifest.read_text(encoding='utf-8'))
     measurements = {}
+    loudness = {}
     for sound, asset in config['assets'].items():
         path = (manifest.parent / asset['source']).resolve()
         if not path.is_file():
@@ -52,6 +56,7 @@ def measure(manifest, ffmpeg):
             capture_output=True, text=True, check=True)
         stats = json.JSONDecoder().raw_decode(result.stderr[result.stderr.rfind('{'):])[0]
         peak = float(stats['input_tp'])
+        loudness[sound] = dict(integratedLUFS=float(stats['input_i']), truePeakDB=peak, volume=asset.get('volume',1.2))
         if not math.isfinite(peak):
             raise ValueError('Silent or invalid recording ' + sound)
         measurements[sound] = (duration, 10 ** ((-1 - peak) / 20) / asset.get('volume', 1.2))
@@ -60,6 +65,19 @@ def measure(manifest, ffmpeg):
     temporary = manifest.with_suffix('.measured.tmp')
     temporary.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding='utf-8')
     temporary.replace(manifest)
+    report = manifest.with_suffix(".loudness.json")
+    groups={}
+    for key,clip in config['bank']['data']['clips'].items():
+        sound=clip['sound']; row=loudness[sound]
+        kind='whisper' if 'Whisper' in key else 'call' if 'Call_' in key else 'breath' if 'Breath_' in key else 'effort' if 'Effort_' in key else 'pain' if 'NativePain' in key else 'dialogue'
+        level=row['integratedLUFS']+20*math.log10(row['volume']*clip.get('gain',1))
+        groups.setdefault(kind,{})[sound]=level
+    flags=[]
+    for kind,values in groups.items():
+        median=statistics.median(values.values())
+        for sound,level in values.items():
+            if abs(level-median)>4: flags.append(dict(sound=sound,category=kind,level=level,median=median))
+    report.write_text(json.dumps(dict(recordings=loudness,outliers=flags,note='Review acting before changing gain; no automatic normalization.'), indent=2), encoding='utf-8')
 
 
 if __name__ == '__main__':

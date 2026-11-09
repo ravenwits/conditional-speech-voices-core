@@ -25,14 +25,30 @@ Live evidence from the November 9 Alp session showed eight Q calls entering and 
 
 The public tests also check atomic interruption, native pain during audition, isolation between actors, a third-party voice identity, context restoration after a failed dispatch and rejection of orphaned observer requests. See [Core boundaries](architecture.md).
 
-The development runner now declares all 79 suites explicitly and executes each in a fresh process. Setup helpers contain game doubles and provider loading, not older test assertions. Historical assumptions about male-only ammunition voices and old preview identities were replaced with checks against the current supported behavior.
+The development runner now declares all 80 suites explicitly and executes each in a fresh process. Setup helpers contain game doubles and provider loading, not older test assertions. Historical assumptions about male-only ammunition voices and old preview identities were replaced with checks against the current supported behavior.
 
 Package tests cover removed files, unchanged trees, protected sibling files, path escape, linked input rejection, copy failure and install rollback. These checks do not establish live audio quality or multiplayer correctness.
 
 The 0.42.7 playback tests also cover death/sleep between queueing and startup, unavailable emitters, setup failure after handle allocation, same-packet retry, repeated cancellation, completion while crouched under attack, startup-query errors and active-handle update failure. These tests use explicit failure injection; passing them is not evidence that the latest build ran in the game.
 
-The public suite now has 17 isolated test groups. Additional checks cover malformed and unknown experience schemas, provider-owned table isolation, report preparation failure followed by a successful retry, and malformed or spoofed server messages. The development suite also builds a report with incomplete saved counters. These checks do not simulate an operating-system failure during the final file write or prove an actual save/reload in the engine.
+The public suite now has 18 isolated Lua test groups. Additional checks cover malformed and unknown experience schemas, provider-owned table isolation, report preparation failure followed by a successful retry, and malformed or spoofed server messages. The development suite also builds a report with incomplete saved counters. These checks do not simulate an operating-system failure during the final file write or prove an actual save/reload in the engine.
 
 Two historical development suites were retired: a test of a constant-return native gain helper, and checks tied to an old Alp recording batch. The native framework tests still verify the volumes in generated sound definitions for all four voices. Localization coverage now reads the current voice contract, not archived production plans or an old fixed clip count. Queue retry boundaries and silent-channel outcomes remain tested. Test count is not a coverage measure.
 
 A third, outdated copy of the observer/installation test was removed from the development suite. The public `tests/foundation.lua` retains all of its assertions, supplies every current observer and rejects unexpected observer errors. The release gate always runs this public suite. Audition context tests now call the same context-preview entry point as the UI, rather than an unused random-preview function. Shared development assertions belong in `tests/support`; the runner rejects unlisted standalone test files.
+
+Character creation checks exercise all four official selections across repeated rounds, with injury last, saved volume at 0/100/200, per-recording balance and peak limits. They also cover a provider-chosen two-sample list, an older single-preview provider and a failed handle that must not consume a sample. These use engine doubles and do not establish perceived loudness in combat.
+
+The public check now runs the shipped Python authoring tools against a generated independent provider. It rejects missing recordings/captions/files, duplicate identities, bad durations and invalid preview lists, and preserves existing build output. This replaces a private builder test tied to an old production manifest that the release gate did not execute. The byte fixture is deliberately not audio; decoding and listening quality are separate checks.
+
+The development suite now has 80 groups. Quality sequence checks cover 120 busy
+frames plus 120 danger frames with zero loot inventory snapshots, immediate item
+loss cancellation, current inventory at dispatch, and a fresh injury winning over
+loot. They also exercise native alert onset, the 12-second context boundary and
+all four banks' aftermath/meaning choices. Four exact aftermath scenarios are
+included in the in-game list. The public suite has 18 Lua groups plus the Python
+authoring check. These are offline results, not game-frame or listening evidence.
+
+The latest inspected console startup reports 42.22.2, build 3d39148846. The updated
+build still needs restarted gameplay on that version. Two-client multiplayer is
+pending because only one computer is available for the current test round.

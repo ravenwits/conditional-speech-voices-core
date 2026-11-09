@@ -148,6 +148,12 @@ local function collect(player)
  else clock.clearSince=nil;s.recentThreat=nil end
  local e=S.events[player] or {}
  s.acute=e.acute~=nil and now-e.acute<3000
+ -- Keep emotional context briefly after verified distress without inventing a moodle.
+ if (s.panic or 0)>=3 or s.acute or (s.health or 100)<=35 and (s.bleeding or 0)>0 then
+  e.distress=now;S.events[player]=e
+ end
+ local distress=math.max(e.distress or 0,e.startle or 0,e.physicalInjury or 0)
+ s.recentDistress=distress>0 and now>=distress and now-distress<12000
  s.pickup=e.pickup~=nil and now-e.pickup<3000
  s.treeDown=e.treeDown~=nil and now-e.treeDown<3000
  return s

@@ -20,6 +20,19 @@ local sortInventory=require('CSV/Sort').sort
 local function buildReport(f,compact)
  local preparationStarted=getTimestampMs()
  local V=require 'CSV/Core';local C=V.client;local N=require 'CSV/NeedTiming'
+ local function location(id)
+  if not getModInfoByID then return 'unavailable' end
+  local ok,path=pcall(function() local info=getModInfoByID(id);return info and info:getDir() end)
+  return ok and tostring(path or 'unavailable') or 'unavailable'
+ end
+ emit(f,function()return 'CORE_PATH '..location('Conditional-Speech-Voices-Core')..'\n' end)
+ for id in pairs(require('CSV/Registry').providers)do
+  local mod=id
+  emit(f,function()return 'PACK_PATH '..mod..' '..location(mod)..'\n' end)
+ end
+ local actor=getSpecificPlayer and getSpecificPlayer(0)
+ local selected=actor and V.voice(actor)
+ emit(f,function()return 'BUILD '..require('CSV/BuildIdentity')..' selectedVoice='..tostring(selected)..' selectedBank='..tostring(selected and V.bank(selected).id)..'\n' end)
  emit(f,function()return 'CSV production evidence v'..require('CSV/Core').version..'\nSessionStart='..R.started..' ExportedAt='..getTimestampMs()..' droppedRows='..(R.dropped or 0)..'\n' end)
  emit(f,function()return 'NOT OBSERVED is not missing audio. Preview is not gameplay. no_eligible_recording needs semantic review; missing_audio_file is a packaging defect. Silence/cooldown does not require synthesis.\n' end)
  if C then emit(f,function()return 'Settings '..C.settingsSnapshot()..'\n' end)end

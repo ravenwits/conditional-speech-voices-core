@@ -48,6 +48,17 @@ function S.cases()
   for key,value in pairs(row.state)do f[key]=value end
   out[#out+1]={name='Kill context: '..row.name,group='Psychology',level=1,max=1,state=f,prefs={whisper=false},expect=row.expect,mode=row.silent and 'silent' or 'spoken',newPsychology=true,limited='none'}
  end
+ for _,row in ipairs({
+  {name='Recent shock after zombie fight',kind='zombieKill',recent=true,expect='AfterZombieShaken'},
+  {name='Settled after zombie fight',kind='zombieKill',recent=false,expect='AfterZombieSteady'},
+  {name='Recent shock after human fight',kind='humanKill',recent=true,expect='AfterHumanShaken'},
+  {name='Settled after human fight',kind='humanKill',recent=false,expect='AfterHumanSteady'}
+ })do
+  out[#out+1]={name=row.name,group='Psychology',level=1,max=1,
+   state={psychology={kind=row.kind,verified=true,experience='practiced',aftermath=true},sneaking=false,
+    near=0,visible=0,recentThreat=false,encounterThreat=false,humanThreat=false,panic=0,health=100,recentDistress=row.recent},
+   prefs={whisper=false},expect=row.expect,mode='spoken',newPsychology=true,limited='none'}
+ end
  require('CSV/Sort').sort(out,function(a,b)return a.name<b.name end);return out
 end
 return S

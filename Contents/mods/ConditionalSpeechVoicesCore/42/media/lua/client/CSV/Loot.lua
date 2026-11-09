@@ -123,11 +123,15 @@ function L.complements(item,items,f,index)
  end end
  f.neededOpener=opener and sealed and not otherOpener
 end
+function L.owned(player,item)
+ local container=call(item,'getContainer')
+ return container and call(container,'isInCharacterInventory',player)==true or false
+end
 function L.snapshot(player,item)
  local f={};local state=State.capture(player)
  f.hunger=state.hunger;f.pain=state.pain
  if (state.sick or 0)>0 then f.foodSickness=read(function()return player:getStats():get(CharacterStat.FOOD_SICKNESS)end) end
- local container=call(item,'getContainer');f.owned=container and call(container,'isInCharacterInventory',player)==true or false
+ f.owned=L.owned(player,item)
  f.itemType=full(item)
  L.survivalFacts(player,item,state,f)
  f.openWounds=read(function()
@@ -204,17 +208,17 @@ function L.update(player)
  local candidates={};for _,e in pairs(s.pending)do candidates[#candidates+1]=e end
  require('CSV/Sort').sort(candidates,function(a,b)if a.at==b.at then return a.group<b.group end;return a.at<b.at end)
  for _,e in ipairs(candidates)do
-  local f=L.snapshot(player,e.item);local group=Rules.classify(f)
-  local pendingStatus=require('CSV/Pending').status(now,group==e.group and Rules.allowed(e.group,prefs),e.at+90000,s.nextAttempt)
-  if pendingStatus=='expired' or pendingStatus=='cancelled' then s.pending[e.group]=nil;observe('expired_or_resolved',f)
-  elseif not require('ConditionalSpeech_Core').enabledPhraseSet('FoundLoot') then s.pending[e.group]=nil;observe('disabled',f)
+  local pendingStatus=require('CSV/Pending').status(now,L.owned(player,e.item) and Rules.allowed(e.group,prefs),e.at+90000,s.nextAttempt)
+  if pendingStatus=='expired' or pendingStatus=='cancelled' then s.pending[e.group]=nil;observe('expired_or_resolved')
+  elseif not require('ConditionalSpeech_Core').enabledPhraseSet('FoundLoot') then s.pending[e.group]=nil;observe('disabled')
   elseif pendingStatus=='ready' and (not s.last[e.group] or now-s.last[e.group]>=gaps.category) then
    local state=State.capture(player)
    -- Loot comments wait for verified safety, including while crouched.
-   if state.near==0 and state.visible==0 and state.recentThreat==false then
-    state.loot=f
-    local line,decision=V.client.plan(player,voice,e.group,1,1,state,V.client.preferences())
-    if line and decision.mode=='spoken' then
+   if state.near==0 and state.visible==0 and state.recentThreat==false and require('CSV/VoiceOwnership').check(player,{priority=1,group=e.group}) then
+    local f=L.snapshot(player,e.item)
+    if Rules.classify(f)~=e.group then s.pending[e.group]=nil;observe('expired_or_resolved',f)
+    else
+     -- Selection and playback belong to the shared manager, not this observer.
      s.nextAttempt=now+5000;State.loot=State.loot or setmetatable({},{__mode='k'});State.loot[player]=f
      local ok,err=pcall(require('ConditionalSpeech_Core').generateSpeechFrom,player,e.group,1,1,false,false)
      State.loot[player]=nil

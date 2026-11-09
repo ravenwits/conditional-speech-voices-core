@@ -1,6 +1,8 @@
 local UI=require 'CSV/DebugUI'
 local function t(key)return getText('UI_CSV_Aud_'..key)end
 local A={entries={
+ {group="Explore"}, {group="NativeCall"}, {group="NativeWhisperCall"},
+ {group="NativeBreath"}, {group="NativeEffort"}, {group="NativePain"},
 
  {group='Pain'}, {group='Angry'},
  {group='FoodRotten'}, {group='FoodEaten'},
@@ -9,7 +11,7 @@ local A={entries={
  {group='GunJammed'},
  {group='ReliefAnger'}, {group='ReliefBoredom'}, {group='ReliefSobriety'},
  {group='ChamberEmpty'}, {group='AmmoCount'},
- {group='Bored'}, {group='Explore'},
+ {group='Bored'},
  {group='AnimalTracks'},
  {group='SickFromFood'},
  {group='Panic'}, {group='Agoraphobic'},

@@ -56,11 +56,26 @@ function R.valid(e)
   return owner and owner.pending[e.group]==e.recovery and (rule and f[rule.field]==0 or e.group=='ReliefThreat' and require('CSV/Safety').settled(f))
  end
  if e.lootEvent then
-  local owner=require('CSV/Loot').players[p]
+  local loot=require('CSV/Loot');local owner=loot.players[p]
   if not owner or owner.pending[e.group]~=e.lootEvent then return false end
-  e.loot=require('CSV/Loot').snapshot(p,e.lootEvent.item)
-  return require('CSV/LootRules').classify(e.loot)==e.group
+  if not loot.owned(p,e.lootEvent.item) then e.invalidReason='loot_no_longer_owned';return false end
+  return require('CSV/LootRules').allowed(e.group,V.client.preferences())
  end
+ return true
+end
+-- Full inventory facts are read only when a loot request can be considered.
+-- Nothing is cached across attempts, so new ammunition/medicine is visible immediately.
+function R.waitReason(e)
+ if not e.lootEvent then return end
+ local allowed=require('CSV/VoiceOwnership').check(e.player,{priority=1,group=e.group})
+ if not allowed then return 'loot_wait_for_voice' end
+ local f=S.capture(e.player)
+ if f.near~=0 or f.visible~=0 or f.recentThreat~=false then return 'loot_wait_for_safety' end
+end
+function R.refresh(e)
+ if not e.lootEvent then return true end
+ e.loot=require('CSV/Loot').snapshot(e.player,e.lootEvent.item)
+ if require('CSV/LootRules').classify(e.loot)~=e.group then e.invalidReason='loot_need_resolved';return false end
  return true
 end
 function R.accept(e)

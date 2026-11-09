@@ -10,6 +10,8 @@ See `examples/ExampleVoice/42/media/lua/shared/CSV_Packs/CSV-Voice-Example.lua`.
 
 Each voice has a globally unique lowercase `id`, display `name`, unique `prefix` such as `VoiceCSVMyVoiceP`, `base` of VoiceMale or VoiceFemale, and a `preview` line ID. Optional `styleName` preserves old character-creation identifiers. Never reuse another pack's voice ID or prefix. Native prefixes and saved `csvVoice` IDs must remain stable across updates. Invalid or duplicate definitions are rejected as a whole and logged.
 
+Optional `previewLines` declares a nonempty list of unique recordings owned by that voice. Core shuffles them without repetition within a round. Optional `previewLast` reserves one member for the final draw. Without a list, the existing `preview` field supplies a single sample. The builder and runtime reject missing or duplicate playlist entries. Previews use the own-voice volume setting, recording balance and peak limit. They do not simulate world distance or nearby danger.
+
 The bank follows the existing schema-1 recording contract:
 
 - `id`, `language`, `revision`; `data.groups` maps existing condition names to ordered `{id,text}` lines. `data.clips` maps `<voice>_<line>` to playback metadata including `sound` and `duration`.

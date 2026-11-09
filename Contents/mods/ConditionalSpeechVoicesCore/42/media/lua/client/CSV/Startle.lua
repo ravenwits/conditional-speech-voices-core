@@ -14,6 +14,7 @@ function A.observe(p)
  E.sound(p,playing)
  local rising=playing and state.playing~=true;state.playing=playing
  if not rising then return end
+ S.record(p,'startle')
  S.nativeAlert=S.nativeAlert or setmetatable({},{__mode='k'});S.nativeAlert[p]=true
  local facts=S.capture(p)
  require('CSV/ProductionReport').observe('native_alert_onset',facts)
