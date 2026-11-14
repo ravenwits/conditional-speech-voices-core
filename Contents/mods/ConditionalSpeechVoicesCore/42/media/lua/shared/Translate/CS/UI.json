@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Úprava výšky hlasu",
   "UI_CSV_PitchOffsetHelp": "Výška hlasu aktuální postavy se načte automaticky. Použít změní jen tuto postavu. Bez postavy je vypnuto.",
   "UI_CSV_Short_Compatibility": "Pouze kompatibilita - nehodnoceno",
-  "UI_CSV_Short_SelectionOnly": "Kontrola výběru repliky. Přehrávání se zobrazuje zvlášť."
+  "UI_CSV_Short_SelectionOnly": "Kontrola výběru repliky. Přehrávání se zobrazuje zvlášť.",
+  "UI_CSV_Captions": "Zobrazovat text reakcí",
+  "UI_CSV_CaptionsHelp": "Zobrazuje automatické promluvy, myšlenky a volání tohoto modu nad postavou. Ve výchozím stavu vypnuto. Zvuk, sluch zombií ani ruční chat se nemění."
 }

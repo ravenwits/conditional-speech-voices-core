@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Stimmlage anpassen",
   "UI_CSV_PitchOffsetHelp": "Absolute Stimmlage des aktuellen Charakters. Automatisch geladen. Anwenden ändert nur diesen Charakter. Ohne Charakter deaktiviert.",
   "UI_CSV_Short_Compatibility": "Nur Kompatibilität - nicht bewertet",
-  "UI_CSV_Short_SelectionOnly": "Nur die Auswahl wird geprüft. Wiedergabe wird separat angezeigt."
+  "UI_CSV_Short_SelectionOnly": "Nur die Auswahl wird geprüft. Wiedergabe wird separat angezeigt.",
+  "UI_CSV_Captions": "Reaktionstexte anzeigen",
+  "UI_CSV_CaptionsHelp": "Zeigt automatische Sätze, Gedanken und Rufe dieser Mod über deiner Figur. Standardmäßig aus. Ton, Zombiegehör und manuelle Chatnachrichten bleiben unverändert."
 }

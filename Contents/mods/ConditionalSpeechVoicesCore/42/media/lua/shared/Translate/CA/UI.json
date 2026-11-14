@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Ajust del to de veu",
   "UI_CSV_PitchOffsetHelp": "El to real del personatge actual es carrega automàticament. Aplicar només canvia aquest personatge. Desactivat sense personatge.",
   "UI_CSV_Short_Compatibility": "Només compatibilitat - sense avaluar",
-  "UI_CSV_Short_SelectionOnly": "Només es comprova la selecció. La reproducció es mostra a part."
+  "UI_CSV_Short_SelectionOnly": "Només es comprova la selecció. La reproducció es mostra a part.",
+  "UI_CSV_Captions": "Mostra el text de les reaccions",
+  "UI_CSV_CaptionsHelp": "Mostra les frases, els pensaments i les crides automàtiques del mod sobre el personatge. Desactivat per defecte. No canvia el so, l’oïda dels zombis ni el xat manual."
 }

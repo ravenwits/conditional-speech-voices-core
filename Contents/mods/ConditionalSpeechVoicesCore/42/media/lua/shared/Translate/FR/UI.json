@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Réglage de la hauteur de voix",
   "UI_CSV_PitchOffsetHelp": "Hauteur absolue du personnage actuel, chargée automatiquement. Appliquer ne change que ce personnage. Désactivé sans personnage.",
   "UI_CSV_Short_Compatibility": "Compatibilité seule - non évaluée",
-  "UI_CSV_Short_SelectionOnly": "Seule la sélection est vérifiée. La lecture est affichée séparément."
+  "UI_CSV_Short_SelectionOnly": "Seule la sélection est vérifiée. La lecture est affichée séparément.",
+  "UI_CSV_Captions": "Afficher le texte des réactions",
+  "UI_CSV_CaptionsHelp": "Affiche les paroles, pensées et appels automatiques du mod au-dessus du personnage. Désactivé par défaut. Le son, l’ouïe des zombies et le chat manuel restent inchangés."
 }

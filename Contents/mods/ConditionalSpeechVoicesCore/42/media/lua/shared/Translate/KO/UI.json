@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "목소리 높낮이 조절",
   "UI_CSV_PitchOffsetHelp": "현재 캐릭터의 음높이를 자동으로 불러옵니다. 적용하면 이 캐릭터만 변경됩니다. 캐릭터가 없으면 비활성화됩니다.",
   "UI_CSV_Short_Compatibility": "호환성만 확인 - 평가 제외",
-  "UI_CSV_Short_SelectionOnly": "대사 선택만 확인합니다. 재생 상태는 별도로 표시됩니다."
+  "UI_CSV_Short_SelectionOnly": "대사 선택만 확인합니다. 재생 상태는 별도로 표시됩니다.",
+  "UI_CSV_Captions": "반응 텍스트 표시",
+  "UI_CSV_CaptionsHelp": "이 모드의 자동 대사, 생각, 외침을 캐릭터 위에 표시합니다. 기본값은 꺼짐입니다. 소리, 좀비의 청각, 직접 입력한 채팅에는 영향을 주지 않습니다."
 }

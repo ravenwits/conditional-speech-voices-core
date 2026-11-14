@@ -84,10 +84,10 @@ from prepare_voice_pack import measure
 with tempfile.TemporaryDirectory() as temp:
     folder=Path(temp); (folder/'sample.mp3').write_bytes(b'unchanged')
     manifest=folder/'pack.json'
-    config={'assets':{},'bank':{'data':{'clips':{}},'peaklimits':{}}}
+    config={'assets':{},'bank':{'voices':[{'id':'test'}],'data':{'clips':{}},'peaklimits':{}}}
     for i in range(3):
-        sound='Whisper_'+str(i);config['assets'][sound]={'source':'sample.mp3','volume':1}
-        config['bank']['data']['clips']['test_'+sound]={'sound':sound,'gain':1}
+        sound='Whisper_'+str(i);(folder/(sound+'.mp3')).write_bytes(('sample '+str(i)).encode());config['assets'][sound]={'source':sound+'.mp3','volume':1}
+        config['bank']['data']['clips']['test_Whisper_AfterHumanShaken_'+str(i+1)]={'sound':sound,'gain':1}
     manifest.write_text(json.dumps(config))
     levels=iter([-28,-28,-18])
     def ffmpeg(args,**kwargs):

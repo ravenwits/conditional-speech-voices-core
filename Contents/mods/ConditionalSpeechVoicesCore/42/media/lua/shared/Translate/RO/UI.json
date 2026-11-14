@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Reglarea tonalității vocii",
   "UI_CSV_PitchOffsetHelp": "Tonalitatea personajului curent se încarcă automat. Aplicare modifică doar acest personaj. Dezactivat fără personaj.",
   "UI_CSV_Short_Compatibility": "Doar compatibilitate - fără evaluare",
-  "UI_CSV_Short_SelectionOnly": "Verifică doar alegerea replicii. Redarea este afișată separat."
+  "UI_CSV_Short_SelectionOnly": "Verifică doar alegerea replicii. Redarea este afișată separat.",
+  "UI_CSV_Captions": "Arată textul reacțiilor",
+  "UI_CSV_CaptionsHelp": "Arată replicile, gândurile și strigătele automate ale modului deasupra personajului. Dezactivat implicit. Sunetul, auzul zombilor și chatul manual nu se schimbă."
 }

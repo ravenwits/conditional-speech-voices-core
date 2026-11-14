@@ -186,6 +186,15 @@ end
 transaction:replace(Speech,'generateSpeechFrom',generateSpeechFrom)
 transaction:replace(Speech,'ProcessSpeech',ProcessSpeech)
 transaction:replace(Speech,'Say',Say)
+-- Only suppress the rendering step of our own automatic speech. The upstream
+-- Say call still owns zombie noise; manual chat and unsupported voices pass through.
+if type(Speech.applyVolumetricColor_Say)=='function' then
+ local renderCaption=Speech.applyVolumetricColor_Say
+ transaction:replace(Speech,'applyVolumetricColor_Say',function(player,...)
+  if owns(player) and C.contexts[player] and not (C.captionsEnabled and C.captionsEnabled()) then return end
+  return renderCaption(player,...)
+ end)
+end
  end)
 end
 return Adapter

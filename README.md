@@ -14,6 +14,18 @@ Copy `Contents/mods/ConditionalSpeechVoicesCore` into your `Zomboid/mods` folder
 
 Mod ID: `Conditional-Speech-Voices-Core`
 
+## Start Studio
+
+Download or clone this repository. Install Python 3.11 or later and add FFmpeg to PATH. Open
+`Contents/mods/ConditionalSpeechVoicesCore/authoring` and double-click **Start Studio.cmd**.
+The launcher opens a browser tab. Keep the launcher window open while you work.
+
+Use **New project** in the project picker to choose a voice name and language. Studio saves your work
+under `Zomboid/VoiceProjects`. The compiled app is included in this repository.
+
+- [Studio guide](studio/CREATOR-GUIDE.md)
+- [Command-line guide](Contents/mods/ConditionalSpeechVoicesCore/authoring/README.md#command-line)
+
 ## Report a bug
 
 [Open a bug report](https://github.com/ravenwits/conditional-speech-voices-core/issues/new?template=bug-report.yml). English and Turkish reports are welcome.

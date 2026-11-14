@@ -30,11 +30,21 @@ def lua(value):
 
 
 def validate(config, directory):
+    from recording_limits import MAX_CAPTION, MAX_SECONDS, steam_profile
+    steam_profile(config.get("steamProfile",""))
+    if any(not isinstance(text,str) or len(text)>MAX_CAPTION for text in config["bank"]["lines"].values()):
+        raise ValueError(f"Captions must be at most {MAX_CAPTION} characters")
+    if config.get("trial"):
+        raise ValueError("Voice trials use the listen command. Initialize a full manifest to build a game pack.")
     if config.get('schema') != 1 or not IDENTIFIER.fullmatch(config['module']):
         raise ValueError('Invalid builder schema or module')
     if not re.fullmatch(r'[A-Za-z0-9_-]+', config['modId']):
         raise ValueError('Invalid mod ID')
     bank = config['bank']
+    allowed = {'schema','revision','extras','whispers','expressions','peaklimits','profanity',
+               'voices','id','data','language','native','lines','contract','needTiers','criticalHealth','aliases'}
+    if set(bank) - allowed:
+        raise ValueError('Unknown bank fields cannot be distributed: ' + ', '.join(sorted(set(bank) - allowed)))
     if bank.get('contract') != 1 or not bank.get('voices'):
         raise ValueError('A complete contract-1 bank with voices is required')
     if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', bank.get('revision', '')):
@@ -102,7 +112,7 @@ def validate(config, directory):
         if not sound.startswith('CSV_' + owner + '_'):
             raise ValueError('Recording references another speaker: ' + key)
         duration = clip['duration']
-        if not isinstance(duration, (int, float)) or not math.isfinite(duration) or duration <= 0:
+        if not isinstance(duration, (int, float)) or not math.isfinite(duration) or duration <= 0 or duration > MAX_SECONDS*1000:
             raise ValueError('Invalid duration ' + key)
         expected.add(sound)
     if expected != set(config['assets']):
@@ -110,6 +120,8 @@ def validate(config, directory):
     files = {}
     for sound, asset in config['assets'].items():
         source = (directory / asset['source']).resolve()
+        if not source.is_relative_to(directory.resolve()):
+            raise ValueError('Audio must be imported into the project before packaging')
         if source.suffix.lower() != '.mp3' or not source.is_file() or source.stat().st_size < 1000:
             raise ValueError('Missing or empty MP3 for ' + sound)
         volume = asset.get('volume', 1.2)
@@ -181,10 +193,14 @@ def build(config_path, output, core=None):
             'require=Conditional-Speech-Voices-Core', 'author=' + config['author'],
             'modversion=' + bank['revision'], 'versionMin=42.20', 'poster=poster.png',
             'description=' + config['description']]) + '\n'
+        if config.get('steamProfile'): info += 'url='+config['steamProfile']+'\n'
         for location in (temporary, temporary / '42'):
             (location / 'mod.info').write_text(info, encoding='utf-8')
             if config.get('poster'):
-                shutil.copy2(config_path.parent / config['poster'], location / 'poster.png')
+                poster = (config_path.parent / config['poster']).resolve()
+                if not poster.is_relative_to(config_path.parent.resolve()) or poster.read_bytes()[:8] != b'\x89PNG\r\n\x1a\n':
+                    raise ValueError('Poster must be a PNG inside the project')
+                shutil.copy2(poster, location / 'poster.png')
         if core is not None:
             from verify_runtime import verify
             verify(temporary, core)

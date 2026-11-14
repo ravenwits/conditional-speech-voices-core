@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Regulacja wysokości głosu",
   "UI_CSV_PitchOffsetHelp": "Wysokość głosu bieżącej postaci jest wczytywana automatycznie. Zastosuj zmienia tylko tę postać. Bez postaci opcja jest nieaktywna.",
   "UI_CSV_Short_Compatibility": "Tylko zgodność - bez oceny",
-  "UI_CSV_Short_SelectionOnly": "Sprawdza tylko wybór kwestii. Odtwarzanie jest pokazane osobno."
+  "UI_CSV_Short_SelectionOnly": "Sprawdza tylko wybór kwestii. Odtwarzanie jest pokazane osobno.",
+  "UI_CSV_Captions": "Pokazuj tekst reakcji",
+  "UI_CSV_CaptionsHelp": "Pokazuje automatyczne wypowiedzi, myśli i zawołania tego moda nad postacią. Domyślnie wyłączone. Dźwięk, słuch zombie i ręczny czat pozostają bez zmian."
 }

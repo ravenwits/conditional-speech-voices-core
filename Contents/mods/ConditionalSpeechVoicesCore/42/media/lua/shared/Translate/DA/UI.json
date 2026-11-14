@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Juster stemmeleje",
   "UI_CSV_PitchOffsetHelp": "Den aktuelle figurs stemmeleje indlæses automatisk. Anvend ændrer kun denne figur. Deaktiveret uden figur.",
   "UI_CSV_Short_Compatibility": "Kun kompatibilitet - ikke bedømt",
-  "UI_CSV_Short_SelectionOnly": "Kun valg af replik kontrolleres. Afspilning vises separat."
+  "UI_CSV_Short_SelectionOnly": "Kun valg af replik kontrolleres. Afspilning vises separat.",
+  "UI_CSV_Captions": "Vis reaktionstekst",
+  "UI_CSV_CaptionsHelp": "Viser moddens automatiske tale, tanker og råb over din figur. Slået fra som standard. Lyd, zombiers hørelse og manuel chat ændres ikke."
 }

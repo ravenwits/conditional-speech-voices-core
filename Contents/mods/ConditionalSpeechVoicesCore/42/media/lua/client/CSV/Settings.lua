@@ -1,7 +1,7 @@
 local Settings={}
 function Settings.install(C,V)
 local State=require 'CSV/State'
-local lootModeOption,lootFrequencyOption,profanityOption
+local lootModeOption,lootFrequencyOption,profanityOption,captionOption
 local volumeOption,otherVolumeOption,debugOption,frequencyOption,whisperOption,thoughtOption,safeOption
 function C.preferences()
     return {profanity=not profanityOption or profanityOption:getValue(),lootMode=lootModeOption and lootModeOption:getValue()-1 or 2,lootFrequency=lootFrequencyOption and lootFrequencyOption:getValue()-1 or 1,frequency=frequencyOption and require('CSV/FrequencyOptions').normalize(frequencyOption) or 1,whisper=whisperOption and whisperOption:getValue() or false,thoughts=thoughtOption and thoughtOption:getValue() or false,safeSpeech=safeOption and safeOption:getValue() or false}
@@ -55,13 +55,15 @@ local function createOptions()
     thoughtOption=options:getOption('hearThoughts') or options:addTickBox('hearThoughts',getText('UI_CSV_Option_22'),false,getText('UI_CSV_Option_23'))
     safeOption=options:getOption('safeSpeech') or options:addTickBox('safeSpeech',getText('UI_CSV_Option_24'),true,getText('UI_CSV_Option_25'))
     profanityOption=options:getOption('profanity') or options:addTickBox('profanity',getText('UI_CSV_Profanity'),true,getText('UI_CSV_ProfanityHelp'))
+    captionOption=options:getOption('showCaptions') or options:addTickBox('showCaptions',getText('UI_CSV_Captions'),false,getText('UI_CSV_CaptionsHelp'))
     debugOption=options:getOption('speechDebug') or options:addTickBox('speechDebug',
-        getText('UI_CSV_Option_16'),true,getText('UI_CSV_Option_17'))
+        getText('UI_CSV_Option_16'),false,getText('UI_CSV_Option_17'))
     require('CSV/OptionHelp').apply(options)
     PZAPI.ModOptions:load()
     require('CSV/FrequencyOptions').normalize(frequencyOption)
 end
-function C.debugEnabled()return not debugOption or debugOption:getValue()end
+function C.debugEnabled()return debugOption ~= nil and debugOption:getValue() == true end
+function C.captionsEnabled()return captionOption ~= nil and captionOption:getValue() == true end
 Events.OnGameBoot.Add(createOptions)
 end
 return Settings

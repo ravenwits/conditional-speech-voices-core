@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Strewberrie",
   "UI_CSV_PitchOffsetHelp": "Strewberrie",
   "UI_CSV_Short_Compatibility": "Strewberrie",
-  "UI_CSV_Short_SelectionOnly": "Strewberrie"
+  "UI_CSV_Short_SelectionOnly": "Strewberrie",
+  "UI_CSV_Captions": "Strewberrie",
+  "UI_CSV_CaptionsHelp": "Strewberrie"
 }

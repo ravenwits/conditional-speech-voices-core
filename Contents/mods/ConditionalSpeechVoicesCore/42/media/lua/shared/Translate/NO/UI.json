@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Juster stemmeleie",
   "UI_CSV_PitchOffsetHelp": "Gjeldende figurs stemmeleie lastes automatisk. Bruk endrer bare denne figuren. Deaktivert uten figur.",
   "UI_CSV_Short_Compatibility": "Kun kompatibilitet - ikke vurdert",
-  "UI_CSV_Short_SelectionOnly": "Kontrollerer bare valg av replikk. Avspilling vises separat."
+  "UI_CSV_Short_SelectionOnly": "Kontrollerer bare valg av replikk. Avspilling vises separat.",
+  "UI_CSV_Captions": "Vis reaksjonstekst",
+  "UI_CSV_CaptionsHelp": "Viser moddens automatiske tale, tanker og rop over figuren. Av som standard. Lyd, zombienes hørsel og manuell chat endres ikke."
 }

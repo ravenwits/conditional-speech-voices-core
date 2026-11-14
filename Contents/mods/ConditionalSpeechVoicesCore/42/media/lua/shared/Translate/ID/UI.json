@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Penyesuaian nada suara",
   "UI_CSV_PitchOffsetHelp": "Nada karakter saat ini dimuat otomatis. Terapkan hanya mengubah karakter ini. Nonaktif tanpa karakter.",
   "UI_CSV_Short_Compatibility": "Hanya kompatibilitas - tidak dinilai",
-  "UI_CSV_Short_SelectionOnly": "Hanya memeriksa pilihan dialog. Pemutaran ditampilkan terpisah."
+  "UI_CSV_Short_SelectionOnly": "Hanya memeriksa pilihan dialog. Pemutaran ditampilkan terpisah.",
+  "UI_CSV_Captions": "Tampilkan teks reaksi",
+  "UI_CSV_CaptionsHelp": "Menampilkan ucapan, pikiran, dan panggilan otomatis mod di atas karakter. Nonaktif secara bawaan. Suara, pendengaran zombi, dan obrolan manual tidak berubah."
 }

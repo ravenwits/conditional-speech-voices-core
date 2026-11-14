@@ -94,5 +94,7 @@
   "UI_CSV_PitchOffset": "Voice pitch adjustment",
   "UI_CSV_PitchOffsetHelp": "Absolute pitch of the current saved character. Loaded automatically. Apply saves to this character only. No character: disabled.",
   "UI_CSV_Short_Compatibility": "Compatibility only - not graded",
-  "UI_CSV_Short_SelectionOnly": "Selection check only. Playback is shown separately."
+  "UI_CSV_Short_SelectionOnly": "Selection check only. Playback is shown separately.",
+  "UI_CSV_Captions": "Show reaction text",
+  "UI_CSV_CaptionsHelp": "Show this mod’s automatic speech, thoughts and custom calls above your character. Off by default. Audio, zombie hearing and manual chat are unchanged."
 }

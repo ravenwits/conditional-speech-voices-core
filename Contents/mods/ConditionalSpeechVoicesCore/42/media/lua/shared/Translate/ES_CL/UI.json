@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Ajuste del tono de voz",
   "UI_CSV_PitchOffsetHelp": "Tono absoluto del personaje actual, cargado automáticamente. Aplicar cambia solo este personaje. Desactivado sin personaje.",
   "UI_CSV_Short_Compatibility": "Solo compatibilidad - sin evaluar",
-  "UI_CSV_Short_SelectionOnly": "Solo comprueba la selección. La reproducción se muestra aparte."
+  "UI_CSV_Short_SelectionOnly": "Solo comprueba la selección. La reproducción se muestra aparte.",
+  "UI_CSV_Captions": "Mostrar texto de las reacciones",
+  "UI_CSV_CaptionsHelp": "Muestra las frases, pensamientos y llamadas automáticas del mod sobre tu personaje. Desactivado por defecto. No cambia el sonido, el oído de los zombis ni el chat manual."
 }

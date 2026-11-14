@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "聲調調整",
   "UI_CSV_PitchOffsetHelp": "自動讀取目前存檔角色的實際音調。套用僅更改此角色。沒有角色時停用。",
   "UI_CSV_Short_Compatibility": "僅相容性 - 不計成敗",
-  "UI_CSV_Short_SelectionOnly": "僅檢查台詞選擇。播放狀態另行顯示。"
+  "UI_CSV_Short_SelectionOnly": "僅檢查台詞選擇。播放狀態另行顯示。",
+  "UI_CSV_Captions": "顯示反應文字",
+  "UI_CSV_CaptionsHelp": "在角色上方顯示此模組的自動對話、想法與呼喊。預設關閉。不影響音效、殭屍聽覺或手動聊天。"
 }

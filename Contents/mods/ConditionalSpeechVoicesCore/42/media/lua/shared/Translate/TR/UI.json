@@ -94,5 +94,7 @@
   "UI_CSV_PitchOffset": "Ses perdesi ayarı",
   "UI_CSV_PitchOffsetHelp": "Açık kayıttaki karakterin gerçek perde değeri otomatik yüklenir. Uygula yalnız bu karakteri değiştirir. Karakter yokken pasiftir.",
   "UI_CSV_Short_Compatibility": "Yalnız uyumluluk - başarı sayılmaz",
-  "UI_CSV_Short_SelectionOnly": "Yalnız replik seçimi kontrol edilir. Oynatma ayrıca gösterilir."
+  "UI_CSV_Short_SelectionOnly": "Yalnız replik seçimi kontrol edilir. Oynatma ayrıca gösterilir.",
+  "UI_CSV_Captions": "Tepki yazılarını göster",
+  "UI_CSV_CaptionsHelp": "Modun otomatik konuşmalarını, düşüncelerini ve çağrılarını karakterin üstünde gösterir. Varsayılan olarak kapalıdır. Ses, zombilerin duyması ve elle yazılan sohbet değişmez."
 }

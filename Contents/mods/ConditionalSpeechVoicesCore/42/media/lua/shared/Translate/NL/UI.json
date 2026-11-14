@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Stemhoogte aanpassen",
   "UI_CSV_PitchOffsetHelp": "De werkelijke stemhoogte van het huidige personage wordt automatisch geladen. Toepassen wijzigt alleen dit personage. Zonder personage uitgeschakeld.",
   "UI_CSV_Short_Compatibility": "Alleen compatibiliteit - niet beoordeeld",
-  "UI_CSV_Short_SelectionOnly": "Controleert alleen de keuze. Afspelen wordt apart weergegeven."
+  "UI_CSV_Short_SelectionOnly": "Controleert alleen de keuze. Afspelen wordt apart weergegeven.",
+  "UI_CSV_Captions": "Reactietekst tonen",
+  "UI_CSV_CaptionsHelp": "Toont de automatische uitspraken, gedachten en kreten van deze mod boven je personage. Standaard uit. Geluid, het gehoor van zombies en handmatige chat blijven ongewijzigd."
 }

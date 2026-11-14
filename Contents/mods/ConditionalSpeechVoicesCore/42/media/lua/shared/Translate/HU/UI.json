@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Hangmagasság módosítása",
   "UI_CSV_PitchOffsetHelp": "Az aktuális karakter hangmagassága automatikusan betöltődik. Az alkalmazás csak ezt a karaktert módosítja. Karakter nélkül letiltva.",
   "UI_CSV_Short_Compatibility": "Csak kompatibilitás - nincs értékelés",
-  "UI_CSV_Short_SelectionOnly": "Csak a mondatválasztást ellenőrzi. A lejátszás külön látható."
+  "UI_CSV_Short_SelectionOnly": "Csak a mondatválasztást ellenőrzi. A lejátszás külön látható.",
+  "UI_CSV_Captions": "Reakciószövegek megjelenítése",
+  "UI_CSV_CaptionsHelp": "A mod automatikus beszédét, gondolatait és kiáltásait a karakter fölött mutatja. Alapból kikapcsolva. A hang, a zombik hallása és a kézi csevegés nem változik."
 }

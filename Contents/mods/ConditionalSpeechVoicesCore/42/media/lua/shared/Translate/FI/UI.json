@@ -91,5 +91,7 @@
   "UI_CSV_PitchOffset": "Äänenkorkeuden säätö",
   "UI_CSV_PitchOffsetHelp": "Nykyisen hahmon äänenkorkeus ladataan automaattisesti. Käytä muuttaa vain tätä hahmoa. Ei käytössä ilman hahmoa.",
   "UI_CSV_Short_Compatibility": "Vain yhteensopivuus - ei arvioitu",
-  "UI_CSV_Short_SelectionOnly": "Vain repliikin valinta tarkistetaan. Toisto näytetään erikseen."
+  "UI_CSV_Short_SelectionOnly": "Vain repliikin valinta tarkistetaan. Toisto näytetään erikseen.",
+  "UI_CSV_Captions": "Näytä reaktiotekstit",
+  "UI_CSV_CaptionsHelp": "Näyttää modin automaattisen puheen, ajatukset ja huudot hahmon yllä. Oletuksena pois käytöstä. Ääni, zombien kuulo ja käsin kirjoitettu chat eivät muutu."
 }
