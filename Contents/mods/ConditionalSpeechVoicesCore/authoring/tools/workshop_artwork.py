@@ -1,5 +1,6 @@
 """Render Studio's Workshop covers using the bundled wordmark and flags."""
 from pathlib import Path
+import json
 import re
 import shutil
 import subprocess
@@ -28,6 +29,7 @@ LOCAL_NAMES = {
     'IT': 'Italiano', 'PT': 'Português', 'PTBR': 'Português',
     'PL': 'Polski', 'NL': 'Nederlands', 'SV': 'Svenska', 'FI': 'Suomi',
 }
+LANGUAGE_NAMES = json.loads((ARTWORK / "language-names.json").read_text(encoding="utf-8"))
 SAME_CODE = frozenset('AZ DE EE FI FR ID IS IT LA LT LU LV MT NL NO PL PT RO RU TH TR'.split())
 
 
@@ -43,36 +45,41 @@ def available_flag_languages():
 
 
 def flag_image(language):
-    if not re.fullmatch(r'[A-Z_]{2,8}', language):
+    if not re.fullmatch(r'[A-Z_]{2,16}', language):
         raise ValueError('Invalid voice language for the cover')
     with ZipFile(ARTWORK / 'flags.zip') as flags:
         name = flag_code(language) + '.png'
         return flags.read(name) if name in flags.namelist() else (ARTWORK / 'neutral.png').read_bytes()
 
-def render(workshop, mod, language, ffmpeg):
+def cover_image(template, language, ffmpeg):
     flag = flag_image(language)
-    for template, filename, flag_width, flag_height, center_y in [
-        ('square', 'preview.png', 260, 170, 154),
-        ('wide', 'preview-16x9.png', 510, 240, 215),
-    ]:
-        filters = (
-            f'[1:v]scale={flag_width}:{flag_height}:force_original_aspect_ratio=decrease[flag];'
-            f'[0:v][flag]overlay=(main_w-overlay_w)/2:{center_y}-overlay_h/2:format=rgb'
-        )
-        label = LOCAL_NAMES.get(language, language)
-        label_size, label_y = (34, 251) if template == 'square' else (49, 356)
-        filters += (
-            f",drawtext=fontfile=CalSans.ttf:text='{label}':fontsize={label_size}"
-            f":fontcolor=0xf5f5f5:x=(w-tw)/2:y={label_y}"
-        )
-        if template == 'square':
-            filters += ',scale=256:256:flags=lanczos'
-        subprocess.run([
-            ffmpeg, '-nostdin', '-y', '-v', 'error', '-i', str((ARTWORK / f'{template}.png').resolve()),
-            '-f', 'image2pipe', '-c:v', 'png', '-i', 'pipe:0',
-            '-filter_complex_threads', '1', '-filter_complex', filters,
-            '-frames:v', '1', '-threads', '1', str((workshop / filename).resolve()),
-        ], cwd=ARTWORK.resolve(), input=flag, capture_output=True, check=True, timeout=30)
+    flag_width, flag_height, center_y = {
+        'square': (260, 170, 154),
+        'wide': (510, 240, 215),
+    }[template]
+    filters = (
+        f'[1:v]scale={flag_width}:{flag_height}:force_original_aspect_ratio=decrease[flag];'
+        f'[0:v][flag]overlay=(main_w-overlay_w)/2:{center_y}-overlay_h/2:format=rgb'
+    )
+    label = LOCAL_NAMES.get(language) or LANGUAGE_NAMES.get(language, "Unknown language")
+    label_size, label_y = (34, 251) if template == 'square' else (49, 356)
+    filters += (
+        f",drawtext=fontfile=CalSans.ttf:text='{label}':fontsize={label_size}"
+        f":fontcolor=0xf5f5f5:x=(w-tw)/2:y={label_y}"
+    )
+    if template == 'square':
+        filters += ',scale=256:256:flags=lanczos'
+    return subprocess.run([
+        ffmpeg, '-nostdin', '-y', '-v', 'error', '-i', str((ARTWORK / f'{template}.png').resolve()),
+        '-f', 'image2pipe', '-c:v', 'png', '-i', 'pipe:0',
+        '-filter_complex_threads', '1', '-filter_complex', filters,
+        '-frames:v', '1', '-threads', '1', '-f', 'image2pipe', '-c:v', 'png', 'pipe:1',
+    ], cwd=ARTWORK.resolve(), input=flag, capture_output=True, check=True, timeout=30).stdout
+
+
+def render(workshop, mod, language, ffmpeg):
+    for template, filename in (('square', 'preview.png'), ('wide', 'preview-16x9.png')):
+        (workshop / filename).write_bytes(cover_image(template, language, ffmpeg))
     for folder in (mod, mod / '42'):
         for name in ('poster.png', 'icon.png'):
             shutil.copy2(workshop / 'preview.png', folder / name)

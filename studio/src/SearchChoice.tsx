@@ -106,10 +106,10 @@ export function ProjectPicker({
         <ComboboxInput
           className="project-search border-b-0"
           aria-label="Find a project"
-          placeholder="Find a project…"
+          placeholder="Find a saved project…"
           showTrigger={false}
         />
-        <ComboboxEmpty>No projects found.</ComboboxEmpty>
+        <ComboboxEmpty>No saved projects match your search.</ComboboxEmpty>
         <ComboboxList>
           {(i: ProjectChoice) => (
             <ComboboxRow key={i.key} className="project-option">
@@ -133,8 +133,8 @@ export function ProjectPicker({
               <Button
                 size="icon"
                 variant="ghost"
-                disabled={i.key === "current"}
-                title={i.key === "current" ? "Startup project is protected" : "Remove project"}
+                disabled={i.key === "current" || i.key.startsWith("saved:")}
+                title={i.key === "current" || i.key.startsWith("saved:") ? "Saved project is protected" : "Remove project"}
                 aria-label={"Remove " + i.name}
                 onClick={() => {
                   setOpen(false);

@@ -1,4 +1,5 @@
 """A loopback-only editor for one local voice project."""
+from functools import lru_cache
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from pathlib import Path
@@ -11,7 +12,7 @@ import subprocess
 from urllib.parse import parse_qs, urlparse
 import webbrowser
 import studio_schema
-from workshop_artwork import available_flag_languages
+from workshop_artwork import available_flag_languages, cover_image
 
 import voice_project as project
 
@@ -22,8 +23,13 @@ def make_server(manifest, ffmpeg, core, port=0):
     project.sync_core(manifest)
     projects_root = manifest.parent / 'projects'
     initial_manifest = manifest
+    workspace_root = manifest.parent.parent if manifest.parent.name == 'my_voice' else None
     active_project = 'current'
     token = secrets.token_urlsafe(32)
+
+    @lru_cache(maxsize=16)
+    def preview(template, language):
+        return cover_image(template, language, ffmpeg)
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args): pass
@@ -63,6 +69,13 @@ def make_server(manifest, ffmpeg, core, port=0):
                 except (ValueError, OSError):
                     self.respond({'error': 'Flag not found'}, status=404)
                 return
+            cover = re.fullmatch(r'/studio/cover/(square|wide)/([A-Z_]{2,16})', url.path)
+            if cover and self.local_request():
+                try:
+                    self.respond(preview(*cover.groups()), 'image/png')
+                except (ValueError, OSError, subprocess.SubprocessError):
+                    self.respond({'error': 'Cover preview unavailable'}, status=503)
+                return
             if url.path.startswith('/studio/assets/') and self.local_request():
                 try:
                     path = project.contained(Path(__file__).parent/'studio/assets', url.path[len('/studio/assets/'):])
@@ -100,6 +113,16 @@ def make_server(manifest, ffmpeg, core, port=0):
                         for folder in sorted(projects_root.iterdir()):
                             path=project.contained(projects_root,folder.name+'/project.json')
                             if path.is_file(): choices.append(dict(key=folder.name,name=project.read(path)['name']))
+                    if workspace_root:
+                        for path in sorted(workspace_root.glob('*/project.json')):
+                            key = path.parent.name
+                            if path == initial_manifest or not re.fullmatch(r'[a-z][a-z0-9_]{0,47}', key):
+                                continue
+                            try:
+                                saved = project.contained(workspace_root, key + '/project.json')
+                                choices.append(dict(key='saved:' + key, name=project.read(saved)['name']))
+                            except (ValueError, OSError, KeyError):
+                                continue
                     self.respond(choices)
                 elif url.path == '/duration':
                     from audio_processing import original_duration
@@ -221,6 +244,8 @@ def make_server(manifest, ffmpeg, core, port=0):
                     elif self.path == '/open':
                         key=data['key']
                         if key=='current': target=initial_manifest
+                        elif workspace_root and isinstance(key, str) and re.fullmatch(r'saved:[a-z][a-z0-9_]{0,47}', key):
+                            target=project.contained(workspace_root,key[6:]+'/project.json')
                         elif isinstance(key,str) and re.fullmatch(r'[a-z][a-z0-9_]{0,47}',key):
                             target=project.contained(projects_root,key+'/project.json')
                         else: raise ValueError('Unknown project')

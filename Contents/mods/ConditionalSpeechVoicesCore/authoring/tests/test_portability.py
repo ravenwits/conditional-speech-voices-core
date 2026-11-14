@@ -35,7 +35,8 @@ class Portability(unittest.TestCase):
             for directory in (mod, mod / '42'):
                 (directory / 'mod.info').write_text('name=Test\nicon=old.png\n', encoding='utf-8')
             def render_image(command, **kwargs):
-                Path(command[-1]).write_bytes(b'image fixture')
+                self.assertEqual(command[-1], 'pipe:1')
+                return subprocess.CompletedProcess(command, 0, stdout=b'image fixture')
             with patch.object(art.subprocess, 'run', side_effect=render_image) as run:
                 art.render(root, mod, 'EN', 'ffmpeg')
                 art.render(root, mod, 'EN', 'ffmpeg')

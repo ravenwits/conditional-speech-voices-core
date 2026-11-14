@@ -328,7 +328,7 @@
 .search-box input {
   padding-left: 32px;
   font-size: 12px;
-  height: 34px;
+  height: 32px;
 }
 .filter-grid {
   display: grid;
@@ -342,12 +342,6 @@
   font-size: 11px;
   color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
-}
-.library-count button {
-  border: 0;
-  background: none;
-  color: var(--foreground);
-  padding: 0;
 }
 .recording-list {
   min-height: 0;
@@ -1813,3 +1807,24 @@ body {
 .language-option { display: flex; align-items: center; gap: 8px; }
 .language-option img { object-fit: contain; flex: none; }
 
+
+.library-controls .recording-status-trigger {
+  font-size: 11px;
+}
+.library-controls .recording-filter-toggle[data-slot="button"],
+.library-controls .clear-recording-filters[data-slot="button"] {
+  height: 32px;
+  min-height: 32px;
+}
+.library-controls .recording-filter-toggle[data-slot="button"] {
+  width: 32px;
+  padding: 0;
+  gap: 1px;
+  font-size: 11px;
+}
+.library-controls .recording-filter-toggle svg {
+  width: 13px;
+}
+
+.bulk-review button[data-bulk-undo] { width: fit-content; padding-inline: 10px; }
+.app-footer .footer-links a[data-slot="button"] { font-size: 11px; }

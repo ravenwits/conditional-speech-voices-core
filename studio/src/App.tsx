@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import {
   Check,
   ChevronUp,
+  ListFilter,
   ChevronLeft,
   ChevronRight,
   Headphones,
@@ -150,6 +151,9 @@ export default function App() {
     () => Array.from(new Set(project?.rows.map((r) => r.category))).sort(),
     [project],
   );
+  const hasFilters = Object.values(filters).some(Boolean);
+  const hasReviewableMatches = hasFilters && filtered.some((row) => row.state !== "missing");
+  const filterCount = Object.entries(filters).filter(([key, value]) => key !== "search" && key !== "state" && value).length;
   const availableFilters = useMemo(() => {
     const rows = project?.rows ?? [];
     const values = (key: keyof typeof emptyFilters, field: (row: Row) => string[]) =>
@@ -327,7 +331,7 @@ export default function App() {
     });
   }
   async function reviewFiltered(state: "approved" | "redo") {
-    if (busy || dirty) return;
+    if (busy || dirty || !hasReviewableMatches) return;
     const slots = filtered
       .filter((r) => r.state !== "missing" && r.state !== state)
       .map((r) => r.slot);
@@ -685,6 +689,7 @@ export default function App() {
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                   <Choice
                     name="Recording status"
+                    triggerClassName="recording-status-trigger"
                     value={filters.state}
                     onChange={(v) => updateFilter("state", v)}
                     items={[
@@ -696,9 +701,17 @@ export default function App() {
                       })),
                     ]}
                   />
-                  <CollapsibleTrigger className="group" render={<Button variant="outline" size="sm" />}>
-                    Filters{Object.entries(filters).filter(([key,value]) => key !== 'search' && key !== 'state' && value).length > 0 ? ` (${Object.entries(filters).filter(([key,value]) => key !== 'search' && key !== 'state' && value).length})` : ''}
-                    <ChevronUp className="size-3.5 rotate-180 transition-transform duration-150 group-data-[panel-open]:rotate-0" />
+                  <CollapsibleTrigger
+                    aria-label={filterCount ? "Filters, active" : "Filters"}
+                    title="More filters"
+                    render={<Button variant="outline" size="sm" className="recording-filter-toggle" />}
+                  >
+                    <ListFilter aria-hidden="true" />
+                    {filterCount > 0 && (
+                      <span aria-hidden="true" className="pointer-events-none absolute right-0 top-0 size-2 rounded-full bg-primary">
+                        <span className="absolute inset-0 rounded-full bg-primary/70 motion-safe:animate-ping" />
+                      </span>
+                    )}
                   </CollapsibleTrigger>
                 </div>
                 <CollapsiblePanel>
@@ -761,17 +774,19 @@ export default function App() {
                     <Button
                       size="xs"
                       variant="ghost"
+                      className="clear-recording-filters w-full justify-center"
                       onClick={() => void changeFilters(emptyFilters)}
                     >
-                      Clear
+                      Clear filters
                     </Button>
                   )}
                 </div>
               </div>
-              <div
+              {(hasReviewableMatches || project?.canUndoReview) && <div
                 className="bulk-review"
                 aria-label="Review filtered recordings"
               >
+                {hasReviewableMatches && <>
                 <Button
                   size="sm"
                   variant="outline"
@@ -784,7 +799,7 @@ export default function App() {
                   }
                   onClick={() => void reviewFiltered("approved")}
                 >
-                  Approve
+                  Approve filtered
                 </Button>
                 <Button
                   size="sm"
@@ -798,17 +813,19 @@ export default function App() {
                   }
                   onClick={() => void reviewFiltered("redo")}
                 >
-                  Retake
+                  Retake filtered
                 </Button>
-                <Button
+                </>}
+                {project?.canUndoReview && <Button
                   size="sm"
                   variant="outline"
-                  disabled={busy || dirty || !project?.canUndoReview}
+                  disabled={busy || dirty}
+                  data-bulk-undo
                   onClick={() => void perform("/undo-review")}
                 >
                   Undo
-                </Button>
-              </div>
+                </Button>}
+              </div>}
               <ScrollArea
                 className="recording-list"
                 ref={listRef}
@@ -1291,12 +1308,12 @@ export default function App() {
               </div>
             )}
             <div className="pack-progress">
-              {project?.buildCoverage && <p>One approved take per meaning is enough. Extra variations and acting are optional.</p>}
+              {project?.buildCoverage && <p>Approve one take in each required group to build. Record extra variations if you want.</p>}
               <strong>
                 {(project?.buildCoverage?.covered ?? project?.coverage.approved ?? 0).toLocaleString()}
                 <span>
                   {" "}
-                  / {(project?.buildCoverage?.required ?? project?.rows.length ?? 0).toLocaleString()} {project?.buildCoverage ? "required meanings covered" : "approved"}
+                  / {(project?.buildCoverage?.required ?? project?.rows.length ?? 0).toLocaleString()} {project?.buildCoverage ? "required recording groups ready" : "approved"}
                 </span>
               </strong>
               <Progress
@@ -1305,11 +1322,31 @@ export default function App() {
                 value={project?.buildCoverage?.covered ?? project?.coverage.approved ?? 0}
               />
               <p>
-                {project?.coverage.missing || 0} missing ·{" "}
-                {project?.coverage.pending || 0} need listening ·{" "}
-                {project?.coverage.redo || 0} to record again
+                Recording library: {(project?.rows.length ?? 0).toLocaleString()} slots ·{" "}
+                {(project?.coverage.approved ?? 0).toLocaleString()} approved ·{" "}
+                {(project?.coverage.pending ?? 0).toLocaleString()} need listening ·{" "}
+                {(project?.coverage.redo ?? 0).toLocaleString()} need a retake
               </p>
             </div>
+            {modal === "prepare" && project && (
+              <section aria-label="Workshop artwork" className="mt-4">
+                <h3 className="mb-2 text-sm font-medium">Workshop artwork</h3>
+                <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.78fr)] gap-3">
+                  {(["square", "wide"] as const).map((format) => (
+                    <figure key={format} className="min-w-0">
+                      <img
+                        className={format === "square" ? "aspect-square w-full rounded-md bg-muted object-contain" : "aspect-video w-full rounded-md bg-muted object-contain"}
+                        src={`/studio/cover/${format}/${encodeURIComponent(project.language)}`}
+                        alt={format === "square" ? "Square Workshop cover" : "Wide Workshop cover"}
+                      />
+                      <figcaption className="mt-1 text-xs text-muted-foreground">
+                        {format === "square" ? "Workshop preview · 1:1" : "Wide cover · 16:9"}
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </section>
+            )}
             {project?.trial && (
               <ActionTip text="Add current Core requirements while preserving your recordings and saving a backup.">
                 <Button

@@ -38,12 +38,14 @@ export function Choice({
   onChange,
   items,
   disabled = false,
+  triggerClassName = "",
 }: {
   name: string;
   value: string;
   onChange: (v: string) => void;
   items: { value: string; label: string; disabled?: boolean }[];
   disabled?: boolean;
+  triggerClassName?: string;
 }) {
   return (
     <Select
@@ -54,7 +56,7 @@ export function Choice({
       items={items}
       disabled={disabled}
     >
-      <SelectTrigger aria-label={name} className="w-full min-w-0">
+      <SelectTrigger aria-label={name} className={`w-full min-w-0 ${triggerClassName}`}>
         <SelectValue />
       </SelectTrigger>
       <SelectPopup>

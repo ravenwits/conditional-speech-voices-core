@@ -281,14 +281,18 @@ it("searches languages with game-compatible codes", async () => {
 it("confirms bulk review counts and excludes missing and filtered-out takes", async () => {
   render(<App />);
   await screen.findByDisplayValue("Line 0");
-  await userEvent.click(within(document.querySelector(".bulk-review") as HTMLElement).getByRole("button", {name:"Approve"}));
+  expect(screen.queryByRole("button", { name: "Approve filtered" })).toBeNull();
+  fireEvent.change(screen.getByLabelText("Find a recording"), {
+    target: { value: "Line 0" },
+  });
+  await userEvent.click(within(document.querySelector(".bulk-review") as HTMLElement).getByRole("button", {name:"Approve filtered"}));
   let dialog = await screen.findByRole("alertdialog");
   expect(
     within(dialog).getByRole("heading", { name: "Approve 1 recordings?" }),
   ).toBeTruthy();
   await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
   expect(action).not.toHaveBeenCalled();
-  await userEvent.click(within(document.querySelector(".bulk-review") as HTMLElement).getByRole("button", {name:"Approve"}));
+  await userEvent.click(within(document.querySelector(".bulk-review") as HTMLElement).getByRole("button", {name:"Approve filtered"}));
   dialog = await screen.findByRole("alertdialog");
   await userEvent.click(
     within(dialog).getByRole("button", { name: "Approve" }),
@@ -311,13 +315,7 @@ it("confirms bulk review counts and excludes missing and filtered-out takes", as
       ).value,
     ).toBe("Line 1510"),
   );
-  expect(
-    (
-      within(document.querySelector(".bulk-review") as HTMLElement).getByRole("button", {
-        name: "Approve",
-      }) as HTMLButtonElement
-    ).disabled,
-  ).toBe(true);
+  expect(screen.queryByRole("button", { name: "Approve filtered" })).toBeNull();
 });
 
 it("shows activity while measuring, then reports the result", async () => {
@@ -467,9 +465,9 @@ it("keeps hidden filters visible as a count and clears them", async () => {
  await userEvent.click(screen.getByRole("button", {name:"Filters"}));
  await userEvent.click(screen.getByRole("combobox", {name:"Category"}));
  await userEvent.click(await screen.findByRole("option", {name:"Physical"}));
- await userEvent.click(screen.getByRole("button", {name:"Filters (1)"}));
+ await userEvent.click(screen.getByRole("button", {name:"Filters, active"}));
  await waitFor(()=>expect(screen.queryByRole("combobox", {name:"Category"})).toBeNull());
- expect(screen.getByRole("button", {name:"Filters (1)"})).toBeTruthy();
- await userEvent.click(screen.getByRole("button", {name:"Clear"}));
+ expect(screen.getByRole("button", {name:"Filters, active"})).toBeTruthy();
+ await userEvent.click(screen.getByRole("button", {name:"Clear filters"}));
  expect(screen.getByRole("button", {name:"Filters"})).toBeTruthy();
 });
