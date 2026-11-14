@@ -80,7 +80,7 @@ def process(manifest,slot,ffmpeg,gain_db=0,semitones=0,restore=False,speed=1,tri
         asset['source']=target.relative_to(root.resolve()).as_posix()
         clip['duration']=0;config['bank']['peaklimits'].pop(project.voice_id(config)+'_'+slot,None)
         authoring.setdefault('reviews',{}).pop(slot,None);authoring.setdefault('measurements',{}).pop(clip['sound'],None)
-        edits[slot]=dict(original=original.relative_to(root).as_posix(),originalHash=original_hash,
+        edits[slot]=dict(original=original.relative_to(root.resolve()).as_posix(),originalHash=original_hash,
                          renderedHash=project.digest(target),gainDb=gain_db,semitones=semitones,speed=speed,trimStart=trim_start,trimEnd=trim_end)
         project.write(manifest,config)
     return dict(message='Original restored. Listen before approving.' if restore else 'Audio settings saved to the recording. Listen before approving.')
