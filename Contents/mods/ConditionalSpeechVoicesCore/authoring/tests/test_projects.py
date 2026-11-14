@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import struct
 import sys
 import tempfile
 import threading
@@ -315,6 +316,15 @@ class Projects(unittest.TestCase):
             self.assertEqual(mapping.call_count,1)
         self.assertEqual(rows['coverage']['missing'],len(rows['rows']))
 
+    def test_schema_hash_ignores_git_line_ending_conversion(self):
+        path = self.root / 'input.lua'
+        path.write_bytes(b'return 1\r\n')
+        windows = studio_schema.source_digest(path)
+        path.write_bytes(b'return 1\n')
+        self.assertEqual(windows, studio_schema.source_digest(path))
+        path.write_bytes(b'return 2\n')
+        self.assertNotEqual(windows, studio_schema.source_digest(path))
+
     def test_stale_core_catalogue_is_rejected_before_server_opens(self):
         schema=copy.deepcopy(studio_schema.load())
         schema['inputs']['42/media/lua/shared/CSV/Rules.lua']='changed'
@@ -514,7 +524,13 @@ class Projects(unittest.TestCase):
         self.assertTrue((Path(result['mod']) / '42/mod.info').is_file())
         self.assertIn('visibility=private', (output / 'workshop.txt').read_text(encoding='utf-8'))
         self.assertNotIn('\nid=', (output / 'workshop.txt').read_text(encoding='utf-8'))
-        self.assertEqual((output / 'preview.png').read_bytes()[:8], b'\x89PNG\r\n\x1a\n')
+        for name, dimensions in [('preview.png', (256, 256)), ('preview-16x9.png', (1280, 720))]:
+            png = (output / name).read_bytes()
+            self.assertEqual(png[:8], b'\x89PNG\r\n\x1a\n')
+            self.assertEqual(struct.unpack('>II', png[16:24]), dimensions)
+        for directory in (Path(result['mod']), Path(result['mod']) / '42'):
+            self.assertIn('icon=icon.png', (directory / 'mod.info').read_text(encoding='utf-8'))
+            self.assertEqual((directory / 'icon.png').read_bytes(), (output / 'preview.png').read_bytes())
         with self.assertRaisesRegex(ValueError, 'already exists'):
             p.workshop_project(self.manifest,output,ffmpeg,TOOLS.parents[1])
         self.assertGreater(result['recordings'],1000)

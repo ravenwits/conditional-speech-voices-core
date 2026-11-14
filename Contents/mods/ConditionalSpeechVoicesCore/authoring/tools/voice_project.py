@@ -4,7 +4,6 @@ import hashlib
 import json
 import math
 import re
-import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -425,8 +424,8 @@ def workshop_project(manifest, output, ffmpeg, core):
         staged = Path(temporary) / 'workshop'
         mod = staged / 'Contents' / 'mods' / config['modId']
         result = package(manifest, mod, ffmpeg, core)
-        poster = mod / '42' / 'poster.png'
-        shutil.copy2(poster if poster.is_file() else TOOLS / 'workshop-preview.png', staged / 'preview.png')
+        from workshop_artwork import render
+        render(staged, mod, config['bank']['language'], ffmpeg)
         lines = ['version=1', 'title=' + config['name'],
                  'description=' + config['description'], 'tags=', 'visibility=private']
         (staged / 'workshop.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')

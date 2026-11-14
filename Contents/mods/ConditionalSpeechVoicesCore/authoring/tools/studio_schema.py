@@ -10,11 +10,15 @@ TOOLS=Path(__file__).resolve().parent
 def load():
     return json.loads((TOOLS/'voice-schema-v1.json').read_text(encoding='utf-8'))
 
+def source_digest(path):
+    # Git checks out text with different line endings on different systems.
+    return hashlib.sha256(path.read_bytes().replace(b'\r\n', b'\n')).hexdigest()
+
 def verify_current():
     core=TOOLS.parents[1]
     for relative,expected in load()['inputs'].items():
         path=core/relative
-        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest()!=expected:
+        if not path.is_file() or source_digest(path)!=expected:
             raise ValueError('Studio catalogue is out of date. Re-export it from the current Core code.')
 
 def strip_text(value):

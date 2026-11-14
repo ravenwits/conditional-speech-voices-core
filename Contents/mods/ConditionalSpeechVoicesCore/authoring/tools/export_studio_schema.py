@@ -1,12 +1,12 @@
 """Export a read-only catalogue from Core Lua. Studio never evaluates gameplay rules."""
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 import tempfile
+from studio_schema import source_digest
 
 TOOLS=Path(__file__).resolve().parent
 CORE=TOOLS.parents[1]
@@ -106,10 +106,10 @@ def export():
             elif events & {'LureCmon','LureTsk'}: row.update(category='Dialogue',delivery='normal')
             else: row.update(category='Nonverbal',delivery='nonverbal')
         row['family']=groups[group]['family']
-    inputs={p.relative_to(CORE).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
+    inputs={p.relative_to(CORE).as_posix():source_digest(p)
             for p in (CORE/'42/media/lua').rglob('*.lua') if p.name!='BuildIdentity.lua'}
     for name in ['voice-template-v1.json','voice-contract-v1.json','export_studio_schema.py']:
-        p=TOOLS/name;inputs[p.relative_to(CORE).as_posix()]=hashlib.sha256(p.read_bytes()).hexdigest()
+        p=TOOLS/name;inputs[p.relative_to(CORE).as_posix()]=source_digest(p)
     return dict(version=1,contract=contract['version'],slots={s:rows[s] for s in sorted(required)},
                 groups=groups,sources=source_files,inputs=inputs)
 

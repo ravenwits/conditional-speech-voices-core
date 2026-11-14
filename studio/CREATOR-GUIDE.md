@@ -43,6 +43,10 @@ Edit the large phrase directly, then Save text. This updates the caption and lib
 
 Open Build voice pack, check audio levels, resolve missing takes and reviews, confirm you have the rights to distribute the recordings, then build. While checking, Studio shows an activity indicator; large packs can take several minutes. The result and a notification appear when finished. Measurements identify level outliers but do not replace listening. A trial must first expand to the full schema. The tool will not invent missing audio.
 
+The build includes a square Workshop preview, a matching in-game icon and a
+1280 × 720 image for sharing. Studio selects a representative flag from the
+pack language. Languages without a mapped flag use a globe.
+
 Close Project Zomboid. Copy the generated mod directory into your Zomboid/mods directory, keeping its 42 and common folders together. Enable Conditional Speech, Conditional Speech Voices Core and your pack. Choose the new voice at character creation. Test ordinary speech, whispers, calls, exertion and pain in the game before distributing it. Studio playback and automated checks are not proof of in-game playback or multiplayer behavior.
 
 Back up the entire project folder, including its manifest, audio and originals. The generated game mod is an output, not a replacement for that editable project.
