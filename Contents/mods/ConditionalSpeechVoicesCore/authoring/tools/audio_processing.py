@@ -77,7 +77,7 @@ def process(manifest,slot,ffmpeg,gain_db=0,semitones=0,restore=False,speed=1,tri
             target=audio_dir/(project.voice_id(config)+'_'+slot+'_'+uuid.uuid4().hex[:12]+'.mp3')
             temporary.replace(target)
         else: target=original
-        asset['source']=target.relative_to(root).as_posix()
+        asset['source']=target.relative_to(root.resolve()).as_posix()
         clip['duration']=0;config['bank']['peaklimits'].pop(project.voice_id(config)+'_'+slot,None)
         authoring.setdefault('reviews',{}).pop(slot,None);authoring.setdefault('measurements',{}).pop(clip['sound'],None)
         edits[slot]=dict(original=original.relative_to(root).as_posix(),originalHash=original_hash,

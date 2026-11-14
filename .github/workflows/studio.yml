@@ -21,7 +21,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ffmpeg lua5.1
       - name: Install macOS tools
         if: runner.os == 'macOS'
-        run: brew install ffmpeg luajit
+        run: |
+          brew install ffmpeg-full luajit
+          echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
       - name: Check Python version
         run: python3 -c "import sys; assert sys.version_info >= (3, 11)"
       - name: Test creator tools
