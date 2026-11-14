@@ -681,8 +681,8 @@ export default function App() {
                     onChange={(e) => updateFilter("search", e.target.value)}
                   />
                 </div>
-                <Collapsible className="library-filters">
-                <div className="filter-toolbar">
+                <Collapsible>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                   <Choice
                     name="Recording status"
                     value={filters.state}
@@ -696,13 +696,13 @@ export default function App() {
                       })),
                     ]}
                   />
-                  <CollapsibleTrigger render={<Button variant="outline" size="sm" />}>
+                  <CollapsibleTrigger className="group" render={<Button variant="outline" size="sm" />}>
                     Filters{Object.entries(filters).filter(([key,value]) => key !== 'search' && key !== 'state' && value).length > 0 ? ` (${Object.entries(filters).filter(([key,value]) => key !== 'search' && key !== 'state' && value).length})` : ''}
-                    <ChevronUp className="filter-chevron" />
+                    <ChevronUp className="size-3.5 rotate-180 transition-transform duration-150 group-data-[panel-open]:rotate-0" />
                   </CollapsibleTrigger>
                 </div>
                 <CollapsiblePanel>
-                <div className="filter-grid">
+                <div className="filter-grid pt-2">
                   <Choice
                     name="Category"
                     value={filters.family}

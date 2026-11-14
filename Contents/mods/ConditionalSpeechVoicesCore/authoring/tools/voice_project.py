@@ -251,7 +251,7 @@ def import_audio(manifest, slot, source, ffmpeg):
         if digest(manifest) != revision:
             raise ValueError('Project changed during import. Retry without concurrent edits.')
         converted.replace(target)
-    config['assets'][clip['sound']]['source'] = target.relative_to(manifest.parent).as_posix()
+    config['assets'][clip['sound']]['source'] = target.relative_to(manifest.parent.resolve()).as_posix()
     clip['duration'] = 0
     config['bank']['peaklimits'].pop(voice_id(config) + '_' + slot, None)
     config.setdefault('authoring', {}).setdefault('reviews', {}).pop(slot, None)

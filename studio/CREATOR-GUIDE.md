@@ -4,7 +4,7 @@ Use CONDITIONAL SPEECH VOICES STUDIO to prepare a voice pack through your browse
 
 ## Install the prerequisites
 
-Install Python 3.11 or newer and FFmpeg. Put both executables on PATH. To build a pack, also install Lua 5.1, LuaJIT, or Neovim. Pitch and speed edits require FFmpeg's `rubberband` filter. Cover generation requires its `drawtext` filter.
+Install [Python](https://www.python.org/downloads/) 3.11 or newer and [FFmpeg](https://ffmpeg.org/download.html). Put both executables on PATH. To build a pack, also install Lua 5.1, LuaJIT, or Neovim. Pitch and speed edits require FFmpeg's `rubberband` filter. Cover generation requires its `drawtext` filter.
 
 Download or clone the Core GitHub repository. The compiled interface is included. You do not need Node to use Studio.
 
