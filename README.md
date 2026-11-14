@@ -16,6 +16,8 @@ Mod ID: `Conditional-Speech-Voices-Core`
 
 ## Start Studio
 
+![Studio recording library](docs/images/studio.png)
+
 Install Python 3.11 or newer and FFmpeg. Pack validation also needs Lua 5.1, LuaJIT, or Neovim. Download or clone this repository and open `Contents/mods/ConditionalSpeechVoicesCore/authoring`.
 
 - On Windows, double-click **Start Studio.cmd**.
