@@ -6,7 +6,21 @@ Core supports independently authored voice packs. No Core patch is required. Exi
 
 Create a B42 mod requiring `Conditional-Speech-Voices-Core`. Give it a unique ModID starting with `CSV-Voice-`, followed by letters, digits, underscores or hyphens. This opt-in prefix avoids probing every unrelated installed mod. Put a provider at `42/media/lua/shared/CSV_Packs/<ModID>.lua`. Core requires this module explicitly for each activated mod using that prefix, once during loading. Return a schema-1 definition with a bank and a voices array. Do not require CSV/Core or CSV/Pack from your provider. Registration after Core loads is rejected; restart after changing packs.
 
-See `examples/ExampleVoice/42/media/lua/shared/CSV_Packs/CSV-Voice-Example.lua`. The example has no audio and is not a finished voice pack. Replace its sample bank module with your own recordings and metadata.
+This provider snippet shows registration. Supply your own bank module, scripts, and recordings before enabling the mod.
+
+```lua
+return {
+    schema = 1,
+    bank = require("ExampleVoice/Bank"),
+    voices = {{
+        id = "example_voice",
+        name = "Example Voice",
+        prefix = "VoiceCSVExampleVoiceP",
+        base = "VoiceFemale",
+        preview = "PanicGrounding_1",
+    }},
+}
+```
 
 Each voice has a globally unique lowercase `id`, display `name`, unique `prefix` such as `VoiceCSVMyVoiceP`, `base` of VoiceMale or VoiceFemale, and a `preview` line ID. Optional `styleName` preserves old character-creation identifiers. Never reuse another pack's voice ID or prefix. Native prefixes and saved `csvVoice` IDs must remain stable across updates. Invalid or duplicate definitions are rejected as a whole and logged.
 
@@ -35,4 +49,4 @@ The routing tests cover bank selection, malformed requests, missing packs and du
 
 ## Permission for independent packs
 
-ravenwits permits anyone to create and distribute independently authored voice packs that depend on the unmodified Core and use this interface. The sample provider in `examples/` may be copied and adapted for that purpose. This does not grant redistribution or modification rights to Core, existing recordings, game assets or other mods. Their existing licenses and permissions still apply.
+ravenwits permits anyone to create and distribute independently authored voice packs that depend on the unmodified Core and use this interface. The sample provider above may be copied and adapted for that purpose. This does not grant redistribution or modification rights to Core, existing recordings, game assets or other mods. Their existing licenses and permissions still apply.

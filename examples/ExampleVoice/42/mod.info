@@ -1,5 +1,0 @@
-name=Example Voice provider template
-id=CSV-Voice-Example
-require=Conditional-Speech-Voices-Core
-author=Your name
-versionMin=42.20

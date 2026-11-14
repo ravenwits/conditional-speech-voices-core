@@ -6,8 +6,6 @@ Voice packs provide recordings, captions, voice identities and native sound mapp
 
 The game loads `42/media/lua/client`, `server` and `shared` by execution side. Keep these roots. `CSV_Client.lua` and `CSV_Server.lua` are the entry points; modules under `CSV/` own the work described below. Pure definitions and rules may live in shared code without running gameplay actions there. Client UI and audio stay in client code.
 
-The current `CSV/` require names are retained. Creating subfolders for every feature would change many imports without changing ownership. Move a module only when it has the wrong execution side or its responsibility needs to change, and check both game entry points and standalone tests.
-
 | Module | Owns | Does not own |
 | --- | --- | --- |
 | Observers and event modules | Evidence from game callbacks and current state | Starting dialogue directly |
@@ -25,17 +23,7 @@ NeedTiming owns ordinary speech intervals as well as need-specific timing. Chann
 
 Native pain prevents Q and dialogue, including audition. An accepted Q call cancels that actor's dialogue. Normal speech waits until Q finishes. Injury fallback interrupts a tracked Q call before requesting an acute-pain line. All of these rules apply equally to official and third-party voices.
 
-The framework still attaches its client functions to `CSV/Core.client`. Replacing that entire interface is outside this refactor; it is not necessary to add another voice pack. Event-specific pending observations also remain in their own modules, while only SpeechManager dispatches gameplay speech.
-
-## Internal names
-
-`PsychologyQueue` handles psychology observations; it is not the global speech queue. The global scheduler is `SpeechManager`.
-
-The unused `AlpCallout` alias and inactive `NativeBaseGain` writer were removed in 0.42.7. They were internal modules, not provider APIs. Use the documented provider interface for new packs. A full game restart is required after updating Core.
-
-The internal `NativeVoice.recordingGain` helper was also removed. It had no provider configuration and always returned 1. Generated clips retain their source volume; NativeVolume remains responsible for the runtime gain.
-
-The retired `randomContextPreview` function and `recordedLevel` classifier had no runtime callers. Audition uses `contextPreview`, which remains supported internally. Threat repetition is owned by Encounter; the old write-only client threat/engagement tables were removed.
+Event modules keep pending observations. SpeechManager dispatches gameplay speech. Client functions are exposed through `CSV/Core.client`.
 
 ## Provider and saved data
 

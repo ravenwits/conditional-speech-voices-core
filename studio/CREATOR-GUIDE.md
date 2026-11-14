@@ -70,7 +70,7 @@ Open **Commands** for keyboard shortcuts and available actions. The shortcut lab
 1. Open **Build voice pack**.
 2. Choose **Check audio levels** and wait for the result. Listen to flagged takes.
 3. Resolve missing audio and unapproved takes.
-4. Confirm that you have the rights to distribute the recordings.
+4. Read the [recording rights notice](../Contents/mods/ConditionalSpeechVoicesCore/authoring/CREATOR-RESPONSIBILITIES.md) and confirm that you have permission to distribute the recordings.
 5. Choose **Build package**.
 
 The output contains `workshop.txt`, `preview.png`, `preview-16x9.png`, and the mod under `Contents/mods`. The mod includes its icon and poster. Existing output folders are not overwritten. Increase the version for the next build.

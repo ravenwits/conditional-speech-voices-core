@@ -1245,7 +1245,15 @@ export default function App() {
             description="Check the recordings, then build a local Steam Workshop project."
             footer={
               <div className="build-footer">
-                <Label className="rights-confirmation"><Checkbox checked={rightsConfirmed} onCheckedChange={setRightsConfirmed} disabled={busy}/>I own these recordings or have permission to distribute them.</Label>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <Label className="rights-confirmation">
+                    <Checkbox checked={rightsConfirmed} onCheckedChange={setRightsConfirmed} disabled={busy} />
+                    I own these recordings or have permission to distribute them.
+                  </Label>
+                  <a className="text-sm underline underline-offset-2" href="https://github.com/ravenwits/conditional-speech-voices-core/blob/main/Contents/mods/ConditionalSpeechVoicesCore/authoring/CREATOR-RESPONSIBILITIES.md" target="_blank" rel="noreferrer">
+                    Recording rights
+                  </a>
+                </div>
                 <div className="button-row">
                   <ActionTip text="Download all variations with their status and batch-import filename.">
                     <Button variant="outline" disabled={busy || !project} onClick={() => void exportList()}>
