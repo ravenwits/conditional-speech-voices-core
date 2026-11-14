@@ -1,8 +1,8 @@
-# Adding a voice pack
+# Voice pack provider reference
 
-Start with the [current authoring guide](../Contents/mods/ConditionalSpeechVoicesCore/authoring/README.md) and its `prepare_voice_pack.py` and `build_voice_pack.py` tools. Run commands from that authoring directory. The complete contract is the authority for required slots, rather than counts copied into documentation. The small example below explains registration only; it is not a complete pack.
+To create a pack in your browser, use the [Studio creator guide](../studio/CREATOR-GUIDE.md). For command-line use, start with the [authoring guide](../Contents/mods/ConditionalSpeechVoicesCore/authoring/README.md) and its `prepare_voice_pack.py` and `build_voice_pack.py` tools. Run commands from that authoring directory. The complete contract is the authority for required slots, rather than counts copied into documentation. The small example below explains registration only; it is not a complete pack.
 
-Core 0.42.3 supports independently authored voice packs. No Core patch is required. Existing English and Turkish packs retain their IDs and save compatibility.
+Core supports independently authored voice packs. No Core patch is required. Existing English and Turkish packs retain their IDs and save compatibility.
 
 Create a B42 mod requiring `Conditional-Speech-Voices-Core`. Give it a unique ModID starting with `CSV-Voice-`, followed by letters, digits, underscores or hyphens. This opt-in prefix avoids probing every unrelated installed mod. Put a provider at `42/media/lua/shared/CSV_Packs/<ModID>.lua`. Core requires this module explicitly for each activated mod using that prefix, once during loading. Return a schema-1 definition with a bank and a voices array. Do not require CSV/Core or CSV/Pack from your provider. Registration after Core loads is rejected; restart after changing packs.
 

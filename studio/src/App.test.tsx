@@ -28,6 +28,7 @@ const project: Project = {
   trial: false,
   revision: "1",
   projectKey: "current",
+  languageFlags: ["EN", "TR", "UZ", "TT", "TK", "TG"],
   coverage: { missing: 1510, pending: 1, approved: 0, redo: 0 },
   rows: Array.from({ length: 1511 }, (_, i) => ({
     slot: "Slot_" + i,
@@ -445,4 +446,30 @@ it("downloads the server's current slots when an older server lacks the list end
     url.mockRestore();
     link.mockRestore();
   }
+});
+
+it("keeps acting alternatives separate inside the same delivery",async()=>{
+ const mixed=structuredClone(project);
+ mixed.rows=mixed.rows.slice(0,3).map((r,i)=>({...r,acting:i===1?'breathless':'unspecified'}));
+ vi.mocked(request).mockImplementation(async path=>path==='/project'?mixed:path==='/schema'?schema:[]);
+ render(<App/>);await screen.findByDisplayValue('Line 0');
+ await userEvent.click(screen.getByRole('combobox',{name:'Acting'}));
+ await userEvent.click(await screen.findByRole('option',{name:'Breathless'}));
+ await screen.findByDisplayValue('Line 1');
+ expect(screen.getByRole('combobox',{name:'Delivery'}).textContent).toContain('Normal');
+ await userEvent.click(screen.getByRole('combobox',{name:'Variation'}));
+ expect(await screen.findAllByRole('option')).toHaveLength(1);
+});
+it("keeps hidden filters visible as a count and clears them", async () => {
+ render(<App />);
+ await screen.findByDisplayValue("Line 0");
+ expect(screen.queryByRole("combobox", {name:"Category"})).toBeNull();
+ await userEvent.click(screen.getByRole("button", {name:"Filters"}));
+ await userEvent.click(screen.getByRole("combobox", {name:"Category"}));
+ await userEvent.click(await screen.findByRole("option", {name:"Physical"}));
+ await userEvent.click(screen.getByRole("button", {name:"Filters (1)"}));
+ await waitFor(()=>expect(screen.queryByRole("combobox", {name:"Category"})).toBeNull());
+ expect(screen.getByRole("button", {name:"Filters (1)"})).toBeTruthy();
+ await userEvent.click(screen.getByRole("button", {name:"Clear"}));
+ expect(screen.getByRole("button", {name:"Filters"})).toBeTruthy();
 });

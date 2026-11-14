@@ -150,15 +150,16 @@ export function useConfirm() {
     text: string;
     title?: string;
     accept?: string;
+    destructive?: boolean;
     resolve: (v: boolean) => void;
   } | null>(null);
   const finish = (value: boolean) => {
     pending?.resolve(value);
     setPending(null);
   };
-  const confirm = (text: string, title?: string, accept?: string) =>
+  const confirm = (text: string, title?: string, accept?: string, destructive = !title) =>
     new Promise<boolean>((resolve) =>
-      setPending({ text, title, accept, resolve }),
+      setPending({ text, title, accept, destructive, resolve }),
     );
   const dialog = (
     <AlertDialog
@@ -178,7 +179,7 @@ export function useConfirm() {
           <Button variant="outline" onClick={() => finish(false)}>
             {pending?.title ? "Cancel" : "Keep editing"}
           </Button>
-          <Button onClick={() => finish(true)}>
+          <Button variant={pending?.destructive ? "destructive" : "default"} onClick={() => finish(true)}>
             {pending?.accept || "Discard changes"}
           </Button>
         </AlertDialogFooter>

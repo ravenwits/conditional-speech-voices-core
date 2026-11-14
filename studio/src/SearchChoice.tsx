@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, FolderOpen, Settings, Plus } from "lucide-react";
+import { ChevronDown, FolderOpen, Settings, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -37,7 +37,7 @@ export function SearchChoice({
         <ComboboxList>
           {(i: { value: string; label: string }) => (
             <ComboboxItem key={i.value} value={i}>
-              {i.label}
+              <span className="language-option"><img src={`/studio/flag/${encodeURIComponent(i.value)}`} alt="" width={20} height={14} loading="lazy" />{i.label}</span>
             </ComboboxItem>
           )}
         </ComboboxList>
@@ -55,6 +55,7 @@ export function ProjectPicker({
   disabled,
   onSelect,
   onDetails,
+  onDelete,
   onCreate,
 }: {
   items: ProjectChoice[];
@@ -64,6 +65,7 @@ export function ProjectPicker({
   disabled: boolean;
   onSelect: (key: string) => Promise<void>;
   onDetails: (key: string) => Promise<void>;
+  onDelete: (item: ProjectChoice) => Promise<void>;
   onCreate: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -127,6 +129,19 @@ export function ProjectPicker({
                 }}
               >
                 <Settings />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled={i.key === "current"}
+                title={i.key === "current" ? "Startup project is protected" : "Remove project"}
+                aria-label={"Remove " + i.name}
+                onClick={() => {
+                  setOpen(false);
+                  void onDelete(i);
+                }}
+              >
+                <Trash2 />
               </Button>
             </ComboboxRow>
           )}

@@ -69,7 +69,8 @@ def category(slot):
 
 
 def guidance(slot):
-    kind = category(slot)
+    definition=studio_schema.entry(slot)
+    kind = {"whisper":"Whisper","shout":"Shout"}.get(definition["delivery"],category(slot))
     base = {
         'Whisper': 'A quiet, close whisper. Keep the meaning of the reference line.',
         'Shout': 'A projecting call to attract attention, not a pain scream.',
@@ -97,8 +98,8 @@ def guidance(slot):
     }
     if definition['group'] in contextual:
         base += ' ' + contextual[definition['group']]
-    if definition['delivery'] in profiles:
-        base += ' ' + profiles[definition['delivery']]
+    if definition.get('acting') in profiles:
+        base += ' ' + profiles[definition['acting']]
     if definition['group']=='CriticalFading':
         base += ' Very weak, fading speech with interrupted breaths, not a strong shout.'
     levels=definition.get('needLevels',[])
@@ -195,7 +196,7 @@ def rows(manifest):
     result = []
     for slot, clip in (slots(config).items() if not schema_error else []):
         definition=studio_schema.entry(slot)
-        result.append(dict(slot=slot, category=category(slot), family=definition['family'], delivery=definition['delivery'], context=context(slot), text=config['bank']['lines'].get(slot, ''),
+        result.append(dict(slot=slot, category=category(slot), family=definition['family'], delivery=definition['delivery'], acting=definition.get('acting','unspecified'), context=context(slot), text=config['bank']['lines'].get(slot, ''),
             reference=config.get('authoring', {}).get('references', {}).get(slot, ''),
             direction=recording_note(config,slot),
             guidance=config.get("authoring",{}).get("recordingGuidance",{}).get(slot) or guidance(slot),
@@ -203,7 +204,7 @@ def rows(manifest):
             audioEdit={k:v for k,v in config.get('authoring',{}).get('audioEdits',{}).get(slot,{}).items() if k in ('gainDb','semitones','speed','trimStart','trimEnd')}))
     return dict(canUndoReview=bool(config.get('authoring',{}).get('lastBulkReview')),limits=dict(caption=MAX_CAPTION,seconds=MAX_SECONDS,audioBytes=MAX_AUDIO),steamProfile=config.get('steamProfile',''),name=config['name'], author=config['author'], description=config['description'], voice=voice_id(config),
                 language=config['bank']['language'], packVersion=config['bank']['revision'], trial=bool(config.get('trial')),
-                revision=digest(manifest), rows=result, schemaError=schema_error, coverage={state:sum(r['state']==state for r in result) for state in ['missing','pending','approved','redo']})
+                buildCoverage=coverage(config, manifest.parent, {r['slot'] for r in result if r['state']=='approved'}), revision=digest(manifest), rows=result, schemaError=schema_error, coverage={state:sum(r['state']==state for r in result) for state in ['missing','pending','approved','redo']})
 
 
 def edit(manifest, slot, text, direction, state):
@@ -440,10 +441,32 @@ def package(manifest, output, ffmpeg, core):
     config = read(manifest)
     studio_schema.validate(config)
     if config.get('trial'): raise ValueError('Promote the trial before packaging')
-    pending = [slot for slot,clip in slots(config).items() if status(config, slot, manifest.parent,clip) != 'approved']
-    if pending: raise ValueError(f'{len(pending)} recordings still need import or listening approval')
-    measure(manifest, ffmpeg)
-    count = build(manifest, output, core)
+    readiness=coverage(config,manifest.parent)
+    if readiness['missing']:
+        raise ValueError(str(len(readiness['missing']))+' situations or native events need an approved recording')
+    # Keep the editable catalogue intact. Only approved takes enter the game pack.
+    selected={slot for slot,clip in slots(config).items() if status(config,slot,manifest.parent,clip)=='approved'}
+    voice=voice_id(config);bank=config['bank'];bank['coverage']='situations-v1'
+    bank['data']['clips']={key:clip for key,clip in bank['data']['clips'].items() if key[len(voice)+1:] in selected}
+    used={clip['sound'] for clip in bank['data']['clips'].values()}
+    config['assets']={key:asset for key,asset in config['assets'].items() if key in used}
+    for event,pool in bank['native']['replacements'].items():
+        bank['native']['replacements'][event]=[slot for slot in pool if slot in selected]
+    v=bank['voices'][0]
+    previews=[slot for slot in v.get('previewLines',[]) if slot in selected]
+    if not previews: previews=[sorted(selected)[0]]
+    v['previewLines']=previews;v['preview']=previews[0]
+    if v.get('previewLast') not in previews: v.pop('previewLast',None)
+    import os
+    fd,path=tempfile.mkstemp(prefix='.build-',suffix='.json',dir=manifest.parent)
+    os.close(fd)
+    try:
+        write(Path(path),config)
+        measure(Path(path),ffmpeg)
+        count = build(Path(path), output, core)
+    finally:
+        Path(path).unlink(missing_ok=True)
+        Path(path).with_suffix('.loudness.json').unlink(missing_ok=True)
     return dict(recordings=count, output=str(output),
                 note='File, measurement and Core registry checks passed. Live listening remains necessary.')
 
@@ -501,3 +524,11 @@ def sync_core(manifest):
     config=read(manifest)
     config.setdefault('authoring',{})['coreInputs']=current
     write(manifest,config)
+
+
+def coverage(config,root,available=None):
+    if available is None: available={slot for slot,clip in slots(config).items() if status(config,slot,root,clip)=='approved'}
+    pools=dict(studio_schema.load()['coverage']['pools'])
+    pools.update({'Native / '+event:pool for event,pool in config['bank']['native']['replacements'].items()})
+    missing=[name for name,pool in pools.items() if not available.intersection(pool)]
+    return dict(required=len(pools),covered=len(pools)-len(missing),missing=missing)

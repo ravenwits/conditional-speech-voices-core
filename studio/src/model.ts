@@ -8,6 +8,7 @@ export type Row = {
   category: string;
   family: string;
   delivery: string;
+  acting?: string;
   context: string;
   state: State;
   audioEdit?: {
@@ -19,6 +20,8 @@ export type Row = {
   };
 };
 export type Project = {
+  buildCoverage?: { required: number; covered: number; missing: string[] };
+  languageFlags?: string[];
   canUndoReview?: boolean;
   name: string;
   author: string;
@@ -40,6 +43,7 @@ export type Slot = {
   group: string;
   source?: string;
   delivery: string;
+  acting?: string;
   category: string;
   family: string;
   needLevels?: number[];
@@ -111,6 +115,8 @@ export type Filters = {
   trait: string;
   group: string;
   category: string;
+  delivery: string;
+  acting: string;
   state: string;
 };
 export const emptyFilters: Filters = {
@@ -119,6 +125,8 @@ export const emptyFilters: Filters = {
   trait: "",
   group: "",
   category: "",
+  delivery: "",
+  acting: "",
   state: "",
 };
 export function filterRows(rows: Row[], f: Filters) {
@@ -129,6 +137,8 @@ export function filterRows(rows: Row[], f: Filters) {
       (!f.trait || recordingTraits(r.context).includes(f.trait)) &&
       (!f.group || r.context === f.group) &&
       (!f.category || r.category === f.category) &&
+      (!f.delivery || r.delivery === f.delivery) &&
+      (!f.acting || (r.acting || "unspecified") === f.acting) &&
       (!f.state || r.state === f.state) &&
       (!query ||
         [r.slot, r.text, r.context, r.delivery]

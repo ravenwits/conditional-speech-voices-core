@@ -42,7 +42,7 @@ def validate(config, directory):
         raise ValueError('Invalid mod ID')
     bank = config['bank']
     allowed = {'schema','revision','extras','whispers','expressions','peaklimits','profanity',
-               'voices','id','data','language','native','lines','contract','needTiers','criticalHealth','aliases'}
+               'voices','id','data','language','native','lines','contract','needTiers','criticalHealth','aliases','coverage'}
     if set(bank) - allowed:
         raise ValueError('Unknown bank fields cannot be distributed: ' + ', '.join(sorted(set(bank) - allowed)))
     if bank.get('contract') != 1 or not bank.get('voices'):
@@ -52,6 +52,8 @@ def validate(config, directory):
     suffixes = bank['native']['suffixes']
     if len(suffixes) != len(set(suffixes)) or not set([''] + CONTRACT['nativeEvents']).issubset(suffixes):
         raise ValueError('Native registrations must include the ambient controller and every event')
+    flexible = bank.get('coverage') == 'situations-v1'
+    if bank.get('coverage') is not None and not flexible: raise ValueError('Unsupported coverage policy')
     required = set(CONTRACT['slots'])
     if 'needTiers' in bank:
         extension = CONTRACT['extensions']['needTiers']
@@ -77,7 +79,12 @@ def validate(config, directory):
         prefixes.add(voice['prefix'])
         if voice['base'] not in ('VoiceMale', 'VoiceFemale'):
             raise ValueError('Invalid native voice base')
-        for slot in sorted(required):
+        if flexible:
+            import studio_schema
+            for meaning,pool in studio_schema.load()['coverage']['pools'].items():
+                if not any(name+'_'+slot in bank['data']['clips'] for slot in pool):
+                    raise ValueError('Missing situation '+meaning)
+        for slot in sorted([] if flexible else required):
             line = bank.get('aliases', {}).get(slot, slot)
             if name + '_' + line not in bank['data']['clips']:
                 raise ValueError(name + ': missing slot ' + slot)

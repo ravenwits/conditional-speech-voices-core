@@ -10,7 +10,7 @@ from studio_schema import source_digest
 
 TOOLS=Path(__file__).resolve().parent
 CORE=TOOLS.parents[1]
-MODULES=['PackSemantics','VoiceRequirements','NeedTiers','Rules','Delivery','RecoveryRules',
+MODULES=['VoicePresentation','PackSemantics','VoiceRequirements','NeedTiers','Rules','Delivery','RecoveryRules',
          'LootRules','OutcomeRules','VehicleRules','VehicleCombatRules','TraitSpeechRules',
          'ReloadRules','PsychologyRules','KillSpeech','CriticalHealth','Conditions']
 SOURCES=MODULES+['SemanticSpeech','Concealment','Safety','Channel','Expressions','Whispers',
@@ -31,7 +31,7 @@ def snapshot():
         if result.returncode or not out.exists(): raise RuntimeError(result.stderr.decode(errors='replace'))
         return json.loads(out.read_text(encoding='utf-8'))
 
-def export():
+def export(check=False):
     data=snapshot(); semantics=data['PackSemantics']
     contract=json.loads((TOOLS/'voice-contract-v1.json').read_text(encoding='utf-8'))
     if set(data['VoiceRequirements']['slots'])!=set(contract['slots']):
@@ -106,16 +106,51 @@ def export():
             elif events & {'LureCmon','LureTsk'}: row.update(category='Dialogue',delivery='normal')
             else: row.update(category='Nonverbal',delivery='nonverbal')
         row['family']=groups[group]['family']
+        profile=row['delivery']
+        presentation=data['VoicePresentation']['profiles'].get(profile)
+        if presentation is None: raise ValueError('Unclassified recording profile: '+profile)
+        row['profile']=profile
+        row['delivery']=presentation['delivery']
+        row['acting']=presentation.get('acting','unspecified')
+        if row['category'] in ('Whisper','Shout'): row['category']='Dialogue'
+    # A full pack needs one take for each distinct meaning. Optional performance
+    # profiles do not invent additional obligations or substitute loud audio for whispers.
+    pools={}
+    for slot,row in rows.items():
+        if data['VoicePresentation'].get('genericExclusions',{}).get(slot): continue
+        if slot not in required or row.get('nativeEvents') or row['profile']=='whisper' or row['source']!=slot: continue
+        constraints={k:row[k] for k in ('needLevels','min','max','threat') if k in row}
+        key=row['group']+'|'+json.dumps(constraints,sort_keys=True)
+        if data['VoicePresentation']['distinctGroups'].get(row['group']): key+='|'+slot
+        pools.setdefault(key,[]).append(slot)
+    # Base policies sometimes select a specific severity, rather than an alternative.
+    for group,policy in data['Rules']['policies'].items():
+        ids=semantics['groups'].get(group,[])
+        if policy['event']:
+            pool=[ids[i-1] for i in policy['pool'] if i<=len(ids)]
+            if pool: pools['policy / '+group]=pool
+        else:
+            for i in set(policy['levels']) & set(policy['pool']):
+                if i<=len(ids): pools['severity / '+group+' / '+str(i)]=[ids[i-1]]
+    for name,pool in data['VoicePresentation']['coveragePools'].items():
+        pools['context / '+name]=pool
+    from build_voice_pack import lua as encode_lua
+    coverage=dict(version=1,pools={k:sorted(v) for k,v in sorted(pools.items())})
+    coverage_path=CORE/'42/media/lua/shared/CSV/VoiceCoverage.lua'
+    coverage_text='return '+encode_lua(coverage)+'\n'
+    if check:
+        if coverage_path.read_text(encoding='utf-8')!=coverage_text: raise ValueError('Core coverage is stale')
+    else: coverage_path.write_text(coverage_text,encoding='utf-8')
     inputs={p.relative_to(CORE).as_posix():source_digest(p)
             for p in (CORE/'42/media/lua').rglob('*.lua') if p.name!='BuildIdentity.lua'}
     for name in ['voice-template-v1.json','voice-contract-v1.json','export_studio_schema.py']:
         p=TOOLS/name;inputs[p.relative_to(CORE).as_posix()]=source_digest(p)
     return dict(version=1,contract=contract['version'],slots={s:rows[s] for s in sorted(required)},
-                groups=groups,sources=source_files,inputs=inputs)
+                groups=groups,sources=source_files,inputs=inputs,coverage=coverage)
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--check',action='store_true');args=parser.parse_args()
-    path=TOOLS/'voice-schema-v1.json';value=export()
+    path=TOOLS/'voice-schema-v1.json';value=export(args.check)
     text=json.dumps(value,ensure_ascii=False,sort_keys=True,indent=2)+'\n'
     if args.check:
         if not path.exists() or path.read_text(encoding='utf-8')!=text: raise SystemExit('Studio schema is stale. Run export_studio_schema.py.')

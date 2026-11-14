@@ -3,6 +3,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from pathlib import Path
 import secrets
+import shutil
 import socket
 import re
 import tempfile
@@ -10,6 +11,7 @@ import subprocess
 from urllib.parse import parse_qs, urlparse
 import webbrowser
 import studio_schema
+from workshop_artwork import available_flag_languages
 
 import voice_project as project
 
@@ -54,6 +56,13 @@ def make_server(manifest, ffmpeg, core, port=0):
                 html = (Path(__file__).parent/'studio/index.html').read_text(encoding='utf-8')
                 self.respond(html.replace('__VOICE_SESSION__', token), 'text/html; charset=utf-8')
                 return
+            if url.path.startswith('/studio/flag/') and self.local_request():
+                from workshop_artwork import flag_image
+                try:
+                    self.respond(flag_image(url.path.rsplit('/', 1)[-1]), 'image/png')
+                except (ValueError, OSError):
+                    self.respond({'error': 'Flag not found'}, status=404)
+                return
             if url.path.startswith('/studio/assets/') and self.local_request():
                 try:
                     path = project.contained(Path(__file__).parent/'studio/assets', url.path[len('/studio/assets/'):])
@@ -71,7 +80,7 @@ def make_server(manifest, ffmpeg, core, port=0):
                 self.respond({'error': 'Unauthorized local request'}, status=403)
                 return
             try:
-                if url.path == '/project': self.respond(dict(project.rows(manifest), projectKey=active_project))
+                if url.path == '/project': self.respond(dict(project.rows(manifest), projectKey=active_project, languageFlags=available_flag_languages()))
                 elif url.path == '/recording-list':
                     studio_schema.verify_current()
                     current = project.rows(manifest)
@@ -129,9 +138,12 @@ def make_server(manifest, ffmpeg, core, port=0):
                     data = json.loads(body)
                     fields={'/save':{'slot','text','direction','state'}, '/metadata':{'name','author','description','packVersion','steamProfile'},
                             '/update':{'apply'}, '/jobs':{'rate'}, '/measure':set(), '/package':{'rightsConfirmed'},
-                            '/create':{'voice','name','language','female','trial'}, '/open':{'key'},
+                            '/create':{'voice','name','language','female','trial'}, '/open':{'key'}, '/remove-project':{'key'},
                             '/undo-review':set(), '/review':{'slots','state'}, '/process':{'slot','gainDb','semitones','restore','speed','trimStart','trimEnd'}}
-                    if not isinstance(data,dict) or self.path not in fields or set(data)-fields[self.path]:
+                    if self.path not in fields:
+                        self.respond({'error': 'Unknown Studio action. Check that the server and interface use the same version.'}, status=404)
+                        return
+                    if not isinstance(data,dict) or set(data)-fields[self.path]:
                         raise ValueError('Unknown fields or action. Core rules are read-only.')
                     if self.path == '/save':
                         project.edit(manifest, data['slot'], data['text'], data['direction'], data['state'])
@@ -191,6 +203,21 @@ def make_server(manifest, ffmpeg, core, port=0):
                         project.write(target,created)
                         manifest=target; active_project=voice
                         result={'message':'Project created. Import your recordings to begin.'}
+                    elif self.path == '/remove-project':
+                        key = data['key']
+                        if not isinstance(key, str) or key == 'current' or not re.fullmatch(r'[a-z][a-z0-9_]{0,47}', key):
+                            raise ValueError('The startup project is protected.')
+                        folder = project.contained(projects_root, key)
+                        if not (folder / 'project.json').is_file():
+                            raise ValueError('Project not found.')
+                        raw_folder = projects_root / key
+                        if raw_folder.is_symlink() or bool(getattr(raw_folder.lstat(), 'st_file_attributes', 0) & 0x400) or folder.parent != projects_root.resolve():
+                            raise ValueError('Cannot delete a linked project directory.')
+                        shutil.rmtree(folder)
+                        if active_project == key:
+                            manifest = initial_manifest
+                            active_project = 'current'
+                        result = {'message': 'Project permanently deleted.'}
                     elif self.path == '/open':
                         key=data['key']
                         if key=='current': target=initial_manifest

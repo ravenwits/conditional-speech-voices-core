@@ -6,7 +6,7 @@ Core handles speech rules, playback, settings and debug reports. It requires [Co
 
 ## Status
 
-Version 0.42.7. Single-player beta, tested with Project Zomboid 42.21.0. Multiplayer is not yet verified. The latest character-specific pitch setting still needs a live save/reload check.
+Version 0.43. Single-player beta. Multiplayer remains unverified. Offline tests do not establish live playback on every game build. See [testing](docs/testing.md) for validation limits.
 
 ## Install
 
@@ -16,15 +16,18 @@ Mod ID: `Conditional-Speech-Voices-Core`
 
 ## Start Studio
 
-Download or clone this repository. Install Python 3.11 or later and add FFmpeg to PATH. Open
-`Contents/mods/ConditionalSpeechVoicesCore/authoring` and double-click **Start Studio.cmd**.
-The launcher opens a browser tab. Keep the launcher window open while you work.
+Install Python 3.11 or newer and FFmpeg. Pack validation also needs Lua 5.1, LuaJIT, or Neovim. Download or clone this repository and open `Contents/mods/ConditionalSpeechVoicesCore/authoring`.
 
-Use **New project** in the project picker to choose a voice name and language. Studio saves your work
-under `Zomboid/VoiceProjects`. The compiled app is included in this repository.
+- On Windows, double-click **Start Studio.cmd**.
+- On Linux or macOS, run `sh "Start Studio.sh"` from that directory.
 
-- [Studio guide](studio/CREATOR-GUIDE.md)
+The launcher opens Studio in your browser. Keep the terminal open while you work. The compiled interface is included; Node is needed only to change its source.
+
+Use **New project** in the project picker. Projects are stored under `Zomboid/VoiceProjects` in your home directory. Studio is for creators and is excluded from Workshop packages.
+
+- [Studio creator guide](studio/CREATOR-GUIDE.md)
 - [Command-line guide](Contents/mods/ConditionalSpeechVoicesCore/authoring/README.md#command-line)
+- [Interface development and source layout](studio/README.md)
 
 ## Report a bug
 

@@ -39,7 +39,42 @@ class Projects(unittest.TestCase):
         return path
 
     def approve(self, slot='Explore_1'):
-        p.edit(self.manifest, slot, 'Buraya daha bakmadım.', 'A cautious observation.', 'approved')
+        p.edit(self.manifest, slot, 'Buraya daha bakmadÄ±m.', 'A cautious observation.', 'approved')
+
+    def test_presentation_separates_delivery_from_acting(self):
+        normal=studio_schema.entry('Angry_1')
+        whisper=studio_schema.entry('Whisper_Angry_1')
+        breathless=studio_schema.entry('Expr_breathless_Thirst_1')
+        self.assertEqual((normal['delivery'],normal['acting']),('normal','unspecified'))
+        self.assertEqual((whisper['category'],whisper['delivery']),('Dialogue','whisper'))
+        self.assertEqual((breathless['delivery'],breathless['acting']),('normal','breathless'))
+
+    def test_single_alternative_pack_passes_actual_core_registry(self):
+        self.manifest=self.root/'full.json'
+        initialize(self.manifest,'sample','EN',trial=False)
+        config=p.read(self.manifest)
+        pools=studio_schema.load()['coverage']['pools']
+        chosen={pool[0] for pool in pools.values()}
+        chosen.update(pool[0] for pool in config['bank']['native']['replacements'].values())
+        self.assertLess(len(chosen),len(p.slots(config)))
+        for slot in chosen:
+            clip=p.slots(config)[slot];clip['duration']=1000
+            path=p.contained(self.root,config['assets'][clip['sound']]['source'])
+            path.parent.mkdir(exist_ok=True);path.write_bytes(b'fixture bytes'*100)
+        p.write(self.manifest,config)
+        for slot in chosen:
+            p.edit(self.manifest,slot,config['bank']['lines'][slot],'','approved')
+        self.assertEqual(p.rows(self.manifest)['buildCoverage']['missing'],[])
+        before=self.manifest.read_bytes()
+        # Registry/build test only; no generated voices or claim of audio playback.
+        with patch('prepare_voice_pack.measure'):
+            result=p.package(self.manifest,self.root/'pack','unused',TOOLS.parents[1])
+        self.assertEqual(result['recordings'],len(chosen))
+        self.assertEqual(self.manifest.read_bytes(),before)
+        lost=next(slot for slot in chosen if slot.startswith('AmmoCount_'))
+        p.edit(self.manifest,lost,config['bank']['lines'][lost],'','redo')
+        with self.assertRaisesRegex(ValueError,'situations or native'):
+            p.package(self.manifest,self.root/'bad','unused',TOOLS.parents[1])
 
     def test_bulk_review_is_scoped_and_atomic_and_keeps_files(self):
         first=self.supply();second=self.supply('Explore_2')
@@ -60,7 +95,7 @@ class Projects(unittest.TestCase):
         first=self.supply();self.supply('Explore_2')
         checksum=p.digest(first)
         p.review_many(self.manifest,['Explore_1'],'approved')
-        p.edit(self.manifest,'Explore_2','Başka bir replik.','','redo')
+        p.edit(self.manifest,'Explore_2','BaÅŸka bir replik.','','redo')
         self.assertTrue(p.rows(self.manifest)['canUndoReview'])
         p.undo_review(self.manifest)
         config=p.read(self.manifest)
@@ -76,7 +111,7 @@ class Projects(unittest.TestCase):
 
     def test_unicode_caption_round_trip_preserves_slot(self):
         self.supply()
-        text='Göz gözü görmüyor. العربية 日本語 ਪੰਜਾਬੀ 🫥'
+        text='GÃ¶z gÃ¶zÃ¼ gÃ¶rmÃ¼yor. Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© æ—¥æœ¬èªž à¨ªà©°à¨œà¨¾à¨¬à©€ ðŸ«¥'
         p.edit(self.manifest,'Explore_1',text,'','pending')
         row=next(r for r in p.rows(self.manifest)['rows'] if r['slot']=='Explore_1')
         self.assertEqual(row['text'],text)
@@ -126,7 +161,7 @@ class Projects(unittest.TestCase):
         p.refresh(self.manifest, True)
         config = p.read(self.manifest)
         self.assertFalse(config.get('trial'))
-        self.assertEqual(config['bank']['lines']['Explore_1'], 'Buraya daha bakmadım.')
+        self.assertEqual(config['bank']['lines']['Explore_1'], 'Buraya daha bakmadÄ±m.')
         self.assertEqual(p.digest(path), checksum)
         self.assertEqual(p.status(config, 'Explore_1', self.root), 'approved')
         self.assertTrue(self.manifest.with_suffix('.before-update.json').is_file())
@@ -278,7 +313,7 @@ class Projects(unittest.TestCase):
         self.assertNotIn('revision', recording_list)
         self.assertTrue(all(row['filename'] == row['slot'] + '.mp3' for row in recording_list['recordings']))
         self.assertEqual(request('POST','/create',headers,dict(voice='../escape',language='EN'))[0],400)
-        self.assertEqual(request('POST','/create',headers,dict(voice='another',name='Müjde Türkçe',language='EN'))[0],200)
+        self.assertEqual(request('POST','/create',headers,dict(voice='another',name='MÃ¼jde TÃ¼rkÃ§e',language='EN'))[0],200)
         code,body=request('GET','/project',headers)
         full=json.loads(body)
         self.assertFalse(full['trial']);self.assertEqual(len(full['rows']),len(studio_schema.load()['slots']))
@@ -289,6 +324,16 @@ class Projects(unittest.TestCase):
             self.assertEqual(status, 400)
             self.assertIn(b'conflicts with', body)
         self.assertEqual(json.loads(request('GET', '/project', headers)[1])['revision'], full['revision'])
+        self.assertEqual(request('POST', '/remove-project', headers, {'key': 'current'})[0], 400)
+        self.assertEqual(request('POST', '/remove-project', headers, {'key': 'another'})[0], 200)
+        self.assertEqual(json.loads(request('GET', '/project', headers)[1])['projectKey'], 'current')
+        self.assertFalse((self.root / 'projects/another').exists())
+        self.assertFalse((self.root / 'archived-projects').exists())
+        headers['X-Revision'] = p.digest(self.manifest)
+        self.assertEqual(request('POST', '/remove-project', headers, {'key': '../escape'})[0], 400)
+        self.assertIn('TT', json.loads(request('GET', '/project', headers)[1])['languageFlags'])
+        self.assertEqual(request('GET', '/studio/flag/EN', {})[1][:8], b'\x89PNG\r\n\x1a\n')
+        headers['X-Revision'] = p.digest(self.manifest)
         self.assertEqual(request('POST','/open',headers,dict(key='current'))[0],200)
 
     def test_core_schema_covers_required_slots_and_cannot_be_changed_by_projects(self):
@@ -534,6 +579,9 @@ class Projects(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'already exists'):
             p.workshop_project(self.manifest,output,ffmpeg,TOOLS.parents[1])
         self.assertGreater(result['recordings'],1000)
+        # Packaging measures only selected takes in a temporary manifest.
+        # Warm the editable project's independent cache before checking reuse.
+        measure(self.manifest,ffmpeg)
         with patch('prepare_voice_pack.subprocess.run') as process:
             measure(self.manifest,ffmpeg)
             process.assert_not_called()

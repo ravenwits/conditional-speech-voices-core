@@ -1,4 +1,4 @@
-"""Double-click entry point. Uses installed Python and FFmpeg; never installs tools."""
+"""Studio launcher for Windows, Linux, and macOS. Uses installed Python and FFmpeg; never installs tools."""
 import argparse
 from pathlib import Path
 import shutil
@@ -37,7 +37,7 @@ def update_checkout():
 def prerequisites(ffmpeg=None):
     if sys.version_info < (3,11): raise ValueError("Python 3.11 or newer is required.")
     executable=ffmpeg or shutil.which('ffmpeg')
-    if not executable: raise ValueError("FFmpeg is required. Add ffmpeg.exe to PATH, then start Studio again.")
+    if not executable: raise ValueError("FFmpeg is required. Add ffmpeg to PATH, then start Studio again.")
     result=subprocess.run([str(executable),'-version'],capture_output=True,timeout=10)
     if result.returncode: raise ValueError("FFmpeg could not start. Check its installation.")
     return str(executable)

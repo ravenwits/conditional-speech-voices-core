@@ -1,0 +1,39 @@
+name: Studio checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  studio:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install Linux tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg lua5.1
+      - name: Install macOS tools
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg luajit
+      - name: Check Python version
+        run: python3 -c "import sys; assert sys.version_info >= (3, 11)"
+      - name: Test creator tools
+        env:
+          VOICE_TEST_FFMPEG: ffmpeg
+        run: python3 -B -m unittest discover -s Contents/mods/ConditionalSpeechVoicesCore/authoring/tests -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Test and build interface
+        working-directory: studio
+        run: |
+          npm ci
+          npm test
+          npm run build

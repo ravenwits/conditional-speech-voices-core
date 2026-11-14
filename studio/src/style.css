@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@import "@fontsource-variable/geist-mono";
+
 @custom-variant dark (&:is(.dark *));
 :root {
   --accent: --alpha(var(--color-black) / 4%);
@@ -157,7 +157,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans: "Cal Sans", system-ui, sans-serif;
   --font-heading: var(--font-sans);
-  --font-mono: "Geist Mono Variable", monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: calc(var(--radius) + 0px);
@@ -255,7 +255,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 15px 24px;
+  padding: 10px 24px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -1329,15 +1329,16 @@ body {
   gap: 12px;
 }
 .identity .wordmark strong {
+  white-space: nowrap;
   font-size: 10px;
   line-height: 1.15;
   letter-spacing: 0.1em;
   font-weight: 600;
 }
-.identity .wordmark strong span {
+.identity .wordmark-title {
   display: block;
-  color: var(--foreground);
-  font-size: 19px;
+  color: var(--primary);
+  font-size: 24px;
   letter-spacing: -0.025em;
   font-weight: 750;
 }
@@ -1368,7 +1369,7 @@ body {
   .variation-field > label {
     grid-column: 1/-1;
   }
-  .identity .wordmark strong span {
+  .identity .wordmark-title {
     font-size: 15px;
   }
   .wordmark-studio {
@@ -1556,7 +1557,7 @@ body {
 }
 .variation-field {
   display: grid;
-  grid-template-columns: auto minmax(100px, 1fr) auto minmax(0, 2fr);
+  grid-template-columns: auto minmax(90px, 1fr) auto minmax(90px, 1fr) auto minmax(0, 2fr);
   align-items: center;
   gap: 10px;
 }
@@ -1775,6 +1776,9 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .app-shell .review-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 761px) and (max-width: 1100px) {
+  .variation-field { grid-template-columns: auto minmax(0, 1fr); }
+}
 @media (max-width: 760px) {
   .variation-field { grid-template-columns: minmax(0, 1fr); }
 }
@@ -1804,3 +1808,12 @@ body {
 .batch-import-example > div, .batch-import-footer { display: flex; flex-wrap: wrap; gap: 8px; }
 .batch-import-example code { overflow-wrap: anywhere; }
 .batch-import-footer { width: 100%; justify-content: flex-end; }
+
+.caption-title textarea { padding-block-start: 6px; padding-inline-start: 6px; }
+.language-option { display: flex; align-items: center; gap: 8px; }
+.language-option img { object-fit: contain; flex: none; }
+
+.filter-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.library-filters .filter-grid { padding-top: 8px; }
+.filter-chevron { width: 14px; height: 14px; transform: rotate(180deg); transition: transform 150ms; }
+[data-panel-open] .filter-chevron { transform: rotate(0); }

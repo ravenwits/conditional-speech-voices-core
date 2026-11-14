@@ -1,5 +1,25 @@
 # Tests
 
+## Test Studio
+
+Use Python 3.11 or newer, FFmpeg, and Lua 5.1, LuaJIT, or Neovim. Set `VOICE_TEST_FFMPEG` if FFmpeg is not on PATH.
+
+From the repository root, run:
+
+```sh
+python3 -B -m unittest discover -s Contents/mods/ConditionalSpeechVoicesCore/authoring/tests -v
+cd studio
+npm ci
+npm test
+npm run build
+```
+
+On Windows, use `python` instead of `python3`. Interface builds need Node.js 24. Running the bundled interface does not need Node.js.
+
+The Studio workflow runs these checks on Linux and macOS. It tests the shell launcher from a directory with spaces. Check the workflow result before claiming support was verified on either system. Browser microphone access and actual game playback need separate manual checks.
+
+## Test Core
+
 `python tools/check.py` parses every shipped Lua file and translation JSON, then runs isolated tests for missing voice packs, observer failure recovery, hook ownership, character-specific pitch and bounded API error reporting.
 
 Use Lua 5.1. Set `LUA` to its executable if it is not on PATH. The local runner also accepts Neovim's LuaJIT through `NVIM` for development; CI runs Lua 5.1.

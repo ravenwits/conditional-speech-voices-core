@@ -9,6 +9,16 @@ function Contract.check(definition)
     end
     local bank = definition.bank
     local aliases = bank.aliases or {}
+    local flexible = bank.coverage == 'situations-v1'
+    if bank.coverage ~= nil and not flexible then return {'Unsupported coverage policy'} end
+    if bank.needTiers~=nil and bank.needTiers~=1 then errors[#errors+1]='Unsupported need tier extension' end
+    if bank.criticalHealth~=nil and bank.criticalHealth~=1 then errors[#errors+1]='Unsupported critical health extension' end
+    for id,clip in pairs(bank.data.clips) do
+        if type(clip)~='table' or type(clip.sound)~='string' or clip.sound=='' or type(clip.duration)~='number'
+            or clip.duration~=clip.duration or clip.duration<=0 or clip.duration==math.huge then
+            errors[#errors+1]='Invalid clip '..tostring(id)
+        end
+    end
     local suffixes = {}
     for _, suffix in ipairs(bank.native and bank.native.suffixes or {}) do
         if suffixes[suffix] then errors[#errors + 1] = 'Duplicate native suffix ' .. suffix end
@@ -19,7 +29,7 @@ function Contract.check(definition)
         if not suffixes[event] then errors[#errors + 1] = 'Missing native registration ' .. event end
     end
     for _, voice in ipairs(definition.voices) do
-        if bank.needTiers~=nil then
+        if bank.needTiers~=nil and not flexible then
             if bank.needTiers~=1 then errors[#errors + 1]='Unsupported need tier extension' end
             for _, pool in pairs(require('CSV/NeedTiers').slots)do
                 for _, id in ipairs(pool)do
@@ -29,14 +39,24 @@ function Contract.check(definition)
                 end
             end
         end
-        if bank.criticalHealth~=nil then
+        if bank.criticalHealth~=nil and not flexible then
             if bank.criticalHealth~=1 then errors[#errors+1]='Unsupported critical health extension' end
             for _,id in ipairs({'CriticalWound_1','CriticalWound_2','CriticalFading_1','CriticalFading_2','Whisper_CriticalWound_1','Whisper_CriticalWound_2','Whisper_CriticalFading_1','Whisper_CriticalFading_2'})do
                 local clip=bank.data.clips[voice.id..'_'..id]
                 if not clip or type(clip.duration)~='number' or clip.duration<=0 or type((bank.lines or {})[id])~='string' then errors[#errors+1]=voice.id..': missing critical health slot '..id end
             end
         end
-        for _, slot in ipairs(requirements.slots) do
+        if flexible then
+            for meaning,pool in pairs(require('CSV/VoiceCoverage').pools) do
+                local found=false
+                for _,id in ipairs(pool) do
+                    local clip=bank.data.clips[voice.id..'_'..id]
+                    if clip and type(clip.sound)=='string' and type(clip.duration)=='number' and clip.duration>0 and clip.duration<math.huge then found=true end
+                end
+                if not found then errors[#errors+1]=voice.id..': missing situation '..meaning end
+            end
+        end
+        for _, slot in ipairs(flexible and {} or requirements.slots) do
             local id = aliases[slot] or slot
             local clip = bank.data.clips[voice.id .. '_' .. id]
             if not clip then

@@ -120,7 +120,7 @@ export default function App() {
   );
   const deliveries = Array.from(new Set(situationRows.map((r) => r.delivery)));
   const variations = situationRows.filter(
-    (r) => r.delivery === selectedRow?.delivery,
+    (r) => r.delivery === selectedRow?.delivery && (r.acting || "unspecified") === (selectedRow?.acting || "unspecified"),
   );
   useEffect(() => {
     if (selectedRow)
@@ -159,6 +159,8 @@ export default function App() {
       state: values("state", (row) => [row.state]),
       group: values("group", (row) => [row.context]),
       category: values("category", (row) => [row.category]),
+      delivery: values("delivery", (row) => [row.delivery]),
+      acting: values("acting", (row) => [row.acting || "unspecified"]),
       trait: values("trait", (row) => recordingTraits(row.context)),
     };
   }, [project, filters]);
@@ -528,7 +530,7 @@ export default function App() {
     !project.schemaError &&
     project.rows.length > 0 &&
     !project.trial &&
-    project.coverage.approved === project.rows.length;
+    (project.buildCoverage ? project.buildCoverage.missing.length === 0 : project.coverage.approved === project.rows.length);
   const commands = [
     {
       value: "Play or pause recording",
@@ -617,7 +619,7 @@ export default function App() {
                 aria-label="Conditional Speech Voices - Studio"
               >
                 <strong>
-                  CONDITIONAL <span>SPEECH VOICES</span>
+                  CONDITIONAL SPEECH <span className="wordmark-title">VOICES</span>
                 </strong>
                 <span className="wordmark-studio">STUDIO</span>
               </div>
@@ -629,6 +631,15 @@ export default function App() {
                 disabled={busy || !project}
                 onSelect={async (key) => {
                   await switchProject(key);
+                }}
+                onDelete={async ({ key, name }) => {
+                  if (!(await confirm(`Permanently delete "${name}" and all its project files and recordings? This cannot be undone.`, "Delete project?", "Delete project", true))) return;
+                  await work(async () => {
+                    if (key === project?.projectKey) stop();
+                    await action("/remove-project", { key });
+                    await load();
+                    setProjects(await request("/projects"));
+                  });
                 }}
                 onDetails={async (key) => {
                   if (key === project?.projectKey) await openModal("project");
@@ -670,16 +681,8 @@ export default function App() {
                     onChange={(e) => updateFilter("search", e.target.value)}
                   />
                 </div>
-                <div className="filter-grid">
-                  <Choice
-                    name="Category"
-                    value={filters.family}
-                    onChange={(v) => updateFilter("family", v)}
-                    items={[
-                      { value: "", label: "All categories" },
-                      ...families.map((f) => ({ value: f, label: label(f), disabled: !availableFilters.family.has(f) })),
-                    ]}
-                  />
+                <Collapsible className="library-filters">
+                <div className="filter-toolbar">
                   <Choice
                     name="Recording status"
                     value={filters.state}
@@ -691,6 +694,22 @@ export default function App() {
                         label: `${name} (${project?.coverage[value as State] || 0})`,
                         disabled: !availableFilters.state.has(value),
                       })),
+                    ]}
+                  />
+                  <CollapsibleTrigger render={<Button variant="outline" size="sm" />}>
+                    Filters{Object.entries(filters).filter(([key,value]) => key !== 'search' && key !== 'state' && value).length > 0 ? ` (${Object.entries(filters).filter(([key,value]) => key !== 'search' && key !== 'state' && value).length})` : ''}
+                    <ChevronUp className="filter-chevron" />
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsiblePanel>
+                <div className="filter-grid">
+                  <Choice
+                    name="Category"
+                    value={filters.family}
+                    onChange={(v) => updateFilter("family", v)}
+                    items={[
+                      { value: "", label: "All categories" },
+                      ...families.map((f) => ({ value: f, label: label(f), disabled: !availableFilters.family.has(f) })),
                     ]}
                   />
                   <Choice
@@ -711,6 +730,18 @@ export default function App() {
                       ...categories.map((c) => ({ value: c, label: c, disabled: !availableFilters.category.has(c) })),
                     ]}
                   />
+                  <Choice
+                    name="Delivery filter"
+                    value={filters.delivery}
+                    onChange={(v) => updateFilter("delivery", v)}
+                    items={[
+                      { value: "", label: "All deliveries" },
+                      ...Array.from(new Set(project?.rows.map((row) => row.delivery))).sort().map((delivery) => ({
+                        value: delivery, label: label(delivery), disabled: !availableFilters.delivery.has(delivery),
+                      })),
+                    ]}
+                  />
+                  <Choice name="Filter acting" value={filters.acting} onChange={v=>updateFilter("acting",v)} items={[{value:"",label:"All acting"},...Array.from(new Set(project?.rows.map(r=>r.acting || "unspecified"))).sort().map(value=>({value,label:value==='unspecified'?'Not specified':label(value),disabled:!availableFilters.acting.has(value)}))]} />
                   {traits.length > 0 && (
                     <Choice
                       name="Trait"
@@ -723,6 +754,8 @@ export default function App() {
                     />
                   )}
                 </div>
+                </CollapsiblePanel>
+                </Collapsible>
                 <div className="library-count">
                   {Object.values(filters).some(Boolean) && (
                     <Button
@@ -912,10 +945,10 @@ export default function App() {
                         </Badge>
                       </div>
                       <div>
-                        <span className="field-caption">Type / delivery</span>
+                        <span className="field-caption">Recording type</span>
                         <span>
                           {selectedRow.category}
-                          {selectedRow.category.toLowerCase() !== selectedRow.delivery.toLowerCase() && ` / ${label(selectedRow.delivery)}`}
+                          
                         </span>
                       </div>
                     </div>
@@ -939,6 +972,10 @@ export default function App() {
                           if (row) void choose(row);
                         }}
                       />
+                      <Label>Acting</Label>
+                      <Choice name="Acting" value={selectedRow.acting || "unspecified"} disabled={busy}
+                        items={Array.from(new Set(situationRows.filter(r=>r.delivery===selectedRow.delivery).map(r=>r.acting || "unspecified"))).map(value=>({value,label:value==='unspecified'?'Not specified':label(value)}))}
+                        onChange={value=>{const row=situationRows.find(r=>r.delivery===selectedRow.delivery && (r.acting || 'unspecified')===value);if(row)void choose(row);}} />
                       <Label>Variation</Label>
                       <Choice
                         name="Variation"
@@ -1246,17 +1283,18 @@ export default function App() {
               </div>
             )}
             <div className="pack-progress">
+              {project?.buildCoverage && <p>One approved take per meaning is enough. Extra variations and acting are optional.</p>}
               <strong>
-                {project?.coverage.approved.toLocaleString() || 0}
+                {(project?.buildCoverage?.covered ?? project?.coverage.approved ?? 0).toLocaleString()}
                 <span>
                   {" "}
-                  / {project?.rows.length.toLocaleString() || 0} approved
+                  / {(project?.buildCoverage?.required ?? project?.rows.length ?? 0).toLocaleString()} {project?.buildCoverage ? "required meanings covered" : "approved"}
                 </span>
               </strong>
               <Progress
-                aria-label="Approved recordings"
-                max={project?.rows.length || 1}
-                value={project?.coverage.approved || 0}
+                aria-label="Package coverage"
+                max={project?.buildCoverage?.required ?? project?.rows.length ?? 1}
+                value={project?.buildCoverage?.covered ?? project?.coverage.approved ?? 0}
               />
               <p>
                 {project?.coverage.missing || 0} missing ·{" "}
@@ -1506,7 +1544,7 @@ export default function App() {
                   <SearchChoice
                     name="Language"
                     value={newProject.language}
-                    items={languages}
+                    items={languages.filter((language) => project?.languageFlags?.includes(language.value))}
                     onChange={(language) =>
                       setNewProject({ ...newProject, language })
                     }
