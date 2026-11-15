@@ -6,7 +6,7 @@ const root=fileURLToPath(new URL('..',import.meta.url));
 const core=existsSync(root+'/Contents/mods')?'../Contents/mods':'../mods';
 export default defineConfig({
  plugins:[tailwindcss()],
- resolve:{alias:{'@':fileURLToPath(new URL('./src',import.meta.url))}},
+ resolve:{alias:{'@':fileURLToPath(new URL('./src',import.meta.url)), '@studio-languages': fileURLToPath(new URL(core + '/ConditionalSpeechVoicesCore/authoring/tools/artwork/language-names.json', import.meta.url))}},
  base:'/studio/',
  build:{outDir:core+'/ConditionalSpeechVoicesCore/authoring/tools/studio',emptyOutDir:true,assetsInlineLimit:0},
 });

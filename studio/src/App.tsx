@@ -1,3 +1,4 @@
+import languageNames from "@studio-languages";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
@@ -28,7 +29,6 @@ import { Choice, Fold, Modal, useConfirm, ActionTip, Hint } from "./controls";
 import { MicrophoneTake } from "./MicrophoneTake";
 import { AudioPlayer } from "./AudioPlayer";
 import { ProjectPicker, SearchChoice } from "./SearchChoice";
-import { languages } from "./languages";
 import {
   Collapsible,
   CollapsibleTrigger,
@@ -60,6 +60,10 @@ import {
 } from "@/components/ui/command";
 const audioFileTypes = ".wav,.flac,.mp3,.ogg,.opus,.m4a,.mp4,.aac,.webm";
 const PAGE = 50;
+
+const languageOptions = Object.entries(languageNames)
+  .map(([code, name]) => ({ value: code, label: `${name} (${code})` }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 export default function App() {
   const [rightsConfirmed,setRightsConfirmed]=useState(false);
@@ -1589,7 +1593,7 @@ export default function App() {
                   <SearchChoice
                     name="Language"
                     value={newProject.language}
-                    items={languages.filter((language) => project?.languageFlags?.includes(language.value))}
+                    items={languageOptions}
                     onChange={(language) =>
                       setNewProject({ ...newProject, language })
                     }

@@ -40,13 +40,15 @@ def flag_code(language):
 def available_flag_languages():
     with ZipFile(ARTWORK / 'flags.zip') as flags:
         files = set(flags.namelist())
-    return sorted(code for code in set(LANGUAGE_COUNTRIES) | SAME_CODE
+    return sorted(code for code in LANGUAGE_NAMES
                   if flag_code(code) + '.png' in files)
 
 
 def flag_image(language):
     if not re.fullmatch(r'[A-Z_]{2,16}', language):
         raise ValueError('Invalid voice language for the cover')
+    if language not in LANGUAGE_NAMES:
+        return (ARTWORK / 'neutral.png').read_bytes()
     with ZipFile(ARTWORK / 'flags.zip') as flags:
         name = flag_code(language) + '.png'
         return flags.read(name) if name in flags.namelist() else (ARTWORK / 'neutral.png').read_bytes()
