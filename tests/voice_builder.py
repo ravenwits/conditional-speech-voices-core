@@ -10,6 +10,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(root / 'Contents/mods/ConditionalSpeechVoicesCore/authoring/tools'))
 from build_voice_pack import validate, build, CONTRACT, lua
 from prepare_voice_pack import initialize
+import studio_schema
 
 with tempfile.TemporaryDirectory() as temporary:
     directory = Path(temporary)
@@ -18,7 +19,13 @@ with tempfile.TemporaryDirectory() as temporary:
     config = json.loads(manifest.read_text(encoding='utf-8'))
     bank = config['bank']
     required = set(CONTRACT['slots']) | set(CONTRACT['extensions']['needTiers']['slots']) | set(CONTRACT['extensions']['criticalHealth']['slots'])
-    assert set(bank['data']['clips']) == {'newvoice_' + line for line in required}
+    optional = {'WindowLocked_1', 'WindowBarricaded_1', 'CarWindowOpened_1', 'CarWindowBroken_1'}
+    alternate_slots = {slot for slot, row in studio_schema.load()['slots'].items() if row.get('optional')}
+    assert {'Alt_AfterHumanShaken_1', 'Alt_Whisper_AfterHumanShaken_1', 'Alt_NativeBreath_1'} <= alternate_slots
+    assert 'Alt_NativeBreath_1' in bank['native']['replacements']['Exercise']
+    optional.update(alternate_slots)
+    assert set(bank['data']['clips']) == {'newvoice_' + line for line in required | optional}
+    assert not (optional & required)
     voice = bank['voices'][0]
     assert voice['base'] == 'VoiceFemale' and config['modId'] == 'CSV-Voice-newvoice'
     assert len(voice['previewLines']) == 6 and voice['previewLast'] == 'Injured_3'
@@ -49,6 +56,13 @@ with tempfile.TemporaryDirectory() as temporary:
             pass
         else:
             raise AssertionError('Invalid input accepted')
+    unrecorded = copy.deepcopy(config)
+    for slot in optional:
+        clip = unrecorded['bank']['data']['clips'].pop('newvoice_' + slot)
+        unrecorded['assets'].pop(clip['sound'])
+    for event, pool in unrecorded['bank']['native']['replacements'].items():
+        unrecorded['bank']['native']['replacements'][event] = [slot for slot in pool if slot not in optional]
+    assert len(validate(unrecorded, directory)) == len(unrecorded['assets'])
     legacy = copy.deepcopy(config)
     legacy['bank']['voices'][0].pop('previewLines')
     legacy['bank']['voices'][0].pop('previewLast')

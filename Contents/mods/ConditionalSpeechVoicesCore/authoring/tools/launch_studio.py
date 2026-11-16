@@ -54,18 +54,20 @@ def main():
     parser.add_argument('--project',type=Path)
     parser.add_argument('--ffmpeg')
     parser.add_argument('--projects',type=Path,default=Path.home()/'Zomboid'/'VoiceProjects')
+    parser.add_argument('--dev', action='store_true')
+    parser.add_argument('--port', type=int, default=0)
     args=parser.parse_args()
     try:
-        update_checkout()
+        if not args.dev: update_checkout()
         ffmpeg=prerequisites(args.ffmpeg)
         manifest,fresh=(args.project,False) if args.project else workspace(args.projects)
         from voice_workbench import make_server
         import webbrowser
-        server,url=make_server(manifest,ffmpeg,Path(__file__).resolve().parents[2])
+        server,url=make_server(manifest,ffmpeg,Path(__file__).resolve().parents[2], args.port)
         print("CONDITIONAL SPEECH VOICES STUDIO")
         print("Keep this window open. Close it or press Ctrl+C when finished.")
         print(url,flush=True)
-        webbrowser.open(url+('?new=1' if fresh else ''))
+        if not args.dev: webbrowser.open(url+('?new=1' if fresh else ''))
         try: server.serve_forever()
         except KeyboardInterrupt: pass
         finally: server.server_close()

@@ -49,6 +49,16 @@ class Projects(unittest.TestCase):
         self.assertEqual((whisper['category'],whisper['delivery']),('Dialogue','whisper'))
         self.assertEqual((breathless['delivery'],breathless['acting']),('normal','breathless'))
 
+    def test_core_acting_tags_reach_studio_without_changing_delivery(self):
+        for slot, acting in {'EngineRecovered_3':'relieved', 'PanicEscape_2':'breathless',
+                             'ThreatTense_1':'uneasy', 'GunJammed_1':'tense',
+                             'Whisper_EngineRecovered_3':'relieved'}.items():
+            self.assertEqual(studio_schema.entry(slot)['acting'], acting)
+            self.assertTrue(p.guidance(slot).isascii())
+            self.assertTrue(p.guidance(slot).strip())
+        self.assertEqual(studio_schema.entry('Whisper_EngineRecovered_3')['delivery'], 'whisper')
+        self.assertEqual(studio_schema.entry('Expr_angry_GunJammed_1')['acting'], 'angry')
+
     def test_single_alternative_pack_passes_actual_core_registry(self):
         self.manifest=self.root/'full.json'
         initialize(self.manifest,'sample','EN',trial=False)
@@ -263,6 +273,39 @@ class Projects(unittest.TestCase):
         entries = p.read(self.manifest.with_suffix('.work.json'))['entries']
         self.assertEqual(len({e['id'] for e in entries}), 4)
 
+    def test_editor_does_not_retry_response_after_client_disconnect(self):
+        server, _ = make_server(self.manifest, 'ffmpeg', TOOLS.parents[1])
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+
+        connection = http.client.HTTPConnection('127.0.0.1', server.server_port, timeout=5)
+        try:
+            connection.request('GET', '/session', headers={'X-Voice-Request': 'local-editor'})
+            token = json.loads(connection.getresponse().read())['token']
+        finally:
+            connection.close()
+        headers = {'X-Voice-Token': token}
+        with patch.object(server.RequestHandlerClass, 'end_headers', side_effect=BrokenPipeError) as send:
+            connection = http.client.HTTPConnection('127.0.0.1', server.server_port, timeout=5)
+            try:
+                connection.request('GET', '/schema', headers=headers)
+                with self.assertRaises(http.client.RemoteDisconnected):
+                    connection.getresponse()
+            finally:
+                connection.close()
+            send.assert_called_once()
+
+        connection = http.client.HTTPConnection('127.0.0.1', server.server_port, timeout=5)
+        try:
+            connection.request('GET', '/project', headers=headers)
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertEqual(len(json.loads(response.read())['rows']), 18)
+        finally:
+            connection.close()
+
     def test_editor_rejects_cross_origin_missing_token_and_stale_writes(self):
         server, url = make_server(self.manifest, 'ffmpeg', TOOLS.parents[1])
         thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
@@ -335,6 +378,15 @@ class Projects(unittest.TestCase):
         self.assertEqual(request('GET', '/studio/flag/EN', {})[1][:8], b'\x89PNG\r\n\x1a\n')
         headers['X-Revision'] = p.digest(self.manifest)
         self.assertEqual(request('POST','/open',headers,dict(key='current'))[0],200)
+
+    def test_core_catalogue_refreshes_after_template_replacement(self):
+        path = self.root / 'voice-template-v1.json'
+        path.write_text('{"extras":{"catalog":{}}}', encoding='utf-8')
+        with patch.object(studio_schema, 'TOOLS', self.root):
+            self.assertEqual(studio_schema.template()['extras']['catalog'], {})
+            path.write_text('{"extras":{"catalog":{"WindowLocked_1":{"group":"WindowLocked"}}}}',
+                            encoding='utf-8')
+            self.assertIn('WindowLocked_1', studio_schema.template()['extras']['catalog'])
 
     def test_core_schema_covers_required_slots_and_cannot_be_changed_by_projects(self):
         studio_schema.verify_current()

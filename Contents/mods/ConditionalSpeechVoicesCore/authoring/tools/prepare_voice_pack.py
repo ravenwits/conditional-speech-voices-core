@@ -59,7 +59,9 @@ def initialize(output, voice, language, female=False, trial=False, texts=None):
         raise ValueError('Use a lowercase voice ID and an uppercase language code')
     if output.exists():
         raise ValueError('Manifest already exists')
-    bank = json.loads(Path(__file__).with_name('voice-template-v1.json').read_text(encoding='utf-8'))
+    from copy import deepcopy
+    from studio_schema import template
+    bank = deepcopy(template())
     bank.update(id='csv.' + voice, language=language, revision='1.0.0', contract=1)
     bank['voices'] = [dict(id=voice, name=voice.title(), prefix='VoiceCSV' + voice.title().replace('_', '') + 'P',
                           base='VoiceFemale' if female else 'VoiceMale', preview='NativeCall_1',
@@ -71,6 +73,8 @@ def initialize(output, voice, language, female=False, trial=False, texts=None):
         required.update(CONTRACT['extensions']['needTiers']['slots'])
     if bank.get('criticalHealth') == 1:
         required.update(CONTRACT['extensions']['criticalHealth']['slots'])
+    from studio_schema import load as studio_catalogue
+    required.update(studio_catalogue()['slots'])
     if trial:
         required = {slot for slots in TRIAL_GROUPS.values() for slot in slots}
         if not required <= bank["lines"].keys():

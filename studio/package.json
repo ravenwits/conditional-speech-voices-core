@@ -4,6 +4,7 @@
   "version": "0.43.0",
   "type": "module",
   "scripts": {
+    "dev": "node dev.mjs",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run"
   },

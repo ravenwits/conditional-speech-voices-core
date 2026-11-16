@@ -1,3 +1,4 @@
+local alternates=require 'CSV/VoiceAlternates'
 local M={repeatMs=90000,meaningRepeatMs=30000}
 -- Only audited equivalents share a short cooldown. Needs keep their severity,
 -- and danger/injury events are not placed behind this additional gate.
@@ -27,7 +28,8 @@ function M.recent(history,line,now)
  return used~=nil and now>=used and now-used<M.meaningRepeatMs
 end
 function M.allowed(line,f)
- local id=M.source(line.id)
+ local variant=alternates[line.id]
+ local id=M.source(variant and variant.source or line.id)
  if id:match('^CriticalFading_') then return type(f.health)=='number' and f.health>0 and f.health<=25 end
  if id:match('^CriticalWound_') then return type(f.health)=='number' and f.health>0 and f.health<=25 and ((f.bleeding or 0)>0 or f.acute==true) end
  if not require('CSV/KillSpeech').allowed(id,f) then return false end

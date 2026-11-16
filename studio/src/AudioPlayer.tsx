@@ -195,7 +195,7 @@ export function AudioPlayer({
             {marker !== null && duration > 0 && !disabled && !pending && (
               <>
                 <span className="seek-highlight" style={{ width: `${marker * 100}%` }} />
-                <span className="seek-time" role="tooltip" style={{ left: `${marker * 100}%` }}>
+                <span className="pointer-events-none absolute bottom-[calc(100%+8px)] z-[3] -translate-x-1/2 rounded-sm bg-popover px-1.5 py-1 text-xs tabular-nums text-popover-foreground ring-1 ring-border" role="tooltip" style={{ left: `${marker * 100}%` }}>
                   {String(Math.floor(centiseconds / 100)).padStart(2, "0")}:
                   {String(centiseconds % 100).padStart(2, "0")}
                 </span>

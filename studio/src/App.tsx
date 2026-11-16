@@ -1,3 +1,4 @@
+import { Dialog as LoadingDialog } from "@base-ui/react/dialog";
 import languageNames from "@studio-languages";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -14,6 +15,7 @@ import {
   Download,
   Terminal,
   Mic,
+  LoaderCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -66,9 +68,10 @@ const languageOptions = Object.entries(languageNames)
   .sort((a, b) => a.label.localeCompare(b.label));
 
 export default function App() {
-  const [rightsConfirmed,setRightsConfirmed]=useState(false);
+  const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [commandsOpen, setCommandsOpen] = useState(false);
   const [operation, setOperation] = useState("");
+  const [projectLoading, setProjectLoading] = useState("Opening project…");
   const playerControl = useRef<{ toggle: () => void }>(null);
   const { confirm, dialog } = useConfirm();
   const [audioDirty, setAudioDirty] = useState(false),
@@ -79,12 +82,14 @@ export default function App() {
     [filters, setFilters] = useState(emptyFilters),
     [page, setPage] = useState(0);
   const [modal, setModal] = useState<
-      "project" | "prepare" | "import" | "create" | "microphone" | null
+      "project" | "prepare" | "import" | "create" | "open-pack" | "microphone" | null
     >(null),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("Opening project…"),
     [error, setError] = useState("");
-  useEffect(()=>setRightsConfirmed(false),[modal,project?.projectKey]);
+  useEffect(() => {
+    setRightsConfirmed(false);
+  }, [modal, project?.projectKey]);
   const [text, setText] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [report, setReport] = useState<Record<string, unknown> | null>(null),
@@ -113,7 +118,9 @@ export default function App() {
   const dirty = textDirty || audioDirty;
   const missingBySlot = useMemo(() => {
     const bySlot = new Map<string, string[]>();
-    for (const [group, slots] of Object.entries(project?.buildCoverage?.missingSlots ?? {})) {
+    for (const [group, slots] of Object.entries(
+      project?.buildCoverage?.missingSlots ?? {},
+    )) {
       for (const slot of slots) {
         const groups = bySlot.get(slot) ?? [];
         groups.push(group);
@@ -122,13 +129,19 @@ export default function App() {
     }
     return bySlot;
   }, [project]);
-  const requiredSlots = useMemo(() => new Set(missingBySlot.keys()), [missingBySlot]);
+  const requiredSlots = useMemo(
+    () => new Set(missingBySlot.keys()),
+    [missingBySlot],
+  );
   const filtered = useMemo(
     () => filterRows(project?.rows || [], filters, requiredSlots),
     [project, filters, requiredSlots],
   );
   const grouped = useMemo(() => groupRows(filtered), [filtered]);
-  const navigationRows = useMemo(() => grouped.flatMap((group) => group.variations), [grouped]);
+  const navigationRows = useMemo(
+    () => grouped.flatMap((group) => group.variations),
+    [grouped],
+  );
   const pageCount = Math.max(1, Math.ceil(grouped.length / PAGE)),
     currentPage = Math.min(page, pageCount - 1);
   const visible = grouped.slice(currentPage * PAGE, (currentPage + 1) * PAGE);
@@ -136,8 +149,17 @@ export default function App() {
     (r) => r.context === selectedRow?.context,
   );
   const deliveries = Array.from(new Set(situationRows.map((r) => r.delivery)));
+  const actingOptions = Array.from(
+    new Set(
+      situationRows
+        .filter((row) => row.delivery === selectedRow?.delivery)
+        .map((row) => row.acting || "unspecified"),
+    ),
+  );
   const variations = situationRows.filter(
-    (r) => r.delivery === selectedRow?.delivery && (r.acting || "unspecified") === (selectedRow?.acting || "unspecified"),
+    (r) =>
+      r.delivery === selectedRow?.delivery &&
+      (r.acting || "unspecified") === (selectedRow?.acting || "unspecified"),
   );
   useEffect(() => {
     if (selectedRow)
@@ -152,7 +174,10 @@ export default function App() {
     [project],
   );
   const traits = useMemo(
-    () => Array.from(new Set(project?.rows.flatMap((row) => row.traits ?? []))).sort(),
+    () =>
+      Array.from(
+        new Set(project?.rows.flatMap((row) => row.traits ?? [])),
+      ).sort(),
     [project],
   );
   const categories = useMemo(
@@ -160,25 +185,37 @@ export default function App() {
     [project],
   );
   const hasFilters = Object.values(filters).some(Boolean);
-  const hasReviewableMatches = hasFilters && filtered.some((row) => row.state !== "missing");
-  const filterCount = Object.entries(filters).filter(([key, value]) => key !== "search" && key !== "state" && value).length;
+  const hasReviewableMatches =
+    hasFilters && filtered.some((row) => row.state !== "missing");
+  const filterCount = Object.entries(filters).filter(
+    ([key, value]) => key !== "search" && key !== "state" && value,
+  ).length;
   const availableFilters = useMemo(() => {
     const rows = project?.rows ?? [];
-    const values = (key: keyof typeof emptyFilters, field: (row: Row) => string[]) => {
+    const values = (
+      key: keyof typeof emptyFilters,
+      field: (row: Row) => string[],
+    ) => {
       const counts = new Map<string, number>();
-      for (const row of filterRows(rows, { ...filters, [key]: "" }, requiredSlots))
-        for (const value of field(row)) counts.set(value, (counts.get(value) ?? 0) + 1);
+      for (const row of filterRows(
+        rows,
+        { ...filters, [key]: "" },
+        requiredSlots,
+      ))
+        for (const value of field(row))
+          counts.set(value, (counts.get(value) ?? 0) + 1);
       return counts;
     };
     return {
       family: values("family", (row) => [row.family]),
-      state: values("state", (row) => [row.state]),
+      state: values("state", (row) =>
+        requiredSlots.has(row.slot) ? [row.state, "required"] : [row.state],
+      ),
       group: values("group", (row) => [row.context]),
       category: values("category", (row) => [row.category]),
       delivery: values("delivery", (row) => [row.delivery]),
       acting: values("acting", (row) => [row.acting || "unspecified"]),
       trait: values("trait", (row) => row.traits ?? []),
-      coverage: values("coverage", (row) => requiredSlots.has(row.slot) ? ["required"] : []),
     };
   }, [project, filters, requiredSlots]);
   function stop() {
@@ -194,7 +231,9 @@ export default function App() {
     stop();
     setSelected(row.slot);
     setText(row.text);
-    const groupIndex = grouped.findIndex((group) => group.context === row.context);
+    const groupIndex = grouped.findIndex(
+      (group) => group.context === row.context,
+    );
     if (groupIndex >= 0) setPage(Math.floor(groupIndex / PAGE));
 
     setAudioDirty(false);
@@ -206,11 +245,12 @@ export default function App() {
     const p = await request<Project>("/project");
     setRevision(p.revision);
     setProject(p);
-    if (p.schemaError) toastManager.add({
-      title: "Project schema needs updating",
-      description: p.schemaError,
-      type: "error",
-    });
+    if (p.schemaError)
+      toastManager.add({
+        title: "Project schema needs updating",
+        description: p.schemaError,
+        type: "error",
+      });
     setProjects((items) =>
       items.map((item) =>
         item.key === p.projectKey ? { ...item, name: p.name } : item,
@@ -235,9 +275,10 @@ export default function App() {
     setMetadataDirty(false);
     return p;
   }
-  async function work(task: () => Promise<void>) {
+  async function work(task: () => Promise<void>, loadingMessage = "") {
     if (busy) return;
     setBusy(true);
+    if (loadingMessage) setProjectLoading(loadingMessage);
     setError("");
     try {
       await task();
@@ -247,19 +288,29 @@ export default function App() {
         title: "Could not complete action",
         description: e instanceof Error ? e.message : String(e),
         type: "error",
-        actionProps: e instanceof RequestError && e.status === 409 ? {
-          children: "Reload saved project",
-          onClick: async () => {
-            if (await confirm("Reload the saved project and discard your unsaved edits?")) {
-              await work(async () => { stop(); await load(); });
-            }
-          },
-        } : undefined,
+        actionProps:
+          e instanceof RequestError && e.status === 409
+            ? {
+                children: "Reload saved project",
+                onClick: async () => {
+                  if (
+                    await confirm(
+                      "Reload the saved project and discard your unsaved edits?",
+                    )
+                  ) {
+                    await work(async () => {
+                      stop();
+                      await load();
+                    });
+                  }
+                },
+              }
+            : undefined,
       });
-
     } finally {
       setBusy(false);
       setOperation("");
+      if (loadingMessage) setProjectLoading("");
     }
   }
   useEffect(() => {
@@ -272,7 +323,7 @@ export default function App() {
         setModal("create");
         history.replaceState(null, "", location.pathname);
       }
-    });
+    }, "Opening project…");
   }, []);
   useEffect(() => {
     const prevent = (e: BeforeUnloadEvent) => {
@@ -288,7 +339,7 @@ export default function App() {
       ?.querySelector("[data-slot=scroll-area-viewport]")
       ?.scrollTo?.(0, 0);
   }, [currentPage, filters]);
-  async function changeFilters(next: typeof filters) {
+  async function changeFilters(next: typeof filters, preferredSlot?: string) {
     if (busy) return;
     if (
       dirty &&
@@ -297,8 +348,13 @@ export default function App() {
       return;
     const matches = filterRows(project?.rows || [], next, requiredSlots);
     setFilters(next);
-    setPage(0);
-    const row = matches.find((r) => r.slot === selected) || matches[0];
+    const row =
+      matches.find((r) => r.slot === (preferredSlot ?? selected)) || matches[0];
+    const groupIndex =
+      preferredSlot && row
+        ? groupRows(matches).findIndex((group) => group.context === row.context)
+        : 0;
+    setPage(Math.max(0, Math.floor(groupIndex / PAGE)));
     stop();
     setSelected(row?.slot || "");
     setText(row?.text || "");
@@ -329,8 +385,11 @@ export default function App() {
         direction: selectedRow.direction,
         state,
       });
-      const index = navigationRows.findIndex((r) => r.slot === selectedRow.slot);
-      const nextSlot = next && index >= 0 ? navigationRows[index + 1]?.slot : undefined;
+      const index = navigationRows.findIndex(
+        (r) => r.slot === selectedRow.slot,
+      );
+      const nextSlot =
+        next && index >= 0 ? navigationRows[index + 1]?.slot : undefined;
       stop();
       await load(nextSlot || selectedRow.slot);
       if (nextSlot) {
@@ -402,7 +461,12 @@ export default function App() {
           );
         const maxBytes = snapshot.limits?.audioBytes ?? 16 * 1024 * 1024;
         if (file.size > maxBytes)
-          throw new Error(file.name + " exceeds the " + maxBytes / (1024 * 1024) + " MiB limit.");
+          throw new Error(
+            file.name +
+              " exceeds the " +
+              maxBytes / (1024 * 1024) +
+              " MiB limit.",
+          );
         used.add(row.slot);
         selectedFiles.push({ row, file });
       }
@@ -445,9 +509,34 @@ export default function App() {
       setPage(0);
       setReport(null);
       succeeded = true;
-    });
+    }, "Opening project…");
     return succeeded;
   }
+  const [packFolder, setPackFolder] = useState("");
+
+  async function choosePackFolder() {
+    await work(async () => {
+      const result = await action("/browse-pack-folders", { native: true });
+      if (result.unavailable) {
+        throw new Error("Windows folder picker unavailable. Enter the local folder path.");
+      }
+      if (typeof result.selected === "string") setPackFolder(result.selected);
+    });
+  }
+
+  async function openVoicePack(folder: string) {
+    await work(async () => {
+      const result = await action("/open-pack", { folder });
+      if (!result.opened) return;
+      stop();
+      await load();
+      setProjects(await request("/projects"));
+      setFilters(emptyFilters);
+      setPage(0);
+      setModal(null);
+    }, "Opening voice pack…");
+  }
+
   async function closeModal() {
     if (busy) return;
     if (metadataDirty && !(await confirm("Discard unsaved project details?")))
@@ -455,7 +544,7 @@ export default function App() {
     setMetadataDirty(false);
     setModal(null);
   }
-  async function openModal(which: "project" | "prepare" | "import" | "create") {
+  async function openModal(which: "project" | "prepare" | "import" | "create" | "open-pack") {
     if (busy) return;
     if (
       dirty &&
@@ -507,17 +596,30 @@ export default function App() {
   }
   async function fetchRecordingList() {
     try {
-      return await request<{ projectKey: string; voice: string; recordings: unknown[] }>("/recording-list");
+      return await request<{
+        projectKey: string;
+        voice: string;
+        recordings: unknown[];
+      }>("/recording-list");
     } catch (error) {
       if (!(error instanceof RequestError) || error.status !== 404) throw error;
-      const latest = await request<Project>("/project", undefined, {}, true, false);
+      const latest = await request<Project>(
+        "/project",
+        undefined,
+        {},
+        true,
+        false,
+      );
       if (latest.schemaError) throw new Error(latest.schemaError);
       return {
         projectKey: latest.projectKey,
         voice: latest.voice,
         language: latest.language,
         recordings: latest.rows.map(({ slot, text, state }) => ({
-          slot, text, state, filename: slot + ".mp3",
+          slot,
+          text,
+          state,
+          filename: slot + ".mp3",
         })),
       };
     }
@@ -526,7 +628,9 @@ export default function App() {
     await work(async () => {
       const { projectKey, ...data } = await fetchRecordingList();
       if (projectKey !== project?.projectKey)
-        throw new Error("The active project changed. Reopen it before downloading its slots.");
+        throw new Error(
+          "The active project changed. Reopen it before downloading its slots.",
+        );
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: "application/json",
       });
@@ -548,7 +652,17 @@ export default function App() {
     !project.schemaError &&
     project.rows.length > 0 &&
     !project.trial &&
-    (project.buildCoverage ? project.buildCoverage.missing.length === 0 : project.coverage.approved === project.rows.length);
+    (project.buildCoverage
+      ? project.buildCoverage.missing.length === 0
+      : project.coverage.approved === project.rows.length);
+  const hasAudio = !!selectedRow && selectedRow.state !== "missing";
+  const takeCommands = {
+    approve: { value: "Approve", key: "Ctrl+Enter", disabled: busy || audioDirty || !hasAudio, run: () => void save("approved") },
+    import: { value: "Import audio", key: "Alt+I", disabled: busy || !selectedRow, run: () => importRef.current?.click() },
+    record: { value: "Record audio", key: "Alt+R", disabled: busy || !selectedRow, run: () => { stop(); setModal("microphone"); } },
+    listen: { value: "Needs listening", key: "Alt+L", disabled: busy || audioDirty || !hasAudio || selectedRow?.state === "pending", run: () => void save("pending") },
+    retake: { value: "Needs a retake", key: "Alt+T", disabled: busy || audioDirty || !hasAudio, run: () => void save("redo") },
+  };
   const commands = [
     {
       value: "Play or pause recording",
@@ -568,24 +682,46 @@ export default function App() {
       disabled: busy || position < 0 || position >= navigationRows.length - 1,
       run: () => void choose(navigationRows[position + 1]),
     },
-    {
-      value: "Approve and next",
-      key: "Ctrl+Enter",
-      disabled:
-        busy || audioDirty || !selectedRow || selectedRow.state === "missing",
-      run: () => void save("approved", true),
-    },
+    takeCommands.approve,
     {
       value: "Undo last bulk review",
       key: "Ctrl+Shift+Z",
       disabled: busy || dirty || !project?.canUndoReview,
       run: () => void perform("/undo-review"),
     },
+    takeCommands.record,
+    takeCommands.listen,
+    takeCommands.retake,
+    takeCommands.import,
     {
       value: "Build voice pack",
       key: "",
       disabled: busy,
       run: () => void openModal("prepare"),
+    },
+    {
+      value: "Batch import",
+      key: "",
+      disabled: busy || !project,
+      run: () => void openModal("import"),
+    },
+    {
+      value: "Download recording list",
+      key: "",
+      disabled: busy || !project,
+      run: () => void exportList(),
+    },
+    {
+      value: "Check audio levels",
+      key: "",
+      disabled: busy || !project || project.coverage.missing === project.rows.length,
+      run: () => void perform("/measure"),
+    },
+    {
+      value: "Clear recording filters",
+      key: "",
+      disabled: busy || !Object.values(filters).some(Boolean),
+      run: () => void changeFilters(emptyFilters),
     },
   ];
   useEffect(() => {
@@ -604,7 +740,10 @@ export default function App() {
         )
       )
         return;
-      const match =
+      const takeShortcut = e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey
+        ? { KeyR: 5, KeyL: 6, KeyT: 7, KeyI: 8 }[e.code as "KeyR" | "KeyL" | "KeyT" | "KeyI"]
+        : undefined;
+      const match = takeShortcut ?? (
         e.altKey && e.key === "ArrowLeft"
           ? 1
           : e.altKey && e.key === "ArrowRight"
@@ -617,7 +756,7 @@ export default function App() {
                 ? 4
                 : e.code === "Space" && el === document.body
                   ? 0
-                  : -1;
+                  : -1);
       if (match >= 0 && !commands[match].disabled) {
         e.preventDefault();
         commands[match].run();
@@ -628,30 +767,55 @@ export default function App() {
   });
   return (
     <ToastProvider>
+      <LoadingDialog.Root open={!!projectLoading} onOpenChange={() => {}}>
+        <LoadingDialog.Portal>
+          <LoadingDialog.Popup className="fixed inset-0 z-[100] flex h-dvh w-screen flex-col items-center justify-center gap-3 bg-background px-6 text-center text-foreground outline-none" aria-busy="true">
+            <LoaderCircle aria-hidden="true" className="size-8 animate-spin text-primary motion-reduce:animate-none" />
+            <LoadingDialog.Title className="text-lg font-semibold">{projectLoading}</LoadingDialog.Title>
+            <LoadingDialog.Description className="text-sm text-muted-foreground" role="status">
+              Loading recordings and project details. Please wait.
+            </LoadingDialog.Description>
+          </LoadingDialog.Popup>
+        </LoadingDialog.Portal>
+      </LoadingDialog.Root>
       <TooltipProvider delay={250}>
-        <div className="app-shell" aria-busy={busy}>
-          <header className="app-header">
+        <div
+          className="app-shell flex h-dvh flex-col overflow-hidden max-[600px]:h-auto max-[600px]:min-h-dvh max-[600px]:overflow-visible"
+          aria-busy={busy}
+        >
+          <header className="app-header flex shrink-0 items-center justify-between gap-5 border-b px-6 py-2.5 max-[800px]:gap-3 max-[800px]:px-4 max-[800px]:py-3 max-[600px]:items-start">
             <div className="identity">
-              <div
-                className="wordmark"
-                aria-label="Conditional Speech Voices - Studio"
-              >
-                <strong>
-                  CONDITIONAL SPEECH <span className="wordmark-title">VOICES</span>
+              <div className="border-r pr-3" aria-label="Conditional Speech Voices - Studio">
+                <strong className="wordmark">
+                  CONDITIONAL SPEECH{" "}
+                  <span className="flex gap-1.5">
+                    <span className="wordmark-title">VOICES</span>
+                    <span className="font-thin text-secondary text-2xl self-center">
+                      STUDIO
+                    </span>
+                  </span>
                 </strong>
-                <span className="wordmark-studio">STUDIO</span>
               </div>
               <ProjectPicker
                 items={projects}
                 current={project?.projectKey || "current"}
                 language={project?.language || ""}
+                languageFlags={project?.languageFlags ?? []}
                 trial={!!project?.trial}
                 disabled={busy || !project}
                 onSelect={async (key) => {
                   await switchProject(key);
                 }}
                 onDelete={async ({ key, name }) => {
-                  if (!(await confirm(`Permanently delete "${name}" and all its project files and recordings? This cannot be undone.`, "Delete project?", "Delete project", true))) return;
+                  if (
+                    !(await confirm(
+                      `Permanently delete "${name}" and all its project files and recordings? This cannot be undone.`,
+                      "Delete project?",
+                      "Delete project",
+                      true,
+                    ))
+                  )
+                    return;
                   await work(async () => {
                     if (key === project?.projectKey) stop();
                     await action("/remove-project", { key });
@@ -666,23 +830,55 @@ export default function App() {
                     setModal("project");
                   }
                 }}
+                onOpen={() => {
+                  setPackFolder("");
+                  void openModal("open-pack");
+                }}
                 onCreate={() => void openModal("create")}
               />
             </div>
-            <Button
-              disabled={busy || !project}
-              onClick={() => openModal("prepare")}
-            >
-              Build voice pack
-            </Button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                variant="ghost"
+                disabled={
+                  busy ||
+                  !project ||
+                  project.coverage.missing === project.rows.length
+                }
+                onClick={() => void perform("/measure")}
+              >
+                {operation === "/measure" ? "Checking…" : "Check audio levels"}
+              </Button>
+              <Button
+                disabled={busy || !project}
+                onClick={() => openModal("prepare")}
+              >
+                Build voice pack
+              </Button>
+            </div>
           </header>
-          <main className="workspace">
-            <aside className="recordings" aria-label="Recording library">
-              <div className="library-controls">
-                <div className="library-title">
-                  <strong>Recordings</strong>
+          {operation === "/measure" && (
+            <div className="measurement-progress" role="status">
+              <p>Checking audio levels…</p>
+              <Progress value={null} aria-label="Checking audio levels" />
+              <p className="help">
+                Large packs can take several minutes. Keep Studio open.
+              </p>
+            </div>
+          )}
+
+          <main className="min-h-0 flex-1 grid grid-cols-[330px_minmax(0,1fr)] max-[800px]:grid-cols-[280px_minmax(0,1fr)] max-[600px]:flex max-[600px]:flex-col">
+            <aside
+              className="flex min-h-0 flex-col border-r bg-card max-[600px]:shrink-0 max-[600px]:border-r-0 max-[600px]:border-b"
+              aria-label="Recording library"
+            >
+              <div className="border-b px-3.5 pt-3.75 pb-2.5 max-[600px]:px-3 max-[600px]:pt-2.5 max-[600px]:pb-2">
+                <div className="mb-3 flex items-center justify-between">
+                  <strong className="text-[15px]">Recordings</strong>
                   <Button
-                    variant="outline"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8! min-h-8!"
                     disabled={busy}
                     onClick={() => void openModal("import")}
                   >
@@ -700,107 +896,158 @@ export default function App() {
                   />
                 </div>
                 <Collapsible>
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-                  <Choice
-                    name="Recording status"
-                    triggerClassName="recording-status-trigger"
-                    value={filters.state}
-                    onChange={(v) => updateFilter("state", v)}
-                    items={[
-                      { value: "", label: "All statuses" },
-                      ...Object.entries(stateNames).map(([value, name]) => ({
-                        value,
-                        label: `${name} (${availableFilters.state.get(value) ?? 0})`,
-                        disabled: !availableFilters.state.has(value),
-                      })),
-                    ]}
-                  />
-                  <CollapsibleTrigger
-                    aria-label={filterCount ? "Filters, active" : "Filters"}
-                    title="More filters"
-                    render={<Button variant="outline" size="sm" className="recording-filter-toggle" />}
-                  >
-                    <ListFilter aria-hidden="true" />
-                    {filterCount > 0 && (
-                      <span aria-hidden="true" className="pointer-events-none absolute right-0 top-0 size-2 rounded-full bg-primary">
-                        <span className="absolute inset-0 rounded-full bg-primary/70 motion-safe:animate-ping" />
-                      </span>
-                    )}
-                  </CollapsibleTrigger>
-                </div>
-                <CollapsiblePanel>
-                <div className="filter-grid pt-2">
-                  <Choice
-                    name="Category"
-                    value={filters.family}
-                    onChange={(v) => updateFilter("family", v)}
-                    items={[
-                      { value: "", label: "All categories" },
-                      ...families.map((f) => ({ value: f, label: `${label(f)} (${availableFilters.family.get(f) ?? 0})`, disabled: !availableFilters.family.has(f) })),
-                    ]}
-                  />
-                  <Choice
-                    name="Situation"
-                    value={filters.group}
-                    onChange={(v) => updateFilter("group", v)}
-                    items={[
-                      { value: "", label: "All situations" },
-                      ...groups.map((g) => ({ value: g, label: `${label(g)} (${availableFilters.group.get(g) ?? 0})`, disabled: !availableFilters.group.has(g) })),
-                    ]}
-                  />
-                  <Choice
-                    name="Recording type"
-                    value={filters.category}
-                    onChange={(v) => updateFilter("category", v)}
-                    items={[
-                      { value: "", label: "All recording types" },
-                      ...categories.map((c) => ({ value: c, label: `${c} (${availableFilters.category.get(c) ?? 0})`, disabled: !availableFilters.category.has(c) })),
-                    ]}
-                  />
-                  <Choice
-                    name="Delivery filter"
-                    value={filters.delivery}
-                    onChange={(v) => updateFilter("delivery", v)}
-                    items={[
-                      { value: "", label: "All deliveries" },
-                      ...Array.from(new Set(project?.rows.map((row) => row.delivery))).sort().map((delivery) => ({
-                        value: delivery, label: `${label(delivery)} (${availableFilters.delivery.get(delivery) ?? 0})`, disabled: !availableFilters.delivery.has(delivery),
-                      })),
-                    ]}
-                  />
-                  <Choice name="Filter acting" value={filters.acting} onChange={v=>updateFilter("acting",v)} items={[{value:"",label:"All acting"},...Array.from(new Set(project?.rows.map(r=>r.acting || "unspecified"))).sort().map(value=>({value,label:`${value === 'unspecified' ? 'Not specified' : label(value)} (${availableFilters.acting.get(value) ?? 0})`,disabled:!availableFilters.acting.has(value)}))]} />
-                  {traits.length > 0 && (
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                     <Choice
-                      name="Trait"
-                      value={filters.trait}
-                      onChange={(value) => updateFilter("trait", value)}
+                      name="Recording status"
+                      triggerClassName="text-[11px]"
+                      value={filters.state}
+                      onChange={(v) => updateFilter("state", v)}
                       items={[
-                        { value: "", label: "All traits" },
-                        ...traits.map((trait) => ({ value: trait, label: `${trait} (${availableFilters.trait.get(trait) ?? 0})`, disabled: !availableFilters.trait.has(trait) })),
+                        { value: "", label: "All statuses" },
+                        ...Object.entries(stateNames).map(([value, name]) => ({
+                          value,
+                          label: `${name} (${availableFilters.state.get(value) ?? 0})`,
+                          disabled: !availableFilters.state.has(value),
+                        })),
+                        ...(project?.buildCoverage?.missingSlots &&
+                        !project.trial
+                          ? [
+                              {
+                                value: "required",
+                                label: `Required gaps (${availableFilters.state.get("required") ?? 0})`,
+                                disabled:
+                                  !availableFilters.state.has("required"),
+                              },
+                            ]
+                          : []),
                       ]}
                     />
-                  )}
-                  {project?.buildCoverage?.missingSlots && !project.trial && (
-                    <Choice
-                      name="Pack coverage"
-                      value={filters.coverage}
-                      onChange={(value) => updateFilter("coverage", value)}
-                      items={[
-                        { value: "", label: "All coverage" },
-                        { value: "required", label: `Required gaps (${availableFilters.coverage.get("required") ?? 0})`,
-                          disabled: !availableFilters.coverage.has("required") },
-                      ]}
-                    />
-                  )}
-                </div>
-                </CollapsiblePanel>
+                    <CollapsibleTrigger
+                      aria-label={filterCount ? "Filters, active" : "Filters"}
+                      title="More filters"
+                      render={
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8! min-h-8! w-8 gap-px p-0 text-[11px] [&_svg]:w-3.25!"
+                        />
+                      }
+                    >
+                      <ListFilter aria-hidden="true" />
+                      {filterCount > 0 && (
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute right-0 top-0 size-2 rounded-full bg-primary"
+                        >
+                          <span className="absolute inset-0 rounded-full bg-primary/70 motion-safe:animate-ping" />
+                        </span>
+                      )}
+                    </CollapsibleTrigger>
+                  </div>
+                  <CollapsiblePanel>
+                    <div className="grid grid-cols-2 gap-1.5 pt-2 max-[600px]:gap-1.25 **:data-[slot=select-trigger]:min-w-0 **:data-[slot=select-trigger]:text-[11px]">
+                      <Choice
+                        name="Category"
+                        value={filters.family}
+                        onChange={(v) => updateFilter("family", v)}
+                        items={[
+                          { value: "", label: "All categories" },
+                          ...families.map((f) => ({
+                            value: f,
+                            label: `${label(f)} (${availableFilters.family.get(f) ?? 0})`,
+                            disabled: !availableFilters.family.has(f),
+                          })),
+                        ]}
+                      />
+                      <Choice
+                        name="Situation"
+                        value={filters.group}
+                        onChange={(v) => updateFilter("group", v)}
+                        items={[
+                          { value: "", label: "All situations" },
+                          ...groups.map((g) => ({
+                            value: g,
+                            label: `${label(g)} (${availableFilters.group.get(g) ?? 0})`,
+                            disabled: !availableFilters.group.has(g),
+                          })),
+                        ]}
+                      />
+                      <Choice
+                        name="Recording type"
+                        value={filters.category}
+                        onChange={(v) => updateFilter("category", v)}
+                        items={[
+                          { value: "", label: "All recording types" },
+                          ...categories.map((c) => ({
+                            value: c,
+                            label: `${c} (${availableFilters.category.get(c) ?? 0})`,
+                            disabled: !availableFilters.category.has(c),
+                          })),
+                        ]}
+                      />
+                      <Choice
+                        name="Delivery filter"
+                        value={filters.delivery}
+                        onChange={(v) => updateFilter("delivery", v)}
+                        items={[
+                          { value: "", label: "All deliveries" },
+                          ...Array.from(
+                            new Set(project?.rows.map((row) => row.delivery)),
+                          )
+                            .sort()
+                            .map((delivery) => ({
+                              value: delivery,
+                              label: `${label(delivery)} (${availableFilters.delivery.get(delivery) ?? 0})`,
+                              disabled:
+                                !availableFilters.delivery.has(delivery),
+                            })),
+                        ]}
+                      />
+                      <Choice
+                        name="Filter acting"
+                        value={filters.acting}
+                        onChange={(v) => updateFilter("acting", v)}
+                        items={[
+                          { value: "", label: "All acting" },
+                          ...Array.from(
+                            new Set(
+                              project?.rows.map(
+                                (r) => r.acting || "unspecified",
+                              ),
+                            ),
+                          )
+                            .sort()
+                            .map((value) => ({
+                              value,
+                              label: `${value === "unspecified" ? "Not specified" : label(value)} (${availableFilters.acting.get(value) ?? 0})`,
+                              disabled: !availableFilters.acting.has(value),
+                            })),
+                        ]}
+                      />
+                      {traits.length > 0 && (
+                        <Choice
+                          name="Trait"
+                          value={filters.trait}
+                          onChange={(value) => updateFilter("trait", value)}
+                          items={[
+                            { value: "", label: "All traits" },
+                            ...traits.map((trait) => ({
+                              value: trait,
+                              label: `${trait} (${availableFilters.trait.get(trait) ?? 0})`,
+                              disabled: !availableFilters.trait.has(trait),
+                            })),
+                          ]}
+                        />
+                      )}
+                    </div>
+                  </CollapsiblePanel>
                 </Collapsible>
                 <div className="library-count">
                   {Object.values(filters).some(Boolean) && (
                     <Button
                       size="xs"
                       variant="ghost"
-                      className="clear-recording-filters w-full justify-center"
+                      className="h-8! min-h-8! w-full justify-center"
                       onClick={() => void changeFilters(emptyFilters)}
                     >
                       Clear filters
@@ -808,52 +1055,59 @@ export default function App() {
                   )}
                 </div>
               </div>
-              {(hasReviewableMatches || project?.canUndoReview) && <div
-                className="bulk-review"
-                aria-label="Review filtered recordings"
-              >
-                {hasReviewableMatches && <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={
-                    busy ||
-                    dirty ||
-                    !filtered.some(
-                      (r) => r.state !== "missing" && r.state !== "approved",
-                    )
-                  }
-                  onClick={() => void reviewFiltered("approved")}
+              {(hasReviewableMatches || project?.canUndoReview) && (
+                <div
+                  className="bulk-review"
+                  aria-label="Review filtered recordings"
                 >
-                  Approve filtered
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={
-                    busy ||
-                    dirty ||
-                    !filtered.some(
-                      (r) => r.state !== "missing" && r.state !== "redo",
-                    )
-                  }
-                  onClick={() => void reviewFiltered("redo")}
-                >
-                  Retake filtered
-                </Button>
-                </>}
-                {project?.canUndoReview && <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={busy || dirty}
-                  data-bulk-undo
-                  onClick={() => void perform("/undo-review")}
-                >
-                  Undo
-                </Button>}
-              </div>}
+                  {hasReviewableMatches && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={
+                          busy ||
+                          dirty ||
+                          !filtered.some(
+                            (r) =>
+                              r.state !== "missing" && r.state !== "approved",
+                          )
+                        }
+                        onClick={() => void reviewFiltered("approved")}
+                      >
+                        Approve filtered
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={
+                          busy ||
+                          dirty ||
+                          !filtered.some(
+                            (r) => r.state !== "missing" && r.state !== "redo",
+                          )
+                        }
+                        onClick={() => void reviewFiltered("redo")}
+                      >
+                        Retake filtered
+                      </Button>
+                    </>
+                  )}
+                  {project?.canUndoReview && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy || dirty}
+                      data-bulk-undo
+                      onClick={() => void perform("/undo-review")}
+                    >
+                      Undo
+                    </Button>
+                  )}
+                </div>
+              )}
               <ScrollArea
-                className="recording-list"
+                className="h-0 flex-1 overflow-hidden max-[600px]:h-47.5 max-[600px]:min-h-47.5 max-[600px]:flex-none"
                 ref={listRef}
                 key={currentPage}
               >
@@ -929,14 +1183,14 @@ export default function App() {
                   </Collapsible>
                 ))}
                 {!visible.length && (
-                  <p className="empty-list">
+                  <p className="p-4 text-xs text-muted-foreground">
                     {project
                       ? "No recordings match these filters."
                       : "Loading recordings…"}
                   </p>
                 )}
               </ScrollArea>
-              <div className="pagination">
+              <div className="flex items-center justify-between border-t px-3 py-0.5 text-[11px] tabular-nums text-muted-foreground">
                 <Button
                   size="icon-sm"
                   variant="ghost"
@@ -968,7 +1222,7 @@ export default function App() {
             >
               {selectedRow ? (
                 <>
-                  <div className="recording-header">
+                  <div className="mb-6.5 border-b pb-5.5 max-[800px]:mb-5">
                     <div className="metadata-grid">
                       <div>
                         <span className="field-caption">Category</span>
@@ -989,13 +1243,16 @@ export default function App() {
                       </div>
                       <div>
                         <span className="field-caption">Recording type</span>
-                        <span>
-                          {selectedRow.category}
-                          
-                        </span>
+                        <span>{selectedRow.category}</span>
                       </div>
                     </div>
-                    <div className="variation-field">
+                    <div
+                      className={
+                        actingOptions.length > 0
+                          ? "variation-field"
+                          : "variation-field without-acting"
+                      }
+                    >
                       <Label>Delivery</Label>
                       <Choice
                         name="Delivery"
@@ -1015,10 +1272,31 @@ export default function App() {
                           if (row) void choose(row);
                         }}
                       />
-                      <Label>Acting</Label>
-                      <Choice name="Acting" value={selectedRow.acting || "unspecified"} disabled={busy}
-                        items={Array.from(new Set(situationRows.filter(r=>r.delivery===selectedRow.delivery).map(r=>r.acting || "unspecified"))).map(value=>({value,label:value==='unspecified'?'Not specified':label(value)}))}
-                        onChange={value=>{const row=situationRows.find(r=>r.delivery===selectedRow.delivery && (r.acting || 'unspecified')===value);if(row)void choose(row);}} />
+                      {actingOptions.length > 0 && (
+                        <>
+                          <Label>Acting</Label>
+                          <Choice
+                            name="Acting"
+                            value={selectedRow.acting || "unspecified"}
+                            disabled={busy || actingOptions.length < 2}
+                            items={actingOptions.map((value) => ({
+                              value,
+                              label:
+                                value === "unspecified"
+                                  ? "Not specified"
+                                  : label(value),
+                            }))}
+                            onChange={(value) => {
+                              const row = situationRows.find(
+                                (r) =>
+                                  r.delivery === selectedRow.delivery &&
+                                  (r.acting || "unspecified") === value,
+                              );
+                              if (row) void choose(row);
+                            }}
+                          />
+                        </>
+                      )}
                       <Label>Variation</Label>
                       <Choice
                         name="Variation"
@@ -1030,10 +1308,11 @@ export default function App() {
                         }}
                         items={variations.map((r, i) => ({
                           value: r.slot,
-                          label: `${i + 1}. ${r.slot}`,
+                          label: `${i + 1}. ${r.slot}${r.optional ? " (optional)" : ""}`,
                         }))}
                       />
                     </div>
+
                   </div>
                   <div className="caption-editor">
                     <Textarea
@@ -1056,11 +1335,24 @@ export default function App() {
                       </Button>
                     )}
                   </div>
-                  {filters.coverage && (
-                    <div className="mb-3 flex flex-wrap items-center gap-2 text-xs" aria-label="Required groups for this take">
-                      <span className="text-muted-foreground">Approving this take covers</span>
-                      {Array.from(new Set((missingBySlot.get(selectedRow.slot) ?? []).map(coverageLabel))).map((group) => (
-                        <Badge key={group} variant="outline">{group}</Badge>
+                  {filters.state === "required" && (
+                    <div
+                      className="mb-3 flex flex-wrap items-center gap-2 text-xs"
+                      aria-label="Required groups for this take"
+                    >
+                      <span className="text-muted-foreground">
+                        Approving this take covers
+                      </span>
+                      {Array.from(
+                        new Set(
+                          (missingBySlot.get(selectedRow.slot) ?? []).map(
+                            coverageLabel,
+                          ),
+                        ),
+                      ).map((group) => (
+                        <Badge key={group} variant="outline">
+                          {group}
+                        </Badge>
                       ))}
                     </div>
                   )}
@@ -1086,7 +1378,9 @@ export default function App() {
                               variant="ghost"
                               aria-label="Previous recording"
                               disabled={position <= 0 || busy}
-                              onClick={() => choose(navigationRows[position - 1])}
+                              onClick={() =>
+                                choose(navigationRows[position - 1])
+                              }
                             >
                               <ChevronLeft />
                             </Button>
@@ -1099,7 +1393,9 @@ export default function App() {
                                 position >= navigationRows.length - 1 ||
                                 busy
                               }
-                              onClick={() => choose(navigationRows[position + 1])}
+                              onClick={() =>
+                                choose(navigationRows[position + 1])
+                              }
                             >
                               <ChevronRight />
                             </Button>
@@ -1110,7 +1406,13 @@ export default function App() {
                       slot={selectedRow.slot}
                       missing={selectedRow.state === "missing"}
                       disabled={busy}
-                      onError={(description) => toastManager.add({ title: "Playback failed", description, type: "error" })}
+                      onError={(description) =>
+                        toastManager.add({
+                          title: "Playback failed",
+                          description,
+                          type: "error",
+                        })
+                      }
                     />
                     {selectedRow.state !== "missing" && (
                       <AudioEdit
@@ -1147,51 +1449,37 @@ export default function App() {
                       />
                     )}
                   </div>
-                  <div className="take-actions" aria-label="Add a take">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => importRef.current?.click()}
-                    >
-                      <Upload />
-                      Import audio
-                    </Button>
-                    <Button size="lg" variant="outline" disabled={busy} onClick={() => { stop(); setModal("microphone"); }}>
-                      <Mic /> Record audio
-                    </Button>
+                  <div
+                    className="mt-4 grid grid-cols-2 gap-2 max-[480px]:grid-cols-1"
+                    aria-label="Add a take"
+                  >
+                    <ActionTip text={takeCommands.import.key}>
+                      <Button size="lg" variant="outline" disabled={takeCommands.import.disabled} onClick={takeCommands.import.run} aria-keyshortcuts="Alt+I">
+                        <Upload /> Import audio
+                      </Button>
+                    </ActionTip>
+                    <ActionTip text={takeCommands.record.key}>
+                      <Button size="lg" variant="outline" disabled={takeCommands.record.disabled} onClick={takeCommands.record.run} aria-keyshortcuts="Alt+R">
+                        <Mic /> Record audio
+                      </Button>
+                    </ActionTip>
                   </div>
                   <div className="review-actions" aria-label="Review this take">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      disabled={busy || audioDirty || ["missing", "pending"].includes(selectedRow.state)}
-                      onClick={() => void save("pending")}
-                    >
-                      Needs listening
-                    </Button>
-                    <ActionTip text="Reject this take for replacement. The file stays until you import a new recording.">
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        disabled={
-                          busy || audioDirty || selectedRow.state === "missing"
-                        }
-                        onClick={() => void save("redo")}
-                      >
+                    <ActionTip text={takeCommands.listen.key}>
+                      <Button size="lg" variant="outline" disabled={takeCommands.listen.disabled} onClick={takeCommands.listen.run} aria-keyshortcuts="Alt+L">
+                        Needs listening
+                      </Button>
+                    </ActionTip>
+                    <ActionTip text={`${takeCommands.retake.key} · Mark this take for replacement. The current file stays until you import a new one.`}>
+                      <Button size="lg" variant="outline" disabled={takeCommands.retake.disabled} onClick={takeCommands.retake.run} aria-keyshortcuts="Alt+T">
                         Needs a retake
                       </Button>
                     </ActionTip>
-                    <Button
-                      size="lg"
-                      disabled={
-                        busy || audioDirty || selectedRow.state === "missing"
-                      }
-                      onClick={() => void save("approved")}
-                    >
-                      <Check />
-                      Approve
-                    </Button>
+                    <ActionTip text={takeCommands.approve.key}>
+                      <Button size="lg" disabled={takeCommands.approve.disabled} onClick={takeCommands.approve.run} aria-keyshortcuts="Control+Enter Meta+Enter">
+                        <Check /> Approve
+                      </Button>
+                    </ActionTip>
                     <input
                       ref={importRef}
                       hidden
@@ -1205,7 +1493,7 @@ export default function App() {
                   </div>
                 </>
               ) : (
-                <div className="empty-detail">
+                <div className="flex flex-col items-center gap-4 pt-[15vh] text-muted-foreground">
                   <Headphones />
                   <p>
                     {error
@@ -1217,31 +1505,53 @@ export default function App() {
             </section>
           </main>
           <footer className="app-footer">
-            <div className="footer-links">
-            <Button
-              variant="link"
-              size="sm"
-              render={
-                <a
-                  href="https://github.com/ravenwits/conditional-speech-voices-core"
-                  target="_blank"
-                  rel="noreferrer"
-                />
-              }
-            >
-              <Github size={14} /> GitHub
-            </Button>
-              <Button variant="link" size="sm" render={
-                <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3834426673" target="_blank" rel="noreferrer" />
-              }>
-                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                  <path d="M12 0a12 12 0 0 0-12 11.1l6.45 2.67a3.38 3.38 0 0 1 1.89-.58l2.87-4.16v-.06a4.53 4.53 0 1 1 4.53 4.53h-.11l-4.11 2.94a3.4 3.4 0 0 1-6.71.78L.16 15.3A12 12 0 1 0 12 0zm-5.12 18.3 1.48.61a2.55 2.55 0 1 0 1.97-4.7l-1.53-.63a2.7 2.7 0 1 1-1.92 4.72zm8.86-6.3a3.03 3.03 0 1 1 0-6.06 3.03 3.03 0 0 1 0 6.06zm0-.75a2.28 2.28 0 1 0 0-4.56 2.28 2.28 0 0 0 0 4.56z"/>
+            <div className="flex flex-wrap justify-self-start [&_a[data-slot=button]]:text-[11px]!">
+              <Button
+                variant="link"
+                size="sm"
+                render={
+                  <a
+                    href="https://github.com/ravenwits/conditional-speech-voices-core"
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                }
+              >
+                <Github size={14} /> GitHub
+              </Button>
+              <Button
+                variant="link"
+                size="sm"
+                render={
+                  <a
+                    href="https://steamcommunity.com/sharedfiles/filedetails/?id=3834426673"
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                }
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                >
+                  <path d="M12 0a12 12 0 0 0-12 11.1l6.45 2.67a3.38 3.38 0 0 1 1.89-.58l2.87-4.16v-.06a4.53 4.53 0 1 1 4.53 4.53h-.11l-4.11 2.94a3.4 3.4 0 0 1-6.71.78L.16 15.3A12 12 0 1 0 12 0zm-5.12 18.3 1.48.61a2.55 2.55 0 1 0 1.97-4.7l-1.53-.63a2.7 2.7 0 1 1-1.92 4.72zm8.86-6.3a3.03 3.03 0 1 1 0-6.06 3.03 3.03 0 0 1 0 6.06zm0-.75a2.28 2.28 0 1 0 0-4.56 2.28 2.28 0 0 0 0 4.56z" />
                 </svg>
                 Workshop
               </Button>
-              <Button variant="link" size="sm" render={
-                <a href="https://github.com/ravenwits/conditional-speech-voices-core/blob/main/Contents/mods/ConditionalSpeechVoicesCore/authoring/README.md#command-line" target="_blank" rel="noreferrer" />
-              }>
+              <Button
+                variant="link"
+                size="sm"
+                render={
+                  <a
+                    href="https://github.com/ravenwits/conditional-speech-voices-core/blob/main/Contents/mods/ConditionalSpeechVoicesCore/authoring/README.md#command-line"
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                }
+              >
                 <Terminal size={14} /> CLI guide
               </Button>
             </div>
@@ -1271,7 +1581,11 @@ export default function App() {
             open={modal === "microphone"}
             onClose={closeModal}
             title="Record a take"
-            description={selectedRow ? `Record and preview a take for ${selectedRow.slot}.` : "Record and preview a take."}
+            description={
+              selectedRow
+                ? `Record and preview a take for ${selectedRow.slot}.`
+                : "Record and preview a take."
+            }
           >
             {modal === "microphone" && selectedRow && (
               <MicrophoneTake
@@ -1292,39 +1606,44 @@ export default function App() {
             open={modal === "prepare"}
             onClose={closeModal}
             title="Build voice pack"
-            panelClassName="build-dialog-panel"
+            panelClassName="pb-1"
             description="Check the recordings, then build a local Steam Workshop project."
             footer={
-              <div className="build-footer">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <Label className="rights-confirmation">
-                    <Checkbox checked={rightsConfirmed} onCheckedChange={setRightsConfirmed} disabled={busy} />
-                    I own these recordings or have permission to distribute them.
-                  </Label>
-                  <a className="text-sm underline underline-offset-2" href="https://github.com/ravenwits/conditional-speech-voices-core/blob/main/Contents/mods/ConditionalSpeechVoicesCore/authoring/CREATOR-RESPONSIBILITIES.md" target="_blank" rel="noreferrer">
-                    Recording rights
-                  </a>
-                </div>
-                <div className="button-row">
+              <div className="flex w-full flex-wrap items-center justify-end gap-3">
+                <Label className="rights-confirmation">
+                  <Checkbox
+                    checked={rightsConfirmed}
+                    onCheckedChange={setRightsConfirmed}
+                    disabled={busy}
+                  />
+                  <span>
+                    I have the{" "}
+                    <a
+                      className="underline underline-offset-2"
+                      href="https://github.com/ravenwits/conditional-speech-voices-core/blob/main/Contents/mods/ConditionalSpeechVoicesCore/authoring/CREATOR-RESPONSIBILITIES.md"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      rights
+                    </a>{" "}
+                    to distribute these recordings.
+                  </span>
+                </Label>
+                <div className="flex flex-wrap justify-end gap-2">
                   <ActionTip text="Download all variations with their status and batch-import filename.">
-                    <Button variant="outline" disabled={busy || !project} onClick={() => void exportList()}>
+                    <Button
+                      variant="outline"
+                      disabled={busy || !project}
+                      onClick={() => void exportList()}
+                    >
                       Recording list
                     </Button>
                   </ActionTip>
                   <Button
-                    variant="outline"
-                    disabled={
-                      busy || project?.coverage.missing === project?.rows.length
-                    }
-                    onClick={() => void perform("/measure")}
-                  >
-                    {operation === "/measure"
-                      ? "Checking…"
-                      : "Check audio levels"}
-                  </Button>
-                  <Button
                     disabled={busy || !complete || !rightsConfirmed}
-                    onClick={() => void perform("/package", {rightsConfirmed})}
+                    onClick={() =>
+                      void perform("/package", { rightsConfirmed })
+                    }
                   >
                     Build package
                   </Button>
@@ -1332,44 +1651,118 @@ export default function App() {
               </div>
             }
           >
-            {operation === "/measure" && (
-              <div className="measurement-progress" role="status">
-                <p>Checking audio levels…</p>
-                <Progress value={null} aria-label="Checking audio levels" />
-                <p className="help">
-                  Large packs can take several minutes. Keep Studio open.
-                </p>
-              </div>
-            )}
-            <div className="pack-progress">
-              {project?.buildCoverage && <p>Approve one take in each required group to build. Record extra variations if you want.</p>}
-              {!project?.trial && project?.buildCoverage?.missingSlots && project.buildCoverage.missing.length > 0 && (
-                <Button variant="outline" size="sm" disabled={busy}
-                  onClick={async () => {
-                    if (await changeFilters({ ...emptyFilters, coverage: "required" })) setModal(null);
-                  }}>
-                  Show required gaps
-                </Button>
-              )}
-              <strong>
-                {(project?.buildCoverage?.covered ?? project?.coverage.approved ?? 0).toLocaleString()}
-                <span>
+            <div>
+              <strong className="text-[22px] font-[550]">
+                {(
+                  project?.buildCoverage?.covered ??
+                  project?.coverage.approved ??
+                  0
+                ).toLocaleString()}
+                <span className="text-[13px] font-normal text-muted-foreground">
                   {" "}
-                  / {(project?.buildCoverage?.required ?? project?.rows.length ?? 0).toLocaleString()} {project?.buildCoverage ? "required recording groups ready" : "approved"}
+                  /{" "}
+                  {(
+                    project?.buildCoverage?.required ??
+                    project?.rows.length ??
+                    0
+                  ).toLocaleString()}{" "}
+                  {project?.buildCoverage
+                    ? "required recording groups ready"
+                    : "approved"}
                 </span>
               </strong>
               <Progress
+                className="my-3"
                 aria-label="Package coverage"
-                max={project?.buildCoverage?.required ?? project?.rows.length ?? 1}
-                value={project?.buildCoverage?.covered ?? project?.coverage.approved ?? 0}
+                max={
+                  project?.buildCoverage?.required ?? project?.rows.length ?? 1
+                }
+                value={
+                  project?.buildCoverage?.covered ??
+                  project?.coverage.approved ??
+                  0
+                }
               />
-              <p>
-                Recording library: {(project?.rows.length ?? 0).toLocaleString()} slots ·{" "}
+              <p className="text-[11px] text-muted-foreground">
+                Recording library:{" "}
+                {(project?.rows.length ?? 0).toLocaleString()} slots ·{" "}
                 {(project?.coverage.approved ?? 0).toLocaleString()} approved ·{" "}
-                {(project?.coverage.pending ?? 0).toLocaleString()} need listening ·{" "}
-                {(project?.coverage.redo ?? 0).toLocaleString()} need a retake
+                {(project?.coverage.pending ?? 0).toLocaleString()} need
+                listening · {(project?.coverage.redo ?? 0).toLocaleString()}{" "}
+                need a retake
               </p>
             </div>
+            {modal === "prepare" &&
+              !project?.trial &&
+              !!project?.buildCoverage?.missing.length && (
+                <section
+                  aria-label="Required recording groups"
+                  className="mt-4 space-y-2"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong className="text-destructive-foreground">
+                      {project.buildCoverage.missing.length} required groups
+                      missing
+                    </strong>
+                    {project.buildCoverage.missingSlots && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="text-[11px]!"
+                        disabled={busy}
+                        onClick={async () => {
+                          if (
+                            await changeFilters({
+                              ...emptyFilters,
+                              state: "required",
+                            })
+                          )
+                            setModal(null);
+                        }}
+                      >
+                        Review in library
+                      </Button>
+                    )}
+                  </div>
+                  <ScrollArea
+                    className="h-auto bg-muted/72 p-1"
+                    viewportClassName="max-h-32"
+                    scrollbarGutter
+                    overscrollContain
+                  >
+                    <ul className="text-[11px] text-muted-foreground">
+                      {project.buildCoverage.missing.map((group) => {
+                        const slot =
+                          project.buildCoverage?.missingSlots?.[group]?.[0];
+                        return (
+                          <li key={group}>
+                            {slot ? (
+                              <button
+                                type="button"
+                                className="w-full rounded-sm px-1 py-0.5 text-left hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-ring"
+                                disabled={busy}
+                                onClick={async () => {
+                                  if (
+                                    await changeFilters(
+                                      { ...emptyFilters, state: "required" },
+                                      slot,
+                                    )
+                                  )
+                                    setModal(null);
+                                }}
+                              >
+                                {coverageLabel(group)}
+                              </button>
+                            ) : (
+                              coverageLabel(group)
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </ScrollArea>
+                </section>
+              )}
             {modal === "prepare" && project && (
               <section aria-label="Workshop artwork" className="mt-4">
                 <h3 className="mb-2 text-sm font-medium">Workshop artwork</h3>
@@ -1377,12 +1770,22 @@ export default function App() {
                   {(["square", "wide"] as const).map((format) => (
                     <figure key={format} className="min-w-0">
                       <img
-                        className={format === "square" ? "aspect-square w-full rounded-md bg-muted object-contain" : "aspect-video w-full rounded-md bg-muted object-contain"}
+                        className={
+                          format === "square"
+                            ? "aspect-square w-full rounded-md bg-muted object-contain"
+                            : "aspect-video w-full rounded-md bg-muted object-contain"
+                        }
                         src={`/studio/cover/${format}/${encodeURIComponent(project.language)}`}
-                        alt={format === "square" ? "Square Workshop cover" : "Wide Workshop cover"}
+                        alt={
+                          format === "square"
+                            ? "Square Workshop cover"
+                            : "Wide Workshop cover"
+                        }
                       />
                       <figcaption className="mt-1 text-xs text-muted-foreground">
-                        {format === "square" ? "Workshop preview · 1:1" : "Wide cover · 16:9"}
+                        {format === "square"
+                          ? "Workshop preview · 1:1"
+                          : "Wide cover · 16:9"}
                       </figcaption>
                     </figure>
                   ))}
@@ -1402,7 +1805,10 @@ export default function App() {
             )}
 
             {report && (
-              <div className="report-result" role="status">
+              <div
+                className="mb-3 flex items-center justify-between bg-muted p-3 text-xs"
+                role="status"
+              >
                 {typeof report.message === "string"
                   ? report.message
                   : typeof report.output === "string"
@@ -1417,12 +1823,16 @@ export default function App() {
                   </p>
                 )}
                 {typeof report.output === "string" && (
-                  <section className="install-guide">
+                  <section className="mt-6 [&_code]:wrap-anywhere">
                     <h2>Upload through Project Zomboid</h2>
-                    <p>Copy <code>{report.output}</code> into <code>Zomboid/Workshop</code>.
-                      Select the project in the game's Workshop menu and review its preview and visibility before uploading.</p>
+                    <p>
+                      Copy <code>{report.output}</code> into{" "}
+                      <code>Zomboid/Workshop</code>. Select the project in the
+                      game's Workshop menu and review its preview and visibility
+                      before uploading.
+                    </p>
                     <h2>Test locally</h2>
-                    <ol>
+                    <ol className="list-decimal pl-5 [&_li]:my-2.5 [&_li]:leading-[1.6]">
                       <li>Close Project Zomboid.</li>
                       <li>
                         Copy the generated mod folder from{" "}
@@ -1453,29 +1863,43 @@ export default function App() {
             title="Batch import"
             description="Match audio files to slots by filename."
             footer={
-              <div className="batch-import-footer">
-                <Button variant="outline" disabled={busy || !project} onClick={() => void exportList()}>
+              <div className="flex w-full flex-wrap justify-end gap-2">
+                <Button
+                  variant="outline"
+                  disabled={busy || !project}
+                  onClick={() => void exportList()}
+                >
                   <Download /> Download slot names
                 </Button>
-                <Button disabled={busy} onClick={() => batchRef.current?.click()}>
+                <Button
+                  disabled={busy}
+                  onClick={() => batchRef.current?.click()}
+                >
                   <Upload /> Choose audio files
                 </Button>
               </div>
             }
           >
-            <div className="batch-import-guide">
-              <div className="batch-import-example">
-                <span>Filename examples</span>
-                <div><code>Explore_1.wav</code><code>{project?.voice}_Explore_1.mp3</code></div>
+            <div className="grid gap-3.5">
+              <div className="grid gap-2 rounded-[10px] border bg-muted px-3.5 py-3 [&_code]:wrap-anywhere">
+                <span className="text-xs text-muted-foreground">
+                  Filename examples
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <code>Explore_1.wav</code>
+                  <code>{project?.voice}_Explore_1.mp3</code>
+                </div>
               </div>
               <p>
-                Studio fills missing slots and replaces takes marked “Needs a retake”.
-                Files without a matching slot are skipped.
+                Studio fills missing slots and replaces takes marked “Needs a
+                retake”. Files without a matching slot are skipped.
               </p>
               <p className="help">
                 Up to {project?.limits?.seconds ?? 20} seconds and{" "}
-                {(project?.limits?.audioBytes ?? 16 * 1024 * 1024) / (1024 * 1024)} MiB per file.
-                Supports WAV, FLAC, MP3, Ogg, Opus, M4A, MP4, AAC and WebM.
+                {(project?.limits?.audioBytes ?? 16 * 1024 * 1024) /
+                  (1024 * 1024)}{" "}
+                MiB per file. Supports WAV, FLAC, MP3, Ogg, Opus, M4A, MP4, AAC
+                and WebM.
               </p>
               <input
                 hidden
@@ -1491,6 +1915,27 @@ export default function App() {
             </div>
           </Modal>
           <Modal
+            open={modal === "open-pack"}
+            onClose={closeModal}
+            title="Open project"
+            description="Choose a local Conditional Speech Voices pack. An existing Studio project will open if it matches."
+            footer={
+              <div className="flex w-full flex-wrap justify-end gap-2">
+                <Button variant="outline" disabled={busy} onClick={() => void choosePackFolder()}>
+                  Browse folders
+                </Button>
+                <Button disabled={busy || !packFolder.trim()} onClick={() => void openVoicePack(packFolder.trim())}>
+                  Open folder
+                </Button>
+              </div>
+            }
+          >
+            <label className="grid gap-2">
+              Local folder path
+              <Input value={packFolder} onChange={(event) => setPackFolder(event.target.value)} />
+            </label>
+          </Modal>
+          <Modal
             open={modal === "project"}
             onClose={closeModal}
             title="Project"
@@ -1501,7 +1946,15 @@ export default function App() {
                   Close
                 </Button>
                 <Button
-                  disabled={busy || !metadataDirty || !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(metadata.packVersion) || (!!metadata.steamProfile && !/^https:\/\/steamcommunity\.com\/(?:id\/[A-Za-z0-9_-]+|profiles\/[0-9]{17})\/?$/.test(metadata.steamProfile))}
+                  disabled={
+                    busy ||
+                    !metadataDirty ||
+                    !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(metadata.packVersion) ||
+                    (!!metadata.steamProfile &&
+                      !/^https:\/\/steamcommunity\.com\/(?:id\/[A-Za-z0-9_-]+|profiles\/[0-9]{17})\/?$/.test(
+                        metadata.steamProfile,
+                      ))
+                  }
                   onClick={() =>
                     void work(async () => {
                       await action("/metadata", metadata);
@@ -1537,10 +1990,22 @@ export default function App() {
                   }
                   <Input
                     value={metadata[key]}
-                    pattern={key==="packVersion" ? "[0-9]+\\.[0-9]+\\.[0-9]+" : key==="steamProfile" ? "https://steamcommunity\\.com/(id/[A-Za-z0-9_-]+|profiles/[0-9]{17})/?" : undefined}
+                    pattern={
+                      key === "packVersion"
+                        ? "[0-9]+\\.[0-9]+\\.[0-9]+"
+                        : key === "steamProfile"
+                          ? "https://steamcommunity\\.com/(id/[A-Za-z0-9_-]+|profiles/[0-9]{17})/?"
+                          : undefined
+                    }
                     disabled={busy}
                     onChange={(e) => {
-                      setMetadata({ ...metadata, [key]: key === "packVersion" ? e.target.value.replace(/[^0-9.]/g, "") : e.target.value });
+                      setMetadata({
+                        ...metadata,
+                        [key]:
+                          key === "packVersion"
+                            ? e.target.value.replace(/[^0-9.]/g, "")
+                            : e.target.value,
+                      });
                       setMetadataDirty(true);
                     }}
                   />
@@ -1589,7 +2054,7 @@ export default function App() {
                   setMessage(
                     "New project created. Import your recordings to begin.",
                   );
-                });
+                }, "Creating project…");
               }}
             >
               <Label>
@@ -1625,7 +2090,7 @@ export default function App() {
                   }
                 />
               </Label>
-              <div className="form-columns">
+              <div className="grid grid-cols-2 gap-3">
                 <Label>
                   Language
                   <SearchChoice

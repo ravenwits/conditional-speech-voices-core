@@ -37,7 +37,7 @@ export function SearchChoice({
         <ComboboxList>
           {(i: { value: string; label: string }) => (
             <ComboboxItem key={i.value} value={i}>
-              <span className="language-option"><img src={`/studio/flag/${encodeURIComponent(i.value)}`} alt="" width={20} height={14} loading="lazy" />{i.label}</span>
+              <span className="flex items-center gap-2"><img className="flex-none object-contain" src={`/studio/flag/${encodeURIComponent(i.value)}`} alt="" width={20} height={14} loading="lazy" />{i.label}</span>
             </ComboboxItem>
           )}
         </ComboboxList>
@@ -51,22 +51,26 @@ export function ProjectPicker({
   items,
   current,
   language,
+  languageFlags,
   trial,
   disabled,
   onSelect,
   onDetails,
   onDelete,
   onCreate,
+  onOpen,
 }: {
   items: ProjectChoice[];
   current: string;
   language: string;
+  languageFlags: readonly string[];
   trial: boolean;
   disabled: boolean;
   onSelect: (key: string) => Promise<void>;
   onDetails: (key: string) => Promise<void>;
   onDelete: (item: ProjectChoice) => Promise<void>;
   onCreate: () => void;
+  onOpen?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const selected = items.find((i) => i.key === current);
@@ -94,17 +98,16 @@ export function ProjectPicker({
           />
         }
       >
-        <FolderOpen />
-        {selected?.name || "Opening project"}{" "}
-        <span className="subtle">
-          {language}
-          {trial ? " / Trial" : ""}
-        </span>
+        {languageFlags.includes(language) && (
+          <img className="size-4 shrink-0 object-contain" src={`/studio/flag/${encodeURIComponent(language)}`} alt="" />
+        )}
+        {selected?.name || "Opening project"}
+        {trial && <span className="subtle">Trial</span>}
         <ChevronDown />
       </ComboboxTrigger>
       <ComboboxPopup className="project-popup">
         <ComboboxInput
-          className="project-search border-b-0"
+          className="project-search rounded-b-none border-b-0"
           aria-label="Find a project"
           placeholder="Find a saved project…"
           showTrigger={false}
@@ -146,6 +149,15 @@ export function ProjectPicker({
             </ComboboxRow>
           )}
         </ComboboxList>
+        {onOpen && (
+          <Button variant="ghost" className="w-full" onClick={() => {
+            setOpen(false);
+            onOpen();
+          }}>
+            <FolderOpen />
+            Open project
+          </Button>
+        )}
         <Button
           variant="ghost"
           className="w-full border-t-0 project-create"

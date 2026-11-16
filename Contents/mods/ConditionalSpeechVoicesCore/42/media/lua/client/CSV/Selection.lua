@@ -18,6 +18,26 @@ local Extras=require 'CSV/Extras'
 local Evidence=require 'CSV/ThreatEvidence'
 local Delivery=require 'CSV/Delivery'
 local Semantic=require 'CSV/SemanticSpeech'
+local alternates=require 'CSV/VoiceAlternates'
+local function alternate(V,voice,line,f,history,prefs)
+    local id='Alt_'..line.id
+    local entry=alternates[id]
+    if not entry or entry.native or not V.extended(voice) or not V.clip(voice,id) then return line end
+    if entry.gate=='exertion' and (f.endurance or 0)<2 then return line end
+    if entry.gate=='cold' and (f.cold or 0)<3 then return line end
+    if entry.gate=='heat' and (f.heat or 0)<3 then return line end
+    if entry.gate=='danger' and not require('CSV/Concealment').active(f) then return line end
+    if not require('CSV/Profanity').allowed(id,prefs,voice) then return line end
+    local candidate={};for key,value in pairs(line)do candidate[key]=value end
+    candidate.id=id
+    candidate=V.localize(voice,candidate)
+    if not candidate or not Semantic.allowed(candidate,f) or Semantic.recent(history,candidate,V.now()) then return line end
+    local prior,candidatePrior=Semantic.stamp(history,line),Semantic.stamp(history,candidate)
+    if entry.gate or candidatePrior<prior then return candidate end
+    -- Rare events may never repeat within the history window. Give both fresh takes a chance.
+    if prior==0 and candidatePrior==0 and (V.selectionRandom or ZombRand)(3)==0 then return candidate end
+    return line
+end
 function M.install(C,V)
 C.history=setmetatable({},{__mode='k'})
 function C.extraLine(player,voice,group,allowed,rank)
@@ -66,7 +86,23 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
         return pool and C.extraLine(player,voice,pool,function(id)return require('CSV/PsychologyRules').allowed(id,f)end) or nil
     end
     if require('CSV/OutcomeRules').groups[group] then
-        if V.extended(voice) and require('CSV/OutcomeRules').classify(f.outcome)==group then return C.extraLine(player,voice,group,function(id)return require('CSV/OutcomeRules').allowedLine(id,f.outcome)end) end
+        local rules=require('CSV/OutcomeRules')
+        if V.extended(voice) and rules.classify(f.outcome)==group then
+            local preferred
+            if group=='WindowLocked' or group=='WindowBarricaded' then
+                local specific=C.extraLine(player,voice,group)
+                if specific then return specific end
+                if group=='WindowBarricaded' then
+                    return C.extraLine(player,voice,'DoorBlocked',function(id)return id=='DoorBlocked_3' end)
+                end
+                group='DoorLocked'
+                preferred='DoorLocked_2'
+            elseif group=='EngineStalled' and require('CSV/Concealment').active(f) then
+                preferred='EngineStalled_2'
+            end
+            return C.extraLine(player,voice,group,nil,
+                preferred and function(id)return id==preferred and 0 or tonumber(id:match('_(%d+)$')) or 4 end)
+        end
         return nil
     end
     if require('CSV/LootRules').groups[group] then
@@ -79,8 +115,16 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
     if handled then return replacement end
     local extraGroup
     if group=='Threat' then
-        if type(f.panic)=='number' and f.panic<3 and ((f.accessibleNear or f.near or 0)>0 or require('CSV/Concealment').active(f)) then
-            extraGroup=f.panic==0 and not f.recentDistress and not require('CSV/Concealment').active(f) and 'ThreatCalm' or 'ThreatTense'
+        local engaged=require('CSV/Concealment').active(f)
+        if type(f.panic)=='number' and f.panic<3 and ((f.accessibleNear or f.near or 0)>0 or engaged) then
+            local evidence=Evidence.kind(f)
+            if engaged or evidence=='targeting' or evidence=='approaching' or evidence=='attacking' then
+                extraGroup='ThreatTense'
+            elseif evidence=='observed_only' or (f.panic==0 and not f.recentDistress) then
+                extraGroup='ThreatCalm'
+            else
+                extraGroup='ThreatTense'
+            end
             return C.extraLine(player,voice,extraGroup) or (V.bank(voice).data.groups.Panic or {})[2]
         end
         return nil
@@ -89,7 +133,10 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
         return nil
     elseif group:match('^Relief') then
         return C.extraLine(player,voice,group)
-    elseif group=='Panic' and f.fire then extraGroup='Fire'
+    elseif (group=='Panic' or group=='PanicCallback') and f.fire then
+        if not Delivery.fireEmergency(f) then return nil end
+        local cry=C.extraLine(player,voice,'Fire',nil,function(id)return id=='Fire_2' and 0 or tonumber(id:match('_(%d+)$')) or 4 end)
+        if cry then return cry end
     elseif group=='Panic' and (f.near or 0)>0 and (f.panic or 0)>0 and f.panic<3 then extraGroup='ThreatTense'
     elseif group=='MultiHit' and (f.reactiveCrowd or 0)<3 then extraGroup='RepeatedHit'
     elseif group=='Uncomfortable' then extraGroup='Discomfort'
@@ -135,7 +182,13 @@ function C.chooseLine(player,voice,group,intensity,maximum,facts)
     line=Semantic.shared(C,V,player,voice,line,group,f)
     -- Base bank group entries do not carry a group field.
     if line and not line.group then line={id=line.id,text=line.text,group=group}end
-    return V.localize(voice,require('CSV/Expressions').pick(V,voice,line,f,nil,player))
+    local expressions=require('CSV/Expressions')
+    if line and (line.group=='GunJammed' or line.group=='OutOfAmmo') and
+        ((f.directAttack or 0)>0 or (f.attacking or 0)>0) then
+        local frightened=expressions.pick(V,voice,line,f,'frightened',player)
+        if frightened~=line then return V.localize(voice,frightened) end
+    end
+    return V.localize(voice,expressions.pick(V,voice,line,f,nil,player))
 end
 local function plan(player,voice,group,intensity,maximum,facts,prefs)
     local s={};for key,value in pairs(facts or State.capture(player))do s[key]=value end
@@ -148,12 +201,17 @@ local function plan(player,voice,group,intensity,maximum,facts,prefs)
     end
     s.whisperAvailable=whisper~=nil;s.contextWhisperAvailable=contextualWhisper~=nil
     local decision=Delivery.decide(group,intensity,s,prefs)
-    if decision.reason=='observed_calm_warning' and not require('CSV/Traits').context(group,s) then line=C.extraLine(player,voice,s.recentDistress and 'ThreatTense' or 'ThreatCalm') or (V.bank(voice).data.groups.Panic or {})[2] end
+    if group~='Threat' and decision.reason=='observed_calm_warning' and not require('CSV/Traits').context(group,s) then
+        line=C.extraLine(player,voice,s.recentDistress and 'ThreatTense' or 'ThreatCalm') or (V.bank(voice).data.groups.Panic or {})[2]
+    end
     if decision.reason=='recorded_whisper' then line=whisper
     elseif decision.reason=='recorded_context_whisper' then line=contextualWhisper end
     line=V.localize(voice,line)
     if line and not require('CSV/Profanity').allowed(line.id,C.preferences(),voice) then return nil,{mode='silent',reason='profanity_disabled'}end
     if line and not Semantic.allowed(line,s) then return nil,{mode='silent',reason='unproven_final_content'}end
+    if line and decision.mode=='spoken' then
+        line=alternate(V,voice,line,s,C.history[player] or {},C.preferences())
+    end
     if line and not (group=='Injured' and require('CSV/CriticalHealth').pending(player)) and not (group=='AcutePain' and s.acute==true and type(s.injuryEvent)=='number') and Semantic.recent(C.history[player] or {},line,V.now()) then return line,{mode='silent',reason='semantic_repeat'}end
     return line,decision
 end

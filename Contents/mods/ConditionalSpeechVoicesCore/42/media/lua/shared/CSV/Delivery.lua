@@ -53,13 +53,19 @@ for group in pairs(require('CSV/RecoveryRules'))do P.groups[group]='relief' end
 for group in pairs(require('CSV/LootRules').groups)do P.groups[group]='loot' end
 for group in pairs(require('CSV/OutcomeRules').groups)do P.groups[group]=require('CSV/OutcomeRules').urgent(group) and 'urgent' or 'outcome' end
 P.groups.Psychology='psychology';P.groups.Startle='startle'
+function P.fireEmergency(s)
+ return s.fire==true and require('CSV/CriticalHealth').stage(s.health)>0
+end
 function P.decide(group,intensity,s,prefs)
  s=s or {};prefs=prefs or {};local kind=P.groups[group]
  local function result(mode,reason,radius,priority,allowStealth)
   return {mode=mode,reason=reason,radius=radius,noiseRadius=radius,priority=priority or 1,allowStealth=allowStealth==true}
  end
  if not kind then return result('upstream','unmanaged_group') end
- if group=='Panic' and s.fire==true then return result('spoken','on_fire',15,4,true) end
+ if (group=='Panic' or group=='PanicCallback') and s.fire==true then
+  if P.fireEmergency(s) then return result('spoken','on_fire',15,4,true) end
+  return result('silent','fire_severity_unconfirmed')
+ end
  if group=='AcutePain' and s.acute==true then return result('spoken','fresh_injury',8,4,true) end
  local concealment=require 'CSV/Concealment'
  if kind=='relief' and not require('CSV/Safety').settled(s) then return result('silent','recovery_wait_for_safety') end
@@ -106,6 +112,11 @@ function P.decide(group,intensity,s,prefs)
   if decision.mode=='spoken' then decision.radius=math.min(require('CSV/Hearing').quietRadius,decision.radius);decision.noiseRadius=decision.radius;decision.exposed=true;decision.reason='exposed_close_'..decision.reason end
   return decision
  end
+ local evidence=require('CSV/ThreatEvidence').kind(s)
+ if kind=='threat' or kind=='panic' then
+  if evidence=='blocked' then return result('silent','no_active_threat_blocked') end
+  if evidence=='unknown' and s.targeted~=nil then return result('silent','awaiting_threat_evidence') end
+ end
  if s.sneaking==true and (s.whisperRisk or 0)>0 then return result('silent','whisper_would_reveal')end
  if kind=='psychology' then
   local R=require('CSV/PsychologyRules');local e=s.psychology
@@ -136,10 +147,8 @@ function P.decide(group,intensity,s,prefs)
  local near=s.accessibleNear or s.near
  local close=type(near)=='number' and near>0 or (s.exposedNpc or 0)+(s.exposedPlayer or 0)>0
  local danger=s.humanThreat==true or (s.near or 0)>0 or (s.visible or 0)>0 or s.recentThreat==true
- local evidence=require('CSV/ThreatEvidence').kind(s)
  if evidence=='attacking' then close=true end
- if (kind=='threat' or kind=='panic') and evidence=='unknown' and s.targeted~=nil then return result('silent','awaiting_threat_evidence') end
- if (kind=='threat' or kind=='panic') and (evidence=='blocked' or evidence=='observed_only') then
+ if (kind=='threat' or kind=='panic') and evidence=='observed_only' then
   if kind=='threat' and evidence=='observed_only' and (s.panic or 0)<3 then return result('spoken','observed_calm_warning',4,2) end
   return result('silent','no_active_threat_'..evidence)
  end

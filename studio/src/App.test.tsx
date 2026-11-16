@@ -95,7 +95,7 @@ it("requires distribution confirmation each time the build dialog opens", async 
   await userEvent.click(screen.getByRole("button", {name: "Build voice pack"}));
   const build = screen.getByRole("button", {name: "Build package"}) as HTMLButtonElement;
   expect(build.disabled).toBe(true);
-  await userEvent.click(screen.getByRole("checkbox", {name: "I own these recordings or have permission to distribute them."}));
+  await userEvent.click(screen.getByRole("checkbox", {name: "I have the rights to distribute these recordings."}));
   expect(build.disabled).toBe(false);
   await userEvent.click(build);
   await waitFor(() => expect(action).toHaveBeenCalledWith("/package", {rightsConfirmed: true}));
@@ -243,7 +243,7 @@ it("puts batch import in the library and build actions in the pack footer", asyn
   expect(
     screen
       .getByRole("button", { name: "Build package" })
-      .closest(".build-footer"),
+      .closest('[data-slot="dialog-footer"]'),
   ).toBeTruthy();
   expect(
     within(screen.getByRole("dialog")).getAllByRole("button", {
@@ -328,7 +328,6 @@ it("shows activity while measuring, then reports the result", async () => {
         finish = resolve;
       }),
   );
-  await userEvent.click(screen.getByRole("button", { name: "Build voice pack" }));
   await userEvent.click(
     screen.getByRole("button", { name: "Check audio levels" }),
   );
@@ -474,9 +473,10 @@ it("keeps hidden filters visible as a count and clears them", async () => {
 
 it("opens the recordings needed for an uncovered Core group and drops them after approval", async () => {
   const fixture = structuredClone(project);
+  fixture.rows[1].state = "pending";
   fixture.buildCoverage = {
     required: 2, covered: 1, missing: ['severity / Thirst / 1'],
-    missingSlots: { 'severity / Thirst / 1': ['Slot_0', 'Slot_1'] },
+    missingSlots: { 'severity / Thirst / 1': ['Slot_1', 'Slot_0'] },
   };
   vi.mocked(request).mockImplementation(async (path) =>
     path === "/project" ? structuredClone(fixture) : [{ key: "current", name: "Test voice" }],
@@ -485,14 +485,66 @@ it("opens the recordings needed for an uncovered Core group and drops them after
   render(<App />);
   await screen.findByDisplayValue("Line 0");
   await user.click(screen.getByRole("button", { name: "Build voice pack" }));
-  await user.click(screen.getByRole("button", { name: "Show required gaps" }));
+  expect(screen.getByRole("button", { name: "Review in library" })).toBeTruthy();
+  await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /Thirst.*Level 1/ }));
+  expect(screen.getByDisplayValue("Line 1")).toBeTruthy();
+  expect(screen.getByRole("combobox", { name: "Recording status" }).textContent).toContain("Required gaps (2)");
   expect(screen.getByLabelText("Required groups for this take").textContent).toContain("Thirst · Level 1");
-  expect(screen.getByText("Line 1")).toBeTruthy();
+  expect(within(screen.getByRole("complementary")).getByText("Line 1")).toBeTruthy();
   expect(screen.queryByText("Line 2")).toBeNull();
 
   fixture.buildCoverage = { required: 2, covered: 2, missing: [], missingSlots: {} };
-  fixture.rows[0].state = "approved";
+  fixture.rows[1].state = "approved";
   await user.click(within(document.querySelector(".review-actions") as HTMLElement).getByRole("button", { name: "Approve" }));
   await waitFor(() => expect(screen.queryByLabelText("Required groups for this take")).toBeNull());
-  expect(screen.queryByText("Line 1")).toBeNull();
+  expect(within(screen.getByRole("complementary")).queryByText("Line 1")).toBeNull();
+});
+
+
+it("opens the audio picker with Alt+I and lists Import audio as a command", async () => {
+  render(<App />);
+  await screen.findByRole("button", { name: "Import audio" });
+  const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+  expect(input).not.toBeNull();
+  const click = vi.spyOn(input!, "click");
+  fireEvent.keyDown(document.body, { key: "i", code: "KeyI", altKey: true });
+  expect(click).toHaveBeenCalledTimes(1);
+  fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+  expect(await screen.findByRole("option", { name: /Import audio/ })).toBeTruthy();
+});
+
+
+it("shows a single Core acting tag and filters by it without a suggestion panel", async () => {
+  const tagged = structuredClone(project);
+  tagged.rows = tagged.rows.slice(0, 2).map((r, i) => ({...r, context: i ? "EngineFailed" : "EngineRecovered", acting: i ? "frustrated" : "relieved"}));
+  vi.mocked(request).mockImplementation(async path => path === "/project" ? tagged : path === "/schema" ? schema : []);
+  render(<App />);
+  await screen.findByDisplayValue("Line 0");
+  expect(screen.getByRole("combobox", {name: "Acting"}).textContent).toContain("Relieved");
+  expect(screen.queryByLabelText("Suggested acting")).toBeNull();
+  await userEvent.click(screen.getByRole("button", {name: /Filters/}));
+  await userEvent.click(screen.getByRole("combobox", {name: "Filter acting"}));
+  await userEvent.click(await screen.findByRole("option", {name: /Frustrated/}));
+  await screen.findByDisplayValue("Line 1");
+});
+
+
+it("covers the screen until initial project loading finishes", async () => {
+  let finish!: (value: Project) => void;
+  const pending = new Promise<Project>(resolve => { finish = resolve; });
+  vi.mocked(request).mockImplementation(async path => path === "/project" ? pending : path === "/schema" ? schema : []);
+  render(<App />);
+  expect(await screen.findByRole("dialog", {name: "Opening project…"})).toBeTruthy();
+  fireEvent.keyDown(document.body, {key: "Escape"});
+  expect(screen.getByRole("dialog", {name: "Opening project…"})).toBeTruthy();
+  finish(structuredClone(project));
+  await waitFor(() => expect(screen.queryByRole("dialog", {name: "Opening project…"})).toBeNull());
+  await screen.findByDisplayValue("Line 0");
+});
+
+it("removes the opening screen when loading fails", async () => {
+  vi.mocked(request).mockRejectedValue(new Error("Project unavailable"));
+  render(<App />);
+  await waitFor(() => expect(screen.queryByRole("dialog", {name: "Opening project…"})).toBeNull());
+  expect(await screen.findByText("Project could not be opened.")).toBeTruthy();
 });

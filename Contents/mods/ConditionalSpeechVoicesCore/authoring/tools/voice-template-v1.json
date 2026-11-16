@@ -2093,6 +2093,26 @@
         "id": "CriticalFading_2",
         "group": "CriticalFading",
         "text": "Come on... stay with it. Just a little longer."
+      },
+      "WindowLocked_1": {
+        "id": "WindowLocked_1",
+        "group": "WindowLocked",
+        "text": "This window's locked. Another way in."
+      },
+      "WindowBarricaded_1": {
+        "id": "WindowBarricaded_1",
+        "group": "WindowBarricaded",
+        "text": "They boarded up the window."
+      },
+      "CarWindowOpened_1": {
+        "id": "CarWindowOpened_1",
+        "group": "CarWindowOpened",
+        "text": "Window's down."
+      },
+      "CarWindowBroken_1": {
+        "id": "CarWindowBroken_1",
+        "group": "CarWindowBroken",
+        "text": "The car window's broken."
       }
     }
   },
@@ -8440,40 +8460,48 @@
       "PainFromHitBlunt": [
         "NativePain_1",
         "NativePain_2",
-        "NativePain_3"
+        "NativePain_3",
+        "Alt_NativePain_1"
       ],
       "WhisperHey": [
         "NativeWhisperCall_1",
-        "NativeWhisperCall_2"
+        "NativeWhisperCall_2",
+        "Alt_NativeWhisperCall_1"
       ],
       "WhisperPsst": [
         "NativeWhisperCall_1",
-        "NativeWhisperCall_2"
+        "NativeWhisperCall_2",
+        "Alt_NativeWhisperCall_1"
       ],
       "ClimbWindow": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "CorpseLowEffort": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "MeleeStab": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "MeleeStabOnGround": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "MeleeAttackHeavy": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "Cough": [
         "NativeCough_1",
@@ -8483,7 +8511,8 @@
       "PainMoodle": [
         "NativePainMoodle_1",
         "NativePainMoodle_2",
-        "NativePainMoodle_3"
+        "NativePainMoodle_3",
+        "Alt_NativePainMoodle_1"
       ],
       "LureCmon": [
         "NativeLureCmon_1",
@@ -8522,7 +8551,8 @@
       ],
       "WhisperMegaphonePsst": [
         "NativeWhisperCall_1",
-        "NativeWhisperCall_2"
+        "NativeWhisperCall_2",
+        "Alt_NativeWhisperCall_1"
       ],
       "DeathEaten": [
         "NativeDeathEaten_1",
@@ -8571,7 +8601,8 @@
       ],
       "WhisperMegaphoneHey": [
         "NativeWhisperCall_1",
-        "NativeWhisperCall_2"
+        "NativeWhisperCall_2",
+        "Alt_NativeWhisperCall_1"
       ],
       "ShoutMegaphoneHey": [
         "NativeCall_1",
@@ -8593,26 +8624,31 @@
       "JumpHigh": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "JumpLow": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "Exercise": [
         "NativeBreath_1",
-        "NativeBreath_2"
+        "NativeBreath_2",
+        "Alt_NativeBreath_1"
       ],
       "CorpseDragging": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "CorpseHighEffort": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "ShoutHey": [
         "NativeCall_1",
@@ -8629,52 +8665,62 @@
       "PainFromRunIntoWall": [
         "NativePain_1",
         "NativePain_2",
-        "NativePain_3"
+        "NativePain_3",
+        "Alt_NativePain_1"
       ],
       "MeleeAttack": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "MeleeShove": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "MeleeStomp": [
         "NativeEffort_1",
         "NativeEffort_2",
-        "NativeEffort_3"
+        "NativeEffort_3",
+        "Alt_NativeEffort_1"
       ],
       "PainFromBite": [
         "NativePain_1",
         "NativePain_2",
-        "NativePain_3"
+        "NativePain_3",
+        "Alt_NativePain_1"
       ],
       "PainFromScratch": [
         "NativePain_1",
         "NativePain_2",
-        "NativePain_3"
+        "NativePain_3",
+        "Alt_NativePain_1"
       ],
       "PainFromLacerate": [
         "NativePain_1",
         "NativePain_2",
-        "NativePain_3"
+        "NativePain_3",
+        "Alt_NativePain_1"
       ],
       "PainFromGlassCut": [
         "NativePain_1",
         "NativePain_2",
-        "NativePain_3"
+        "NativePain_3",
+        "Alt_NativePain_1"
       ],
       "PainFromFallHigh": [
         "NativePain_1",
         "NativePain_2",
-        "NativePain_3"
+        "NativePain_3",
+        "Alt_NativePain_1"
       ],
       "PainFromFallLow": [
         "NativePain_1",
         "NativePain_2",
-        "NativePain_3"
+        "NativePain_3",
+        "Alt_NativePain_1"
       ]
     },
     "pain": [
@@ -8765,6 +8811,9 @@
           "id": "NativeBreath_2",
           "text": "Huh... hah...",
           "group": "NativeBreath"
+        },
+        {
+          "id": "Alt_NativeBreath_1"
         }
       ],
       "NativeCall": [
@@ -8919,6 +8968,9 @@
           "id": "NativeEffort_3",
           "text": "Ugh!",
           "group": "NativeEffort"
+        },
+        {
+          "id": "Alt_NativeEffort_1"
         }
       ],
       "NativeFreezeShiver": [
@@ -9004,6 +9056,9 @@
           "id": "NativePainMoodle_3",
           "text": "Ahh...",
           "group": "NativePainMoodle"
+        },
+        {
+          "id": "Alt_NativePainMoodle_1"
         }
       ],
       "NativePain": [
@@ -9021,6 +9076,9 @@
           "id": "NativePain_3",
           "text": "Ahh!",
           "group": "NativePain"
+        },
+        {
+          "id": "Alt_NativePain_1"
         }
       ],
       "NativeSighBored": [
@@ -9169,6 +9227,9 @@
           "id": "NativeWhisperCall_2",
           "text": "Hey... look this way.",
           "group": "NativeWhisperCall"
+        },
+        {
+          "id": "Alt_NativeWhisperCall_1"
         }
       ]
     }
@@ -10684,7 +10745,96 @@
     "CriticalFading_1": "No... not here. I don't want to die here.",
     "Whisper_CriticalFading_1": "No... not here. I don't want to die here.",
     "CriticalFading_2": "Come on... stay with it. Just a little longer.",
-    "Whisper_CriticalFading_2": "Come on... stay with it. Just a little longer."
+    "Whisper_CriticalFading_2": "Come on... stay with it. Just a little longer.",
+    "WindowLocked_1": "This window's locked. Another way in.",
+    "WindowBarricaded_1": "They boarded up the window.",
+    "CarWindowOpened_1": "Window's down.",
+    "CarWindowBroken_1": "The car window's broken.",
+    "Alt_AfterHumanShaken_1": "I… I killed somebody.",
+    "Alt_Whisper_AfterHumanShaken_1": "I… I killed somebody.",
+    "Alt_AfterHumanShaken_2": "There's no undoing that.",
+    "Alt_Whisper_AfterHumanShaken_2": "There's no undoing that.",
+    "Alt_AfterHumanShaken_3": "They were… a person.",
+    "Alt_Whisper_AfterHumanShaken_3": "They were… a person.",
+    "Alt_AfterZombieShaken_1": "That was somebody once.",
+    "Alt_Whisper_AfterZombieShaken_1": "That was somebody once.",
+    "Alt_AfterZombieShaken_2": "My hands… still shaking.",
+    "Alt_Whisper_AfterZombieShaken_2": "My hands… still shaking.",
+    "Alt_AfterZombieShaken_3": "I can't think about who they were.",
+    "Alt_Whisper_AfterZombieShaken_3": "I can't think about who they were.",
+    "Alt_AfterHumanSteady_2": "I'll have to live with it.",
+    "Alt_AfterZombieSteady_3": "Just give me a minute.",
+    "Alt_ThreatWhisper_1": "Quiet… they're close.",
+    "Alt_ThreatTense_2": "I need… some room.",
+    "Alt_KeepHidden_1": "Please… keep walking.",
+    "Alt_Whisper_KeepHidden_1": "Please… keep walking.",
+    "Alt_HumanDanger_2": "I don't want to die here.",
+    "Alt_MortalFear_1": "No… please, not here.",
+    "Alt_PursuitSteady_1": "Keep them in sight.",
+    "Alt_PursuitUneasy_3": "Don't lose them… stay back.",
+    "Alt_ReloadSteady_1": "All right. Load it.",
+    "Alt_ReloadShaken_3": "Come on… steady hands.",
+    "Alt_ReloadBreathless_1": "One breath. Then load.",
+    "Alt_ReloadPanic_1": "Come on! Load, please!",
+    "Alt_GunJammed_1": "Jammed… damn it.",
+    "Alt_OutOfAmmo_1": "Empty… nothing left.",
+    "Alt_ChamberEmpty_1": "Nothing in the chamber.",
+    "Alt_WeaponBroken_3": "It's broken. Need something else.",
+    "Alt_JamCleared_3": "It's clear… easy now.",
+    "Alt_CriticalFading_2": "Stay awake… come on.",
+    "Alt_CriticalWound_2": "I'm hurt bad… just keep going.",
+    "Alt_InjuryAcute_1": "Ah! That hurt.",
+    "Alt_InjuryAftermath_3": "Still hurts… but I made it.",
+    "Alt_PainGeneric_2": "Ah… easy.",
+    "Alt_RepeatedHit_2": "Why won't you stay down?",
+    "Alt_MultiHit_2": "Back up… give me room.",
+    "Alt_ThirstCritical_1": "Water… I need water.",
+    "Alt_ThirstCritical_2": "Need water… can't wait.",
+    "Alt_Hypothermia_3": "Need to get warm… won't stop shaking.",
+    "Alt_Hyperthermia_3": "Need to cool down… now.",
+    "Alt_HungerSevere_2": "Food… I can't put it off.",
+    "Alt_WindowLocked_1": "Locked. Try another window.",
+    "Alt_WindowBarricaded_1": "Window's boarded up.",
+    "Alt_CarWindowOpened_1": "There. The window's open.",
+    "Alt_CarWindowBroken_1": "The window just broke.",
+    "Alt_EngineStalled_2": "No… don't quit on me now.",
+    "Alt_EngineRecovered_3": "It's running… thank goodness.",
+    "Alt_VehicleImpactDriver_3": "Felt that. Keep it steady.",
+    "Alt_VehicleImpactPassenger_2": "Felt that through the seat.",
+    "Alt_VehicleSiegeDriver_3": "Steady hands… steady.",
+    "Alt_VehicleSiegePassenger_1": "They're right here… get us out!",
+    "Alt_PanicEscape_2": "Too close… need room.",
+    "Alt_PanicGrounding_2": "Slow. One breath at a time.",
+    "Alt_StartleNormal_1": "Ah! …Okay.",
+    "Alt_StartleBrave_2": "Ah… focus.",
+    "Alt_StartleCowardly_2": "Ah… no, no.",
+    "Alt_StartleDesensitized_1": "Ah. Damn.",
+    "Alt_Fire_2": "Ah! Get it off!",
+    "Alt_LootAmmo_1": "Good. These fit.",
+    "Alt_LootCanOpener_1": "Good, now I can open the cans.",
+    "Alt_LootMagazine_1": "Right magazine. Finally.",
+    "Alt_LootWeapon_1": "Good. This one works.",
+    "Alt_BandageDone_3": "Covered… keep an eye on it.",
+    "Alt_ReliefBleeding_2": "It's stopped… for now.",
+    "Alt_ReliefPain_2": "It's easing up a little.",
+    "Alt_ReliefThreat_1": "Okay… a little room to breathe.",
+    "Alt_StillAlive_2": "I'm still here… okay.",
+    "Alt_ShelterAftermath_2": "This place feels different now.",
+    "Alt_FoundPerson_1": "There… I see them.",
+    "Alt_LostPerson_1": "Where'd they go?",
+    "Alt_FriendMissing_3": "Come on… where are you?",
+    "Alt_HumanGroup_1": "People… easy now.",
+    "Alt_ShelterThreat_2": "Not this place too.",
+    "Alt_KillAngry_1": "Damn you!",
+    "Alt_KillDark_1": "Huh. One less.",
+    "Alt_KillControlled_4": "Easy. No stupid risks.",
+    "Alt_KillDesperate_1": "Stay down… please.",
+    "Alt_KillUneasy_1": "I still can't get used to that.",
+    "Alt_NativeBreath_1": "Short exertion breaths",
+    "Alt_NativePain_1": "Short pain reaction",
+    "Alt_NativePainMoodle_1": "Suppressed pain reaction",
+    "Alt_NativeEffort_1": "Short effort grunt",
+    "Alt_NativeWhisperCall_1": "Psst!"
   },
   "contract": 1,
   "needTiers": 1,

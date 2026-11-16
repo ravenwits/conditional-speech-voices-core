@@ -43,7 +43,10 @@ function M.call(player)
     M.history[#M.history+1]=entry
     if #M.history>32 then table.remove(M.history,1)end
     playing[player]=entry;M.metrics.queued=M.metrics.queued+1
-    if V.client and V.client.captionsEnabled and V.client.captionsEnabled() then player:SayShout(bank.lines[id]) end
+    if V.client and V.client.captionsEnabled and V.client.captionsEnabled() then
+        require('CSV/Caption').renderDebug(V.client,player,entry.id,radius)
+        player:SayShout(entry.text)
+    end
     addSound(player,player:getX(),player:getY(),player:getZ(),radius,radius)
     player:playEmote('shout')
     return true

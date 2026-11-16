@@ -1,6 +1,10 @@
 local R={groups={Darkness='Explore',WeaponBroken='LowAmmo',JamCleared='GunJammed',WeaponReady='LowAmmo',FuelLow='VehicleDamage',BatteryDead='VehicleDamage',EngineFailed='VehicleDamage',BandageDone='Injured',DisinfectDone='Pain',DoorLocked='Explore',DoorBlocked='Explore'}}
 for g,parent in pairs(require('CSV/TraitSpeechRules').groups)do R.groups[g]=parent end
 for g,parent in pairs(require('CSV/VehicleRules').groups)do R.groups[g]=parent end
+R.groups.WindowLocked='Explore'
+R.groups.WindowBarricaded='Explore'
+R.groups.CarWindowOpened='VehicleDamage'
+R.groups.CarWindowBroken='VehicleDamage'
 function R.urgent(g)return g=='WeaponBroken' or require('CSV/VehicleRules').urgent[g]==true end
 function R.ready(f)
  if not f or f.jammed~=false or type(f.condition)~='number' or f.condition<=0 then return false end
@@ -21,8 +25,10 @@ function R.classify(e)
  elseif e.kind=='bandage' and a.bandaged==false and b.bandaged==true then return 'BandageDone'
  elseif e.kind=='disinfect' and type(a.alcohol)=='number' and type(b.alcohol)=='number' and b.alcohol>a.alcohol then return 'DisinfectDone'
  elseif e.kind=='window' and a.open==false and b.open==false and b.destroyed~=true then
-  if b.blocked==true then return 'DoorBlocked' end
-  if b.locked==true and e.nativeSound=='locked' then return 'DoorLocked' end
+  if b.blocked==true then return 'WindowBarricaded' end
+  if b.locked==true and e.nativeSound=='locked' then return 'WindowLocked' end
+ elseif e.kind=='car_window_open' and a.open==false and b.open==true and b.destroyed==false then return 'CarWindowOpened'
+ elseif e.kind=='car_window_smash' and a.destroyed==false and b.destroyed==true then return 'CarWindowBroken'
  elseif e.kind=='car_door' and a.open==false and b.open==false and b.locked==true then return 'DoorLocked'
  elseif e.kind=='door' and a.open==false and b.open==false then
   if b.blocked==true then return 'DoorBlocked' end
@@ -31,9 +37,5 @@ function R.classify(e)
   if b.battery==0 then return 'BatteryDead' end
   return 'EngineFailed'
  elseif e.kind=='fuel' and b.running==true and type(b.fuel)=='number' and b.fuel>=0 and b.fuel<15 then return 'FuelLow' end
-end
--- Only the object-neutral blocked-passage line fits a barricaded window.
-function R.allowedLine(id,e)
- return not (e and e.kind=='window' and R.classify(e)=='DoorBlocked') or id=='DoorBlocked_3'
 end
 return R

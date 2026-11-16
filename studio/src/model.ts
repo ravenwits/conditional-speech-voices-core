@@ -5,6 +5,7 @@ export type Row = {
   reference: string;
   direction: string;
   guidance?: string;
+  optional?: boolean;
   traits?: string[];
   category: string;
   family: string;
@@ -105,7 +106,6 @@ export type Filters = {
   delivery: string;
   acting: string;
   state: string;
-  coverage: string;
 };
 export const emptyFilters: Filters = {
   search: "",
@@ -116,7 +116,6 @@ export const emptyFilters: Filters = {
   delivery: "",
   acting: "",
   state: "",
-  coverage: "",
 };
 export function filterRows(rows: Row[], f: Filters, requiredSlots?: ReadonlySet<string>) {
   const query = f.search.trim().toLocaleLowerCase();
@@ -128,8 +127,9 @@ export function filterRows(rows: Row[], f: Filters, requiredSlots?: ReadonlySet<
       (!f.category || r.category === f.category) &&
       (!f.delivery || r.delivery === f.delivery) &&
       (!f.acting || (r.acting || "unspecified") === f.acting) &&
-      (!f.state || r.state === f.state) &&
-      (!f.coverage || requiredSlots?.has(r.slot)) &&
+      (f.state === "required"
+        ? requiredSlots?.has(r.slot)
+        : !f.state || r.state === f.state) &&
       (!query ||
         [r.slot, r.text, r.context, r.delivery]
           .join(" ")

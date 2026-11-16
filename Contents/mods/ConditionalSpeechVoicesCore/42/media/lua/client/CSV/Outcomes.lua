@@ -15,6 +15,10 @@ function O.snapshot(kind,obj,p)
   local door=call(obj,'getDoor')
   return {open=call(door,'isOpen'),locked=call(door,'isLocked'),broken=call(door,'isLockBroken')}
  end
+ if kind=='car_window_open' or kind=='car_window_smash' then
+  local window=call(obj,'getWindow')
+  return {open=call(window,'isOpen'),destroyed=call(window,'isDestroyed')}
+ end
  if kind=='window' then return {open=call(obj,'IsOpen'),locked=call(obj,'isLocked')==true or call(obj,'isPermaLocked')==true,blocked=call(obj,'isBarricaded')==true,destroyed=call(obj,'isDestroyed')} end
  if kind=='trait' then return require('CSV/TraitReactions').snapshot(p) end
  if kind=='darkness' then return require('CSV/Darkness').snapshot(p) end
@@ -31,7 +35,7 @@ end
 function O.begin(kind,p,obj)
  if not eligible(p) or not obj then return end
  local e={kind=kind,player=p,obj=obj,before=O.snapshot(kind,obj,p),at=V.now()}
- if kind=='car_door' then
+ if kind=='car_door' or kind=='car_window_open' or kind=='car_window_smash' then
   local car=call(obj,'getVehicle');local x,y=call(car,'getX'),call(car,'getY')
   if type(x)=='number' and type(y)=='number' then e.offsetX=call(p,'getX')-x;e.offsetY=call(p,'getY')-y end
  end
@@ -63,7 +67,7 @@ function O.valid(e)
  if e.kind:match('^vehicle_') then return require('CSV/Vehicles').valid(e) end
  if e.kind=='gun' then return call(p,'getPrimaryHandItem')==e.obj end
  if e.kind=='start' or e.kind=='fuel' then return call(p,'getVehicle')==e.obj and call(e.obj,'isDriver',p)==true end
- if e.kind=='car_door' then
+ if e.kind=='car_door' or e.kind=='car_window_open' or e.kind=='car_window_smash' then
   local car=call(e.obj,'getVehicle');local x,y=call(car,'getX'),call(car,'getY')
   if type(x)~='number' or type(y)~='number' then return false end
   -- Keep the attempted door's position relative to the vehicle, including long vans.
@@ -170,6 +174,7 @@ function O.hook(path,name,kind,key)
  t:replace(class,'start',function(self,...)
   safe(function()
    if kind=='bandage' and self.doIt~=true then return end
+   if kind=='car_window_open' and self.open~=true then return end
    local obj=kind=='start' and call(self.character,'getVehicle') or self[key]
    self._csvOutcome=O.begin(kind,self.character,obj)
   end)
@@ -208,7 +213,7 @@ end
 function O.install()
  if O.installed then return true end
  O.hooks.ISUnlockVehicleDoor=O.installVehicleLock()
- for _,row in ipairs({{'TimedActions/ISRackFirearm','ISRackFirearm','gun','gun'},{'TimedActions/ISReloadWeaponAction','ISReloadWeaponAction','gun','gun'},{'TimedActions/ISInsertMagazine','ISInsertMagazine','gun','gun'},{'Vehicles/TimedActions/ISStartVehicleEngine','ISStartVehicleEngine','start'}, {'TimedActions/ISApplyBandage','ISApplyBandage','bandage','bodyPart'},{'TimedActions/ISDisinfect','ISDisinfect','disinfect','bodyPart'},{'TimedActions/ISOpenCloseDoor','ISOpenCloseDoor','door','item'},{'TimedActions/ISOpenCloseWindow','ISOpenCloseWindow','window','object'},{'Vehicles/TimedActions/ISOpenVehicleDoor','ISOpenVehicleDoor','car_door','part'}})do O.hook(unpack(row))end
+ for _,row in ipairs({{'TimedActions/ISRackFirearm','ISRackFirearm','gun','gun'},{'TimedActions/ISReloadWeaponAction','ISReloadWeaponAction','gun','gun'},{'TimedActions/ISInsertMagazine','ISInsertMagazine','gun','gun'},{'Vehicles/TimedActions/ISStartVehicleEngine','ISStartVehicleEngine','start'}, {'TimedActions/ISApplyBandage','ISApplyBandage','bandage','bodyPart'},{'TimedActions/ISDisinfect','ISDisinfect','disinfect','bodyPart'},{'TimedActions/ISOpenCloseDoor','ISOpenCloseDoor','door','item'},{'TimedActions/ISOpenCloseWindow','ISOpenCloseWindow','window','object'},{'Vehicles/TimedActions/ISOpenVehicleDoor','ISOpenVehicleDoor','car_door','part'},{'Vehicles/TimedActions/ISOpenCloseVehicleWindow','ISOpenCloseVehicleWindow','car_window_open','part'},{'Vehicles/TimedActions/ISSmashVehicleWindow','ISSmashVehicleWindow','car_window_smash','part'}})do O.hook(unpack(row))end
  O.installed=require('CSV/Connections').install('outcome-events',function(t)
   if Events.OnWeaponSwing then t:event(Events.OnWeaponSwing,function(...)safe(O.swing,...)end)end
   if Events.OnPlayerUpdate then t:event(Events.OnPlayerUpdate,function(p)safe(O.nativeDoor,p)end)end

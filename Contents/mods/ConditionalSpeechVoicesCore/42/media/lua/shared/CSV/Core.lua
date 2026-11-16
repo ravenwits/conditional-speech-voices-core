@@ -1,3 +1,4 @@
+local alternates=require 'CSV/VoiceAlternates'
 local pack=require 'CSV/Pack'
 local V = {data=require 'CSV/Data',version=require('CSV/Release').version}
 V.pack=pack
@@ -67,13 +68,18 @@ function V.deliveryGain(voice,id)
     return levels[id:match('^(.-)_%d+$') or id] or 1
 end
 function V.delivery(voice,id)
+    if alternates[id] then
+        local delivery=alternates[id].delivery
+        return (delivery=='whisper' or delivery=='shout') and delivery or V.delivery(voice,alternates[id].source)
+    end
     if id:match('^KillControlled_') then return 'controlled' end
     if id:match('^KillUneasy_') then return 'shaken' end
     if id:match('^KillDesperate_') then return 'frightened' end
     local reload=id:match('^(Reload%a+)_')
     if reload then return ({ReloadPanic='frightened',ReloadBreathless='breathless',ReloadSteady='controlled',ReloadShaken='sad'})[reload] or 'original' end
     local expression=require('CSV/Expressions').catalog[id];if expression then return expression.profile end
-    if require('CSV/Whispers').contains(id) then return 'whisper' end
+    if id:match('^ThreatWhisper_%d+$') or require('CSV/Whispers').contains(id) then return 'whisper' end
+    if id=='Fire_2' then return 'shout' end
     for _,line in ipairs(V.bank(voice).data.contextLines or {})do
         if (line.voice==nil or line.voice==voice) and line.id==id then return line.delivery end
     end
@@ -93,6 +99,7 @@ function V.outputGain(voice,id,requested)
     return math.max(0,math.min(peakLimits[voice..'_'..id] or 1,requested))
 end
 function V.maxPriority(id)
+    if alternates[id] then return V.maxPriority(alternates[id].source) end
     if id:match('^CriticalWound_') or id:match('^CriticalFading_') then return 4 end
     if id=='Injured_3' or id=='Bleeding_3' then return 4 end
     if id:match('^KillControlled_') or id:match('^KillUneasy_') or id:match('^KillDesperate_') then return 2 end
@@ -114,6 +121,7 @@ function V.packetPriority(p)
  return math.min(ceiling,V.finite(p.priority) and math.max(1,math.floor(p.priority)) or 1)
 end
 function V.allowStealth(id)
+    if alternates[id] then return V.allowStealth(alternates[id].source) end
     return require('CSV/Whispers').contains(id) or id:match('^Fire_%d+$')~=nil or id:match('^InjuryAcute_%d+$')~=nil or id=='Pain_3' or id=='Panic_3' or id:match('^ThreatWhisper_')~=nil
 end
 function V.contextLine(player,voice,group,intensity,facts)
@@ -121,6 +129,7 @@ function V.contextLine(player,voice,group,intensity,facts)
     local s=facts or require('CSV/State').capture(player)
     if group=='Panic' and s.fire==true then return nil end
     local threat=(s.visible or 0)>0 or s.recentThreat==true or require('CSV/Concealment').active(s)
+        or (group=='Panic' and require('CSV/ThreatEvidence').kind(s)=='attacking')
     for _,line in ipairs(V.bank(voice).data.contextLines or {})do
         if (line.voice==nil or line.voice==voice) and line.group==group and intensity>=line.min and intensity<=line.max
             and (line.threat==nil or (line.threat==threat and (line.threat or s.visible~=nil and s.recentThreat~=nil))) and (line.id~='PanicEscape_1' or require('CSV/Concealment').active(s) or (facts and (s.accessibleNear or s.near or 0)>0) or (not facts and V.closeThreat(player))) and V.clip(voice,line.id) then return line end

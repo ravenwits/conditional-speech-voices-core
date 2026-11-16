@@ -10,7 +10,7 @@ from studio_schema import source_digest
 
 TOOLS=Path(__file__).resolve().parent
 CORE=TOOLS.parents[1]
-MODULES=['VoicePresentation','PackSemantics','VoiceRequirements','NeedTiers','Rules','Delivery','RecoveryRules',
+MODULES=['VoicePresentation','VoiceAlternates','PackSemantics','VoiceRequirements','NeedTiers','Rules','Delivery','RecoveryRules',
          'LootRules','OutcomeRules','VehicleRules','VehicleCombatRules','TraitSpeechRules',
          'ReloadRules','PsychologyRules','KillSpeech','CriticalHealth','Conditions','Traits']
 SOURCES=MODULES[:-1]+['SemanticSpeech','Concealment','Safety','Channel','Expressions','Whispers',
@@ -70,7 +70,24 @@ def export(check=False):
                 source_files[path.relative_to(CORE).as_posix()]=path.read_text(encoding='utf-8-sig')
     trait_links=data['Traits']['recordingTraits']
     groups={}
-    for id in sorted(required):
+    optional = set(data['VoicePresentation']['optionalSlots'])
+    alternates = data['VoiceAlternates']
+    for slot, variant in alternates.items():
+        source = rows[variant['source']]
+        if source['group'] != variant['group'] or slot in required:
+            raise ValueError('Invalid alternate source: '+slot)
+        if variant.get('native'):
+            if set(rows[slot]['nativeEvents']) != set(source['nativeEvents']):
+                raise ValueError('Alternate native events differ from source: '+slot)
+        else:
+            if slot in rows:
+                raise ValueError('Alternate replaces an existing slot: '+slot)
+            rows[slot] = dict(source, source=variant['source'])
+            rows[slot].pop('alternative', None)
+        optional.add(slot)
+    if not optional <= rows.keys() or optional & required:
+        raise ValueError('Invalid optional recording slots')
+    for id in sorted(required | optional):
         row=rows[id]; group=row['group']
         row.pop('id',None);row['slot']=id
         row['nativeEvents']=sorted(row.get('nativeEvents',[]))
@@ -111,9 +128,13 @@ def export(check=False):
         profile=row['delivery']
         presentation=data['VoicePresentation']['profiles'].get(profile)
         if presentation is None: raise ValueError('Unclassified recording profile: '+profile)
+        group_presentation=data['VoicePresentation']['groupPresentation'].get(group,{})
+        slot_presentation=data['VoicePresentation']['slotPresentation'].get(id,{})
         row['profile']=profile
-        row['delivery']=presentation['delivery']
-        row['acting']=presentation.get('acting','unspecified')
+        row['delivery']=slot_presentation.get('delivery',group_presentation.get('delivery',presentation['delivery']))
+        row['acting']=presentation.get('acting',group_presentation.get('acting','unspecified'))
+        if id in alternates:
+            row.update(delivery=alternates[id]['delivery'], acting=alternates[id]['acting'], optional=True)
         if row['category'] in ('Whisper','Shout'): row['category']='Dialogue'
     # A full pack needs one take for each distinct meaning. Optional performance
     # profiles do not invent additional obligations or substitute loud audio for whispers.
@@ -147,7 +168,7 @@ def export(check=False):
             for p in (CORE/'42/media/lua').rglob('*.lua') if p.name!='BuildIdentity.lua'}
     for name in ['voice-template-v1.json','voice-contract-v1.json','export_studio_schema.py']:
         p=TOOLS/name;inputs[p.relative_to(CORE).as_posix()]=source_digest(p)
-    return dict(version=1,contract=contract['version'],slots={s:rows[s] for s in sorted(required)},
+    return dict(version=1,contract=contract['version'],slots={s:rows[s] for s in sorted(required | optional)},
                 groups=groups,sources=source_files,inputs=inputs,coverage=coverage)
 
 def main():

@@ -165,7 +165,7 @@ export function MicrophoneTake({
         />
       </div>
       {phase === "recording" && (
-        <div className="microphone-monitor">
+        <div className="flex items-center gap-3 tabular-nums [&_meter]:flex-1">
           <span>Recording</span>
           <meter aria-label="Microphone input level" min={0} max={1} value={level} />
           <span aria-label="Elapsed time">{elapsed.toFixed(1)} / {seconds} s</span>

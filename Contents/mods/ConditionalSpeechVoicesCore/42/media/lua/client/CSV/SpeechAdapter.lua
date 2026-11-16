@@ -7,6 +7,7 @@ function Adapter.install(C,V,env)
  local Evidence=require 'CSV/ThreatEvidence'
  local Trace=require 'CSV/Trace'
  local Channel=require 'CSV/Channel'
+ local Caption=require 'CSV/Caption'
  local Debug=C.debug
  local speechAvailable,diagnostic,playerInfo,extraGroups=env.speechAvailable,env.diagnostic,env.playerInfo,env.extraGroups
  return require('CSV/Connections').install('conditional-speech',function(transaction)
@@ -190,9 +191,15 @@ transaction:replace(Speech,'Say',Say)
 -- Say call still owns zombie noise; manual chat and unsupported voices pass through.
 if type(Speech.applyVolumetricColor_Say)=='function' then
  local renderCaption=Speech.applyVolumetricColor_Say
- transaction:replace(Speech,'applyVolumetricColor_Say',function(player,...)
-  if owns(player) and C.contexts[player] and not (C.captionsEnabled and C.captionsEnabled()) then return end
-  return renderCaption(player,...)
+ transaction:replace(Speech,'applyVolumetricColor_Say',function(player,text,volume,...)
+  local ctx=owns(player) and C.contexts[player]
+  if ctx then
+   if not (C.captionsEnabled and C.captionsEnabled()) then return end
+   if ctx.playbackEntry and not ctx.playbackFailed and text==ctx.line.text then
+    Caption.renderDebug(C,player,ctx.playbackEntry.line or ctx.line.id,volume)
+   end
+  end
+  return renderCaption(player,text,volume,...)
  end)
 end
  end)

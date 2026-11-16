@@ -6,9 +6,19 @@ from pathlib import Path
 
 TOOLS=Path(__file__).resolve().parent
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=4)
+def _read_version(path, modified, size):
+    return json.loads(path.read_text(encoding='utf-8'))
+
+
+def _read_catalogue(name):
+    path = TOOLS / name
+    stamp = path.stat()
+    return _read_version(path, stamp.st_mtime_ns, stamp.st_size)
+
+
 def load():
-    return json.loads((TOOLS/'voice-schema-v1.json').read_text(encoding='utf-8'))
+    return _read_catalogue('voice-schema-v1.json')
 
 def source_digest(path):
     # Git checks out text with different line endings on different systems.
@@ -26,9 +36,8 @@ def strip_text(value):
     if isinstance(value,list): return [strip_text(v) for v in value]
     return value
 
-@lru_cache(maxsize=1)
 def template():
-    return json.loads((TOOLS/'voice-template-v1.json').read_text(encoding='utf-8'))
+    return _read_catalogue('voice-template-v1.json')
 
 def validate(config):
     from prepare_voice_pack import TRIAL_GROUPS

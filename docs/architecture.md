@@ -1,6 +1,6 @@
 # Core boundaries
 
-Voice packs provide recordings, captions, voice identities and native sound mappings. Core owns event meaning, eligibility, channel choice, repetition and playback. A new voice must use the provider contract rather than add a character-name branch to Core.
+Voice packs provide recordings, captions, voice identities and native sound mappings. Optional dialogue takes in Core are tied to a source recording. Selection can substitute an available alternate after the source's event and delivery rules pass. Native alternatives enter the existing event pools through the pack manifest. Core owns event meaning, eligibility, channel choice, repetition and playback. A new voice must use the provider contract rather than add a character-name branch to Core.
 
 ## Runtime responsibilities
 

@@ -43,8 +43,12 @@ def make_server(manifest, ffmpeg, core, port=0):
             self.send_header('Cache-Control', 'no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
             self.send_header('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; media-src 'self' blob:; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'")
-            self.end_headers()
-            self.wfile.write(data)
+            try:
+                self.end_headers()
+                self.wfile.write(data)
+            except (BrokenPipeError, ConnectionResetError):
+                # A tab reload can close the connection while a response is in flight.
+                self.close_connection = True
 
         def local_request(self):
             host = f'127.0.0.1:{self.server.server_port}'
@@ -161,7 +165,7 @@ def make_server(manifest, ffmpeg, core, port=0):
                     data = json.loads(body)
                     fields={'/save':{'slot','text','direction','state'}, '/metadata':{'name','author','description','packVersion','steamProfile'},
                             '/update':{'apply'}, '/jobs':{'rate'}, '/measure':set(), '/package':{'rightsConfirmed'},
-                            '/create':{'voice','name','language','female','trial'}, '/open':{'key'}, '/remove-project':{'key'},
+                            '/create':{'voice','name','language','female','trial'}, '/open':{'key'}, '/open-pack':{'folder'}, '/browse-pack-folders':{'folder','native'}, '/remove-project':{'key'},
                             '/undo-review':set(), '/review':{'slots','state'}, '/process':{'slot','gainDb','semitones','restore','speed','trimStart','trimEnd'}}
                     if self.path not in fields:
                         self.respond({'error': 'Unknown Studio action. Check that the server and interface use the same version.'}, status=404)
@@ -241,6 +245,45 @@ def make_server(manifest, ffmpeg, core, port=0):
                             manifest = initial_manifest
                             active_project = 'current'
                         result = {'message': 'Project permanently deleted.'}
+                    elif self.path == '/browse-pack-folders':
+                        from open_voice_pack import browse_folders, choose_windows_folder
+                        folder = data.get('folder')
+                        if folder is not None and not isinstance(folder, str):
+                            raise ValueError('Invalid folder path.')
+                        if data.get('native') is True:
+                            try:
+                                result = {'selected': choose_windows_folder()}
+                            except (ValueError, OSError):
+                                result = {'selected': None, 'unavailable': True}
+                        else:
+                            result = browse_folders(folder, initial_manifest.parent)
+                    elif self.path == '/open-pack':
+                        from open_voice_pack import import_voice, open_pack, resolve_folder
+                        value = data.get('folder')
+                        if value is not None and not isinstance(value, str):
+                            raise ValueError('Invalid folder path.')
+                        value = value.strip() if value else None
+                        result = {'opened': False}
+                        if value:
+                            known = {'current': initial_manifest}
+                            for path in sorted(projects_root.glob('*/project.json')):
+                                known[path.parent.name] = project.contained(projects_root, path.relative_to(projects_root))
+                            if workspace_root:
+                                for path in sorted(workspace_root.glob('*/project.json')):
+                                    if path != initial_manifest and re.fullmatch(r'[a-z][a-z0-9_]{0,47}', path.parent.name):
+                                        known['saved:' + path.parent.name] = project.contained(workspace_root, path.relative_to(workspace_root))
+                            mod_id, fields, audio, language, voices = open_pack(resolve_folder(value), known, projects_root)
+                            for voice, key in voices.items():
+                                if key is None:
+                                    key, known_key = import_voice(mod_id, fields, audio, language, voice, projects_root)
+                                    known[key] = known_key
+                                    voices[voice] = key
+                            key = active_project if active_project in voices.values() else next(iter(voices.values()))
+                            target = known[key]
+                            project.sync_core(target)
+                            studio_schema.validate(project.read(target))
+                            manifest, active_project = target, key
+                            result = {'opened': True, 'message': 'Voice pack opened.'}
                     elif self.path == '/open':
                         key=data['key']
                         if key=='current': target=initial_manifest

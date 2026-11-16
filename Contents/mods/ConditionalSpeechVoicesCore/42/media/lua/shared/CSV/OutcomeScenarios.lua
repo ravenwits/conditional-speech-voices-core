@@ -45,7 +45,8 @@ function S.cases()
    if mode=='cancelled' then e.cancelled=true end
    if mode=='unknown' then e.after.locked=nil end
    local blocked=mode=='opened' or mode=='cancelled' or mode=='unknown'
-   cases[#cases+1]={name='DoorLocked: '..kind..' '..mode,group='DoorLocked',level=1,max=1,state={outcome=e,sneaking=mode=='whisper',near=0,visible=0,recentThreat=false,panic=0},prefs={whisper=true},expect=blocked and 'none' or 'DoorLocked',mode=blocked and 'silent' or 'spoken',newOutcomes=true,limited='none'}
+   local group=kind=='window' and 'WindowLocked' or 'DoorLocked'
+   cases[#cases+1]={name=group..': '..kind..' '..mode,group=group,level=1,max=1,state={outcome=e,sneaking=mode=='whisper',near=0,visible=0,recentThreat=false,panic=0},prefs={whisper=true},expect=blocked and 'none' or 'DoorLocked',mode=blocked and 'silent' or 'spoken',newOutcomes=true,limited='none'}
   end
  end
  local negatives={

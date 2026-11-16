@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import re
+import stat
 from pathlib import Path
 import subprocess
 import tempfile
@@ -81,7 +82,25 @@ def guidance(slot):
         'Dialogue': '',
     }[kind]
     profiles = {
+        'startled': 'A short involuntary startle, then regain control. Do not prolong it into a scream.',
+        'tense': 'Keep the words short and tight, without raising your voice.',
+        'frustrated': 'Brief frustration at the setback. Do not sound panicked unless the line calls for it.',
+        'disappointed': 'A short, disappointed realization, then look for another option.',
+        'calm': 'A brief, calm observation. Avoid sounding excited.',
+        'downcast': 'Low and subdued, without forcing tears.',
+        'tired': 'Let fatigue slow the words slightly; keep them clear.',
+        'exhausted': 'Speak with little energy, pausing to recover your breath.',
+        'uncomfortable': 'Let physical discomfort show, matching the severity of the line.',
+        'dry': 'Deliver the line with dry understatement and little change in pitch.',
         'angry': 'Angry and frustrated, without changing the meaning.',
+        'controlled': 'Keep your voice steady under pressure.',
+        'pain': 'React before you can compose yourself. Keep the words brief and involuntary.',
+        'strained': 'Speak through the pain with short pauses and uneven breath.',
+        'catchingBreath': 'Start on a short breath and let the voice settle as you finish.',
+        'waryRelief': 'Let a little relief through while staying alert.',
+        'relieved': 'Let the words come out on a small, relieved exhale.',
+        'uneasy': 'Hold the tension in your voice without raising it.',
+        'shaken': 'Let the voice tremble slightly and pause where the thought breaks.',
         'breathless': 'Speak between short breaths. Keep the words understandable.',
         'frightened': 'Audibly frightened, with strained and unsteady delivery.',
         'sad': 'Sad and vulnerable, with restrained tears rather than theatrical sobbing.',
@@ -98,8 +117,20 @@ def guidance(slot):
     }
     if definition['group'] in contextual:
         base += ' ' + contextual[definition['group']]
-    if definition.get('acting') in profiles:
+    elif definition.get('acting') in profiles:
         base += ' ' + profiles[definition['acting']]
+    if slot in ('Fire_2', 'Alt_Fire_2'):
+        base = 'An involuntary cry from a burning survivor. Keep the words intelligible and end quickly.'
+    elif slot=='ThreatWhisper_1':
+        base += ' Hold down a quick breath and let a trace of fear through.'
+    elif definition['source']=='DoorLocked_2':
+        base += ' React to a locked opening. The same line may be used for a window, a door, or a vehicle door.'
+    elif definition['source']=='DoorBlocked_3':
+        base += ' React to a blocked passage without naming the object. This line can also play for a barricaded window.'
+    elif definition['source']=='EngineStalled_2':
+        base += ' The engine has just cut out. Keep the urgency believable if the vehicle is under attack.'
+    if definition.get('optional') and definition['group'] in ('AfterHumanShaken','AfterZombieShaken'):
+        base += ' Keep the reaction restrained. Let one short pause interrupt the thought.'
     if definition['group']=='CriticalFading':
         base += ' Very weak, fading speech with interrupted breaths, not a strong shout.'
     levels=definition.get('needLevels',[])
@@ -171,20 +202,45 @@ def audio_digest(path, size, modified, changed):
 def fingerprint(config, slot, root, clip=None):
     clip = clip or slots(config)[slot]
     path = contained(root, config['assets'][clip['sound']]['source'])
+    return take_fingerprint(config, slot, clip, path, path.stat() if path.is_file() else None)
+
+
+def take_fingerprint(config, slot, clip, path, info):
     value = [config['bank']['lines'].get(slot, ''),
              recording_note(config,slot),
-             audio_digest(str(path),path.stat().st_size,path.stat().st_mtime_ns,path.stat().st_ctime_ns) if path.is_file() else None, clip.get('gain', 1),
-             config['assets'][clip['sound']].get('volume', 1.2)]
+             audio_digest(str(path),info.st_size,info.st_mtime_ns,info.st_ctime_ns) if info else None,
+             clip.get('gain', 1), config['assets'][clip['sound']].get('volume', 1.2)]
     return hashlib.sha256(json.dumps(value, ensure_ascii=False).encode()).hexdigest()
 
 
-def status(config, slot, root, clip=None):
+def status(config, slot, root, clip=None, *, directories=None):
     clip = clip or slots(config)[slot]
-    path = contained(root, config['assets'][clip['sound']]['source'])
-    if not path.is_file(): return 'missing'
+    source = config['assets'][clip['sound']]['source']
+    if directories is None:
+        path = contained(root, source)
+        info = path.stat() if path.is_file() else None
+    else:
+        relative = Path(source)
+        parent = relative.parent
+        if parent not in directories:
+            resolved = (root / parent).resolve()
+            if not resolved.is_relative_to(root):
+                raise ValueError('Project paths must stay inside the project directory')
+            directories[parent] = resolved
+        path = directories[parent] / relative.name
+        if relative.name in ('', '..'):
+            path = contained(root, source)
+        try:
+            info = path.lstat()
+            if stat.S_ISLNK(info.st_mode):
+                path = contained(root, source)
+                info = path.stat()
+        except (FileNotFoundError, NotADirectoryError):
+            info = None
+    if info is None or not stat.S_ISREG(info.st_mode): return 'missing'
     review = config.get('authoring', {}).get('reviews', {}).get(slot, {})
     if not review: return 'pending'
-    if review.get('fingerprint') != fingerprint(config, slot, root, clip): return 'pending'
+    if review.get('fingerprint') != take_fingerprint(config, slot, clip, path, info): return 'pending'
     return review.get('status', 'pending')
 
 
@@ -194,13 +250,15 @@ def rows(manifest):
     try: studio_schema.validate(config)
     except ValueError as error: schema_error=str(error)
     result = []
+    root = manifest.parent.resolve()
+    directories = {}
     for slot, clip in (slots(config).items() if not schema_error else []):
         definition=studio_schema.entry(slot)
-        result.append(dict(slot=slot, category=category(slot), family=definition['family'], delivery=definition['delivery'], acting=definition.get('acting','unspecified'), context=definition['group'], traits=definition.get('traits',[]), text=config['bank']['lines'].get(slot, ''),
+        result.append(dict(slot=slot, category=category(slot), family=definition['family'], delivery=definition['delivery'], acting=definition.get('acting','unspecified'), context=definition['group'], optional=definition.get('optional',False), traits=definition.get('traits',[]), text=config['bank']['lines'].get(slot, ''),
             reference=config.get('authoring', {}).get('references', {}).get(slot, ''),
             direction=recording_note(config,slot),
             guidance=config.get("authoring",{}).get("recordingGuidance",{}).get(slot) or guidance(slot),
-            state=status(config, slot, manifest.parent, clip),
+            state=status(config, slot, root, clip, directories=directories),
             audioEdit={k:v for k,v in config.get('authoring',{}).get('audioEdits',{}).get(slot,{}).items() if k in ('gainDb','semitones','speed','trimStart','trimEnd')}))
     return dict(canUndoReview=bool(config.get('authoring',{}).get('lastBulkReview')),limits=dict(caption=MAX_CAPTION,seconds=MAX_SECONDS,audioBytes=MAX_AUDIO),steamProfile=config.get('steamProfile',''),name=config['name'], author=config['author'], description=config['description'], voice=voice_id(config),
                 language=config['bank']['language'], packVersion=config['bank']['revision'], trial=bool(config.get('trial')),

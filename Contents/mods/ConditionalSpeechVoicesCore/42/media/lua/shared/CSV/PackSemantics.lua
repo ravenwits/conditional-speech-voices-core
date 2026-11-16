@@ -7,4 +7,8 @@ S.extras["CriticalFading_1"]={id="CriticalFading_1",group="CriticalFading"}
 S.whispers["CriticalFading_1"]={id="Whisper_CriticalFading_1",group="CriticalFading"}
 S.extras["CriticalFading_2"]={id="CriticalFading_2",group="CriticalFading"}
 S.whispers["CriticalFading_2"]={id="Whisper_CriticalFading_2",group="CriticalFading"}
+S.extras["WindowLocked_1"]={id="WindowLocked_1",group="WindowLocked"}
+S.extras["WindowBarricaded_1"]={id="WindowBarricaded_1",group="WindowBarricaded"}
+S.extras["CarWindowOpened_1"]={id="CarWindowOpened_1",group="CarWindowOpened"}
+S.extras["CarWindowBroken_1"]={id="CarWindowBroken_1",group="CarWindowBroken"}
 return S

@@ -16,7 +16,7 @@ local T={cases={
  {name='Wet and hypothermic',group='Wet',level=4,max=4,state={cold=3},expect='Wet_3'},
  {name='High panic, no external threat',group='Panic',level=4,max=4,state={fire=false,visible=0,recentThreat=false,near=0},expect='PanicGrounding_1',limited='Panic_3'},
  {name='High panic, visible close zombie',group='Panic',level=4,max=4,state={fire=false,visible=1,recentThreat=true,near=1},expect='PanicEscape_1',limited='Panic_3'},
- {name='On fire, no zombies',group='Panic',level=4,max=4,state={fire=true,visible=0,recentThreat=false,near=0},expect='Panic_3'},
+ {name='On fire, no zombies',group='Panic',level=4,max=4,state={fire=true,health=20,visible=0,recentThreat=false,near=0},expect='Panic_3'},
  {name='Severe thirst',group='Thirst',level=4,max=4,state={},expect='ThirstCritical_1',limited='Thirst_2'},
  {name='Unknown weapon API',group='OutOfAmmo',level=1,max=1,state={},expect='none'}
 }}
@@ -165,7 +165,7 @@ add{name='Wet: Close threat',group='Wet',level=4,max=4,state={sneaking=false,pan
 add{name='Windchill: Safe',group='Windchill',level=4,max=4,state={sneaking=false,panic=0,near=0,visible=0,recentThreat=false,crowd=3,empty=true,pickup=true,treeDown=true,cold=3,fire=false},expect='eligible_or_none',mode='upstream'}
 add{name='Windchill: Hidden',group='Windchill',level=4,max=4,state={sneaking=true,panic=4,near=3,visible=3,recentThreat=true,crowd=3,empty=true,pickup=true,treeDown=true,cold=3,fire=false},expect='eligible_or_none',mode='silent'}
 add{name='Windchill: Close threat',group='Windchill',level=4,max=4,state={sneaking=false,panic=4,near=3,visible=3,recentThreat=true,crowd=3,empty=true,pickup=true,treeDown=true,cold=3,fire=false},expect='eligible_or_none',mode='silent'}
-add{name='Fire while hidden is involuntary',group='Panic',level=4,max=4,state={sneaking=true,fire=true,panic=4,near=0},expect='Panic_3',mode='spoken',radius=15}
+add{name='Fire while hidden is involuntary',group='Panic',level=4,max=4,state={sneaking=true,fire=true,health=20,panic=4,near=0},expect='Panic_3',mode='spoken',radius=15}
 add{name='Fresh injury while hidden is involuntary',group='AcutePain',level=4,max=4,state={sneaking=true,acute=true,panic=0,near=0},expect='Pain_3',mode='spoken',radius=8}
 add{name='Stale injury is not a fresh cry',group='AcutePain',level=4,max=4,state={sneaking=true,acute=false},expect='none',mode='silent'}
 add{name='Window blocks close warning',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=1,accessibleNear=0,blockedNear=1,visible=1},expect='none',mode='silent'}
@@ -177,10 +177,12 @@ add{name='Transition: calm, threat, panic, hiding, fire',steps={
  {group='Threat',level=2,max=4,state={sneaking=false,panic=2,near=2,visible=2},expect='Panic_2',mode='spoken'},
  {group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',limited='Panic_3',mode='spoken'},
  {group='Panic',level=4,max=4,state={sneaking=true,panic=4,near=2,visible=2,recentThreat=true},expect='PanicEscape_1',limited='Panic_3',mode='silent'},
- {group='Panic',level=4,max=4,state={sneaking=true,fire=true,panic=4,near=2},expect='Panic_3',mode='spoken'}
+ {group='Panic',level=4,max=4,state={sneaking=true,fire=true,health=20,panic=4,near=2},expect='Panic_3',mode='spoken'}
 }}
 -- Explicit measured zombie behavior. These are selection tests, not fabricated live events.
 add{name='Nearby zombie observed, no pursuit',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=1,visible=1,accessibleNear=1,reactiveNear=0,targeted=0,approaching=0,attacking=0},expect='ThreatCalm',limited='Panic_2',mode='spoken',radius=4}
+add{name='Zombie targeting a calm survivor',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=1,visible=1,accessibleNear=1,reactiveNear=1,targeted=1,approaching=0,attacking=0},expect='ThreatTense',limited='Panic_2',mode='spoken'}
+add{name='Zombie approaching a calm survivor',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=1,visible=1,accessibleNear=1,reactiveNear=1,targeted=1,approaching=1,attacking=0},expect='ThreatTense',limited='Panic_2',mode='spoken'}
 add{name='High panic but zombie not pursuing',group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=1,visible=1,accessibleNear=1,reactiveNear=0,targeted=0,approaching=0,attacking=0},expect='eligible_or_none',mode='silent'}
 add{name='Attacking player with high panic',group='Panic',level=4,max=4,state={sneaking=false,panic=4,near=1,visible=1,accessibleNear=1,reactiveNear=1,targeted=1,approaching=0,attacking=1},expect='PanicEscape_1',limited='Panic_3',mode='spoken',radius=15}
 add{name='Threat motion not measured yet',group='Threat',level=1,max=4,state={sneaking=false,panic=0,near=1,accessibleNear=1,targeted=0},expect='eligible_or_none',mode='silent'}
@@ -251,12 +253,13 @@ local function evaluate(player,voice,index,live,step)
  if c.expect=='ThreatCalm' and not require('CSV/Extras').approved then expected='Panic_2' end
  if (c.name or ''):match('^Recovered:') and not require('CSV/Extras').approved then expected='none' end
  if V.extended(voice) and require('CSV/Conditions').enabled and c.group=='OutOfAmmo' and facts.hasChamber==true and facts.chamber==false and (facts.rounds or 0)>0 and facts.jammed~=true then expected='ChamberEmpty' end
+ if c.group=='WindowLocked' and c.expect=='DoorLocked' and not facts.sneaking and V.clip(voice,'WindowLocked_1') then expected='WindowLocked' end
  local expectedMode=c.mode
  if (c.newLoot or c.newOutcomes or c.newPsychology) and (not V.extended(voice) or (facts.sneaking and not require('CSV/Whispers').approved)) then expectedMode=(not V.extended(voice) and c.legacyMode) or 'silent' end
  if not c.newTraits and V.extended(voice) and require('CSV/Extras').approved then
   if c.group=='Panic' and facts.fire then expected='Fire'
   elseif c.group=='AcutePain' and facts.acute then expected='InjuryAcute'
-  elseif c.group=='Threat' and type(facts.panic)=='number' and facts.panic<3 and (facts.accessibleNear or facts.near or 0)>0 then expected=facts.panic==0 and 'ThreatCalm' or 'ThreatTense'
+  elseif c.group=='Threat' and c.expect=='Panic_2' and type(facts.panic)=='number' and facts.panic<3 and (facts.accessibleNear or facts.near or 0)>0 then expected=facts.panic==0 and 'ThreatCalm' or 'ThreatTense'
   elseif c.group=='Panic' and (facts.near or 0)>0 and (facts.panic or 0)>0 and facts.panic<3 then expected='ThreatTense'
   elseif c.group=='MultiHit' and (facts.reactiveCrowd or 0)<3 then expected='RepeatedHit'
   elseif c.group=='Uncomfortable' and c.mode=='silent' and facts.sneaking==false and facts.near==0 then expectedMode='upstream' end
