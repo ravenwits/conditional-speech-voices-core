@@ -1,10 +1,12 @@
 local Actors=require 'CSV/Actors'
 local Concealment=require 'CSV/Concealment'
-local S={events=setmetatable({},{__mode='k'}),motion=setmetatable({},{__mode='k'}),threatClock=setmetatable({},{__mode='k'})}
+local S={events=setmetatable({},{__mode='k'}),motion=setmetatable({},{__mode='k'}),threatClock=setmetatable({},{__mode='k'}),farSight=setmetatable({},{__mode='k'})}
+local FAR_SIGHT_BUDGET=48
+local FAR_SIGHT_MAX_AGE=500
 local function read(fn)
  return require('CSV/ApiDiagnostics').read('State.read',fn)
 end
-S.metrics={captures=0,reads=0,hits=0,visits=0,readMs=0,maxReadMs=0}
+S.metrics={captures=0,reads=0,hits=0,visits=0,sightChecks=0,farSightChecks=0,readMs=0,maxReadMs=0}
 function S.beginFrame()S.frame=setmetatable({},{__mode='k'})end
 function S.endFrame()S.frame=nil end
 function S.invalidate(player)if S.frame then S.frame[player]=nil end end
@@ -75,11 +77,35 @@ local function collect(player)
    px,py,pz=Actors.call(player,'getX'),Actors.call(player,'getY'),Actors.call(player,'getZ')
    if type(px)~='number' or type(py)~='number' or type(pz)~='number' then return end
   end
-  for i=0,size-1 do local z=list:get(i);S.metrics.visits=S.metrics.visits+1
+  local far=S.farSight[player]
+  if not far or far.cell~=cell or far.z~=pz or (far.x-px)^2+(far.y-py)^2>4 then
+   far={cell=cell,x=px,y=py,z=pz,cursor=0,samples=setmetatable({},{__mode='k'})}
+   S.farSight[player]=far
+  end
+  local cursor=size>0 and far.cursor%size or 0
+  local nextCursor=cursor
+  local farChecks=0
+  local sightComplete=true
+  for offset=0,size-1 do
+   local i=(cursor+offset)%size
+   local z=list:get(i);S.metrics.visits=S.metrics.visits+1
    local present=z and not z:isDead() and z:getZ()==pz
-   local shown=present and player:CanSee(z)
-   local d
-   if present then local dx,dy=z:getX()-px,z:getY()-py;d=dx*dx+dy*dy end
+   local d,shown
+   if present then
+    local dx,dy=z:getX()-px,z:getY()-py;d=dx*dx+dy*dy
+    if d<=36 or farChecks<FAR_SIGHT_BUDGET then
+     shown=player:CanSee(z)
+     S.metrics.sightChecks=S.metrics.sightChecks+1
+     if d>36 then
+      farChecks=farChecks+1;nextCursor=(i+1)%size
+      far.samples[z]={shown=shown,at=now}
+     end
+    else
+     local sample=far.samples[z]
+     if sample and now>=sample.at and now-sample.at<=FAR_SIGHT_MAX_AGE then shown=sample.shown end
+     if shown==nil then sightComplete=false end
+    end
+   end
    local inspect=present and (s.sneaking==true or d<=36)
    local npc=(shown or inspect) and Actors.isNpc(z)
    if inspect then Concealment.observe(s,player,z,npc and 'npc' or 'zombie',d)end
@@ -118,8 +144,14 @@ local function collect(player)
     end
    end
   end
-  s.exposureChecked=true;s.encounterThreat=encounter
-  s.visible=zombieVisible
+  far.cursor=nextCursor
+  S.metrics.farSightChecks=S.metrics.farSightChecks+farChecks
+  s.exposureChecked=true
+  s.threatScanIncomplete=not sightComplete
+  if encounter or sightComplete then s.encounterThreat=encounter end
+  if sightComplete then s.visible=zombieVisible
+  elseif type(s.visible)=='number' then s.visible=math.max(zombieVisible,s.visible)
+  elseif zombieVisible>0 then s.visible=zombieVisible end
   s.npcVisible=npcVisible
   s.near=near;s.crowd=crowd;s.reactiveCrowd=reactiveCrowd;s.accessibleNear=accessible;s.blockedNear=blocked
   if reactiveKnown then s.reactiveNear=reactive end

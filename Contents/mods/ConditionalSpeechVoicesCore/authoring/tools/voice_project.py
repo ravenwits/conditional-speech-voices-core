@@ -196,7 +196,7 @@ def rows(manifest):
     result = []
     for slot, clip in (slots(config).items() if not schema_error else []):
         definition=studio_schema.entry(slot)
-        result.append(dict(slot=slot, category=category(slot), family=definition['family'], delivery=definition['delivery'], acting=definition.get('acting','unspecified'), context=context(slot), text=config['bank']['lines'].get(slot, ''),
+        result.append(dict(slot=slot, category=category(slot), family=definition['family'], delivery=definition['delivery'], acting=definition.get('acting','unspecified'), context=definition['group'], traits=definition.get('traits',[]), text=config['bank']['lines'].get(slot, ''),
             reference=config.get('authoring', {}).get('references', {}).get(slot, ''),
             direction=recording_note(config,slot),
             guidance=config.get("authoring",{}).get("recordingGuidance",{}).get(slot) or guidance(slot),
@@ -530,5 +530,5 @@ def coverage(config,root,available=None):
     if available is None: available={slot for slot,clip in slots(config).items() if status(config,slot,root,clip)=='approved'}
     pools=dict(studio_schema.load()['coverage']['pools'])
     pools.update({'Native / '+event:pool for event,pool in config['bank']['native']['replacements'].items()})
-    missing=[name for name,pool in pools.items() if not available.intersection(pool)]
-    return dict(required=len(pools),covered=len(pools)-len(missing),missing=missing)
+    missing={name:pool for name,pool in pools.items() if not available.intersection(pool)}
+    return dict(required=len(pools),covered=len(pools)-len(missing),missing=list(missing),missingSlots=missing)

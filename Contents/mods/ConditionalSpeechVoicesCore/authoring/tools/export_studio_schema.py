@@ -12,8 +12,8 @@ TOOLS=Path(__file__).resolve().parent
 CORE=TOOLS.parents[1]
 MODULES=['VoicePresentation','PackSemantics','VoiceRequirements','NeedTiers','Rules','Delivery','RecoveryRules',
          'LootRules','OutcomeRules','VehicleRules','VehicleCombatRules','TraitSpeechRules',
-         'ReloadRules','PsychologyRules','KillSpeech','CriticalHealth','Conditions']
-SOURCES=MODULES+['SemanticSpeech','Concealment','Safety','Channel','Expressions','Whispers',
+         'ReloadRules','PsychologyRules','KillSpeech','CriticalHealth','Conditions','Traits']
+SOURCES=MODULES[:-1]+['SemanticSpeech','Concealment','Safety','Channel','Expressions','Whispers',
                  'Selection','Startle','Injury','Recovery','Outcomes','Psychology','Callout','Traits']
 
 def snapshot():
@@ -68,6 +68,7 @@ def export(check=False):
             path=CORE/f'42/media/lua/{area}/CSV/{name}.lua'
             if path.exists() and name not in ('PackSemantics','VoiceRequirements'):
                 source_files[path.relative_to(CORE).as_posix()]=path.read_text(encoding='utf-8-sig')
+    trait_links=data['Traits']['recordingTraits']
     groups={}
     for id in sorted(required):
         row=rows[id]; group=row['group']
@@ -106,6 +107,7 @@ def export(check=False):
             elif events & {'LureCmon','LureTsk'}: row.update(category='Dialogue',delivery='normal')
             else: row.update(category='Nonverbal',delivery='nonverbal')
         row['family']=groups[group]['family']
+        if group in trait_links: row['traits']=sorted(trait_links[group].values())
         profile=row['delivery']
         presentation=data['VoicePresentation']['profiles'].get(profile)
         if presentation is None: raise ValueError('Unclassified recording profile: '+profile)

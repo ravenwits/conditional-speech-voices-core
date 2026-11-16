@@ -132,7 +132,7 @@ class Projects(unittest.TestCase):
             self.assertEqual(run.call_args.args[0],['chosen.exe','-version'])
 
     def test_additional_language_scripts_initialize(self):
-        for code in ('ACE','CRH_CYRL','SAT_OLCK','BER_TFNG','PA_ARAB'):
+        for code in ('ACE','CRH_CYRL','SAT_OLCK','BER_TFNG','PA_ARAB','HU','MK'):
             target=self.root/code/'project.json'
             initialize(target,'test_voice',code,trial=True)
             self.assertEqual(p.rows(target)['language'],code)

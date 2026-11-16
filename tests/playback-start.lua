@@ -120,3 +120,30 @@ C.sweep()
 assert(#C.active==0 and C.lastPlayback.outcome=='sound_update_failed','broken active entry is removed instead of failing every tick')
 emitter.setVolume=volume
 print('PASS crouched completion, failed startup query and bounded update failure')
+
+-- Remote clients only receive a public line after its local emitter starts.
+local sent={}
+isClient=function()return true end
+sendClientCommand=function(actor,module,command,packet)
+ assert(actor==p and module=='CSV')
+ sent[#sent+1]={command=command,seq=packet.seq}
+end
+playing=true;pending=true
+ctx=emit()
+assert(#sent==0,'queued handles must not send a speak packet')
+now=now+5100;C.sweep()
+assert(#sent==0 and ctx.playbackEntry.finishedReason=='start_timeout','timeouts send neither speak nor stop')
+ctx=emit();pending=false;C.sweep();C.sweep()
+assert(#sent==1 and sent[1].command=='speak' and sent[1].seq==ctx.playbackEntry.packet.seq,'deferred start relays once')
+p.isDead=function()return true end;C.sweep()
+assert(#sent==2 and sent[2].command=='stop' and sent[2].seq==sent[1].seq,'death stops the same transmitted line')
+p.isDead=function()return false end
+ctx=emit()
+assert(#sent==3 and sent[3].command=='speak','immediate start also relays once')
+C.sweep()
+playing=false;now=now+300;C.sweep()
+assert(#sent==3,'natural completion needs no remote interruption')
+playing=true;pending=true
+ctx=emit();C.cancel(ctx.playbackEntry,'urgent_interrupt',true)
+assert(#sent==3,'interrupting an unrelayed line sends no stop')
+print('PASS MP relay waits for engine startup and interrupts only relayed audio')

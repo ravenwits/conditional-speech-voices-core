@@ -5,6 +5,7 @@ export type Row = {
   reference: string;
   direction: string;
   guidance?: string;
+  traits?: string[];
   category: string;
   family: string;
   delivery: string;
@@ -20,7 +21,7 @@ export type Row = {
   };
 };
 export type Project = {
-  buildCoverage?: { required: number; covered: number; missing: string[] };
+  buildCoverage?: { required: number; covered: number; missing: string[]; missingSlots?: Record<string, string[]> };
   languageFlags?: string[];
   canUndoReview?: boolean;
   name: string;
@@ -77,36 +78,22 @@ export const label = (s: string) =>
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replaceAll("_", " ")
     .replace(/^./, (c) => c.toUpperCase());
-// Browsing labels for trait-linked takes. Gameplay eligibility remains in Core.
-const traitsBySituation: Record<string, string[]> = {
-  Agoraphobic: ["Agoraphobic"],
-  Claustrophobic: ["Claustrophobic"],
-  BloodAversion: ["Fear of Blood"],
-  NicotineNeed: ["Smoker"],
-  StartleBrave: ["Brave"],
-  StartleCowardly: ["Cowardly"],
-  StartleDesensitized: ["Desensitized"],
-  TraitDriver: ["Sunday Driver"],
-  TraitVigilant: ["Deaf", "Hard of Hearing", "Conspicuous"],
-  TraitHunger: ["Hearty Appetite", "Fast Metabolism"],
-  TraitThirst: ["High Thirst"],
-  TraitLoad: ["Weak", "Feeble", "Disorganized"],
-  TraitCold: ["Prone to Illness"],
-  TraitNausea: ["Weak Stomach"],
-  TraitFull: ["Light Eater", "Slow Metabolism"],
-  TraitSight: ["Short Sighted"],
-  TraitRest: ["Restless Sleeper", "Sleepyhead"],
-  TraitWound: ["Slow Healer"],
-  TraitFumble: ["All Thumbs"],
-  TraitReading: ["Slow Reader"],
-  TraitStudy: ["Slow Learner"],
-  TraitFall: ["Clumsy"],
-  TraitScratch: ["Thin-skinned"],
-  TraitIlliterate: ["Illiterate"],
-};
-
-export function recordingTraits(situation: string): string[] {
-  return traitsBySituation[situation] ?? [];
+export function coverageLabel(key: string): string {
+  const [group, conditions, slot] = key.split("|");
+  if (slot) return label(slot);
+  if (!conditions) {
+    const [kind, situation, level] = key.split(" / ");
+    if (kind === "severity") return `${label(situation)} · Level ${level}`;
+    return situation ? label(situation) : label(key);
+  }
+  const { needLevels, min, max, threat } = JSON.parse(conditions);
+  const details = [];
+  if (needLevels?.length) details.push(`Level ${needLevels.join(", ")}`);
+  else if (min !== undefined && max !== undefined)
+    details.push(min === max ? `Level ${min}` : `Levels ${min}–${max}`);
+  else if (min !== undefined) details.push(`Level ${min}+`);
+  if (threat !== undefined) details.push(threat ? "With threat" : "Without threat");
+  return [label(group), ...details].join(" · ");
 }
 
 export type Filters = {
@@ -118,6 +105,7 @@ export type Filters = {
   delivery: string;
   acting: string;
   state: string;
+  coverage: string;
 };
 export const emptyFilters: Filters = {
   search: "",
@@ -128,18 +116,20 @@ export const emptyFilters: Filters = {
   delivery: "",
   acting: "",
   state: "",
+  coverage: "",
 };
-export function filterRows(rows: Row[], f: Filters) {
+export function filterRows(rows: Row[], f: Filters, requiredSlots?: ReadonlySet<string>) {
   const query = f.search.trim().toLocaleLowerCase();
   return rows.filter(
     (r) =>
       (!f.family || r.family === f.family) &&
-      (!f.trait || recordingTraits(r.context).includes(f.trait)) &&
+      (!f.trait || r.traits?.includes(f.trait)) &&
       (!f.group || r.context === f.group) &&
       (!f.category || r.category === f.category) &&
       (!f.delivery || r.delivery === f.delivery) &&
       (!f.acting || (r.acting || "unspecified") === f.acting) &&
       (!f.state || r.state === f.state) &&
+      (!f.coverage || requiredSlots?.has(r.slot)) &&
       (!query ||
         [r.slot, r.text, r.context, r.delivery]
           .join(" ")

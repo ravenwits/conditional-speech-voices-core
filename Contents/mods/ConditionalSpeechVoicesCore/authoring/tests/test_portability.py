@@ -50,7 +50,7 @@ class Portability(unittest.TestCase):
     def test_picker_languages_have_real_bundled_flags(self):
         import workshop_artwork as art
         codes = art.available_flag_languages()
-        for code in ('UZ', 'TT', 'TK', 'TG'):
+        for code in ('UZ', 'TT', 'TK', 'TG', 'HU', 'MK'):
             self.assertIn(code, codes)
         neutral = (art.ARTWORK / 'neutral.png').read_bytes()
         for code in codes:

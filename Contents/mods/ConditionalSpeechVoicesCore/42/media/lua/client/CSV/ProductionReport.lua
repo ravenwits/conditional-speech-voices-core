@@ -56,7 +56,7 @@ local function buildReport(f,compact)
  local hearing=require 'CSV/Hearing'
  emit(f,function()return 'HEARING source='..tostring(hearing.lastSource)..' fallbackMultiplier='..hearing.fallback()..' appliedToRiskOnly=true\n' end)
  local metrics=require('CSV/State').metrics
- emit(f,function()return 'STATE captures='..metrics.captures..' reads='..metrics.reads..' cacheHits='..metrics.hits..' visitedBodies='..metrics.visits..' totalReadMs='..metrics.readMs..' maxReadMs='..metrics.maxReadMs..'\n' end)
+ emit(f,function()return 'STATE captures='..metrics.captures..' reads='..metrics.reads..' cacheHits='..metrics.hits..' visitedBodies='..metrics.visits..' sightChecks='..(metrics.sightChecks or 0)..' farSightChecks='..(metrics.farSightChecks or 0)..' totalReadMs='..metrics.readMs..' maxReadMs='..metrics.maxReadMs..'\n' end)
  local selection=require('CSV/Selection').metrics
  local builds,indexed,candidates=selection.indexBuilds,selection.indexed,selection.candidates
  emit(f,function()return 'SELECTION indexBuilds='..builds..' indexed='..indexed..' candidates='..candidates..'\n'end)

@@ -9,7 +9,7 @@ from zipfile import ZipFile
 ARTWORK = Path(__file__).with_name('artwork')
 # Languages with several national flags use a representative locale.
 LANGUAGE_COUNTRIES = {
-    'UZ': 'uz', 'TT': 'ru-ta', 'TK': 'tm', 'TG': 'tj',
+    'UZ': 'uz', 'TT': 'ru-ta', 'TK': 'tm', 'TG': 'tj', 'HU': 'hu', 'MK': 'mk',
     'EN': 'us', 'ES': 'es', 'ES_CL': 'cl', 'ES_MX': 'mx', 'PTBR': 'br',
     'JP': 'jp', 'JA': 'jp', 'CN': 'cn', 'ZH': 'cn', 'CH': 'tw', 'UA': 'ua', 'UK': 'ua',
     'AR': 'sa', 'BG': 'bg', 'BS': 'ba', 'CA': 'es-aut-ct', 'CS': 'cz',
@@ -28,6 +28,7 @@ LOCAL_NAMES = {
     'ES': 'Español', 'ES_CL': 'Español', 'ES_MX': 'Español',
     'IT': 'Italiano', 'PT': 'Português', 'PTBR': 'Português',
     'PL': 'Polski', 'NL': 'Nederlands', 'SV': 'Svenska', 'FI': 'Suomi',
+    'HU': 'Magyar', 'MK': 'Македонски',
 }
 LANGUAGE_NAMES = json.loads((ARTWORK / "language-names.json").read_text(encoding="utf-8"))
 SAME_CODE = frozenset('AZ DE EE FI FR ID IS IT LA LT LU LV MT NL NO PL PT RO RU TH TR'.split())
@@ -64,9 +65,11 @@ def cover_image(template, language, ffmpeg):
         f'[0:v][flag]overlay=(main_w-overlay_w)/2:{center_y}-overlay_h/2:format=rgb'
     )
     label = LOCAL_NAMES.get(language) or LANGUAGE_NAMES.get(language, "Unknown language")
+    # Cal Sans has no Cyrillic glyphs. Keep the fallback bundled for portable builds.
+    label_font = 'NotoSans.ttf' if language == 'MK' else 'CalSans.ttf'
     label_size, label_y = (34, 251) if template == 'square' else (49, 356)
     filters += (
-        f",drawtext=fontfile=CalSans.ttf:text='{label}':fontsize={label_size}"
+        f",drawtext=fontfile={label_font}:text='{label}':fontsize={label_size}"
         f":fontcolor=0xf5f5f5:x=(w-tw)/2:y={label_y}"
     )
     if template == 'square':

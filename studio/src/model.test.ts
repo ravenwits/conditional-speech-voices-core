@@ -14,7 +14,7 @@ it('groups by Core situation and keeps filtered variation states',()=>{
 });
 
 it('filters trait-linked situations without including general reactions', () => {
-  const linked = {...rows[0], slot: 'Whisper_TraitVigilant_1', context: 'TraitVigilant'};
+  const linked = {...rows[0], slot: 'Whisper_TraitVigilant_1', context: 'TraitVigilant', traits: ['Deaf', 'Conspicuous']};
   const options = [...rows, linked];
   expect(filterRows(options, {...emptyFilters, trait:'Deaf'})).toEqual([linked]);
   expect(filterRows(options, {...emptyFilters, trait:'Conspicuous'})).toEqual([linked]);

@@ -464,10 +464,35 @@ it("keeps hidden filters visible as a count and clears them", async () => {
  expect(screen.queryByRole("combobox", {name:"Category"})).toBeNull();
  await userEvent.click(screen.getByRole("button", {name:"Filters"}));
  await userEvent.click(screen.getByRole("combobox", {name:"Category"}));
- await userEvent.click(await screen.findByRole("option", {name:"Physical"}));
+ await userEvent.click(await screen.findByRole("option", {name:"Physical (1511)"}));
  await userEvent.click(screen.getByRole("button", {name:"Filters, active"}));
  await waitFor(()=>expect(screen.queryByRole("combobox", {name:"Category"})).toBeNull());
  expect(screen.getByRole("button", {name:"Filters, active"})).toBeTruthy();
  await userEvent.click(screen.getByRole("button", {name:"Clear filters"}));
  expect(screen.getByRole("button", {name:"Filters"})).toBeTruthy();
+});
+
+it("opens the recordings needed for an uncovered Core group and drops them after approval", async () => {
+  const fixture = structuredClone(project);
+  fixture.buildCoverage = {
+    required: 2, covered: 1, missing: ['severity / Thirst / 1'],
+    missingSlots: { 'severity / Thirst / 1': ['Slot_0', 'Slot_1'] },
+  };
+  vi.mocked(request).mockImplementation(async (path) =>
+    path === "/project" ? structuredClone(fixture) : [{ key: "current", name: "Test voice" }],
+  );
+  const user = userEvent.setup();
+  render(<App />);
+  await screen.findByDisplayValue("Line 0");
+  await user.click(screen.getByRole("button", { name: "Build voice pack" }));
+  await user.click(screen.getByRole("button", { name: "Show required gaps" }));
+  expect(screen.getByLabelText("Required groups for this take").textContent).toContain("Thirst · Level 1");
+  expect(screen.getByText("Line 1")).toBeTruthy();
+  expect(screen.queryByText("Line 2")).toBeNull();
+
+  fixture.buildCoverage = { required: 2, covered: 2, missing: [], missingSlots: {} };
+  fixture.rows[0].state = "approved";
+  await user.click(within(document.querySelector(".review-actions") as HTMLElement).getByRole("button", { name: "Approve" }));
+  await waitFor(() => expect(screen.queryByLabelText("Required groups for this take")).toBeNull());
+  expect(screen.queryByText("Line 1")).toBeNull();
 });

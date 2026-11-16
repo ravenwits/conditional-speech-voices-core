@@ -23,7 +23,11 @@ NeedTiming owns ordinary speech intervals as well as need-specific timing. Chann
 
 Native pain prevents Q and dialogue, including audition. An accepted Q call cancels that actor's dialogue. Normal speech waits until Q finishes. Injury fallback interrupts a tracked Q call before requesting an acute-pain line. All of these rules apply equally to official and third-party voices.
 
+Playback sends public dialogue to the server only after observing the local emitter start. Interrupting a relayed line sends a stop for the same sequence. The server validates the speaker and routes playback to nearby listeners.
+
 Event modules keep pending observations. SpeechManager dispatches gameplay speech. Client functions are exposed through `CSV/Core.client`.
+
+Studio reads the exported Core recording catalogue for situation, recording type, delivery, acting and trait links. The project service compares approved takes with Core coverage groups and returns the candidate slots for each uncovered group.
 
 ## Provider and saved data
 

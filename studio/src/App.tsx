@@ -39,7 +39,7 @@ import { action, request, setRevision, RequestError } from "./api";
 import {
   emptyFilters,
   filterRows,
-  recordingTraits,
+  coverageLabel,
   label,
   groupRows,
   stateNames,
@@ -111,9 +111,21 @@ export default function App() {
   const selectedRow = project?.rows.find((r) => r.slot === selected);
   const textDirty = !!selectedRow && text !== selectedRow.text;
   const dirty = textDirty || audioDirty;
+  const missingBySlot = useMemo(() => {
+    const bySlot = new Map<string, string[]>();
+    for (const [group, slots] of Object.entries(project?.buildCoverage?.missingSlots ?? {})) {
+      for (const slot of slots) {
+        const groups = bySlot.get(slot) ?? [];
+        groups.push(group);
+        bySlot.set(slot, groups);
+      }
+    }
+    return bySlot;
+  }, [project]);
+  const requiredSlots = useMemo(() => new Set(missingBySlot.keys()), [missingBySlot]);
   const filtered = useMemo(
-    () => filterRows(project?.rows || [], filters),
-    [project, filters],
+    () => filterRows(project?.rows || [], filters, requiredSlots),
+    [project, filters, requiredSlots],
   );
   const grouped = useMemo(() => groupRows(filtered), [filtered]);
   const navigationRows = useMemo(() => grouped.flatMap((group) => group.variations), [grouped]);
@@ -136,19 +148,11 @@ export default function App() {
     [project],
   );
   const groups = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          project?.rows
-            .filter((r) => (!filters.family || r.family === filters.family) &&
-              (!filters.trait || recordingTraits(r.context).includes(filters.trait)))
-            .map((r) => r.context),
-        ),
-      ).sort(),
-    [project, filters.family, filters.trait],
+    () => Array.from(new Set(project?.rows.map((r) => r.context))).sort(),
+    [project],
   );
   const traits = useMemo(
-    () => Array.from(new Set(project?.rows.flatMap((row) => recordingTraits(row.context)))).sort(),
+    () => Array.from(new Set(project?.rows.flatMap((row) => row.traits ?? []))).sort(),
     [project],
   );
   const categories = useMemo(
@@ -160,8 +164,12 @@ export default function App() {
   const filterCount = Object.entries(filters).filter(([key, value]) => key !== "search" && key !== "state" && value).length;
   const availableFilters = useMemo(() => {
     const rows = project?.rows ?? [];
-    const values = (key: keyof typeof emptyFilters, field: (row: Row) => string[]) =>
-      new Set(filterRows(rows, { ...filters, [key]: "" }).flatMap(field));
+    const values = (key: keyof typeof emptyFilters, field: (row: Row) => string[]) => {
+      const counts = new Map<string, number>();
+      for (const row of filterRows(rows, { ...filters, [key]: "" }, requiredSlots))
+        for (const value of field(row)) counts.set(value, (counts.get(value) ?? 0) + 1);
+      return counts;
+    };
     return {
       family: values("family", (row) => [row.family]),
       state: values("state", (row) => [row.state]),
@@ -169,9 +177,10 @@ export default function App() {
       category: values("category", (row) => [row.category]),
       delivery: values("delivery", (row) => [row.delivery]),
       acting: values("acting", (row) => [row.acting || "unspecified"]),
-      trait: values("trait", (row) => recordingTraits(row.context)),
+      trait: values("trait", (row) => row.traits ?? []),
+      coverage: values("coverage", (row) => requiredSlots.has(row.slot) ? ["required"] : []),
     };
-  }, [project, filters]);
+  }, [project, filters, requiredSlots]);
   function stop() {
     setPlayerEpoch((v) => v + 1);
   }
@@ -286,7 +295,7 @@ export default function App() {
       !(await confirm("Your text or audio settings have not been saved."))
     )
       return;
-    const matches = filterRows(project?.rows || [], next);
+    const matches = filterRows(project?.rows || [], next, requiredSlots);
     setFilters(next);
     setPage(0);
     const row = matches.find((r) => r.slot === selected) || matches[0];
@@ -296,6 +305,7 @@ export default function App() {
 
     setAudioDirty(false);
     setEditReset((v) => v + 1);
+    return true;
   }
   useEffect(() => {
     if (dirty || filtered.some((r) => r.slot === selected)) return;
@@ -700,7 +710,7 @@ export default function App() {
                       { value: "", label: "All statuses" },
                       ...Object.entries(stateNames).map(([value, name]) => ({
                         value,
-                        label: `${name} (${project?.coverage[value as State] || 0})`,
+                        label: `${name} (${availableFilters.state.get(value) ?? 0})`,
                         disabled: !availableFilters.state.has(value),
                       })),
                     ]}
@@ -726,7 +736,7 @@ export default function App() {
                     onChange={(v) => updateFilter("family", v)}
                     items={[
                       { value: "", label: "All categories" },
-                      ...families.map((f) => ({ value: f, label: label(f), disabled: !availableFilters.family.has(f) })),
+                      ...families.map((f) => ({ value: f, label: `${label(f)} (${availableFilters.family.get(f) ?? 0})`, disabled: !availableFilters.family.has(f) })),
                     ]}
                   />
                   <Choice
@@ -735,7 +745,7 @@ export default function App() {
                     onChange={(v) => updateFilter("group", v)}
                     items={[
                       { value: "", label: "All situations" },
-                      ...groups.map((g) => ({ value: g, label: label(g), disabled: !availableFilters.group.has(g) })),
+                      ...groups.map((g) => ({ value: g, label: `${label(g)} (${availableFilters.group.get(g) ?? 0})`, disabled: !availableFilters.group.has(g) })),
                     ]}
                   />
                   <Choice
@@ -744,7 +754,7 @@ export default function App() {
                     onChange={(v) => updateFilter("category", v)}
                     items={[
                       { value: "", label: "All recording types" },
-                      ...categories.map((c) => ({ value: c, label: c, disabled: !availableFilters.category.has(c) })),
+                      ...categories.map((c) => ({ value: c, label: `${c} (${availableFilters.category.get(c) ?? 0})`, disabled: !availableFilters.category.has(c) })),
                     ]}
                   />
                   <Choice
@@ -754,11 +764,11 @@ export default function App() {
                     items={[
                       { value: "", label: "All deliveries" },
                       ...Array.from(new Set(project?.rows.map((row) => row.delivery))).sort().map((delivery) => ({
-                        value: delivery, label: label(delivery), disabled: !availableFilters.delivery.has(delivery),
+                        value: delivery, label: `${label(delivery)} (${availableFilters.delivery.get(delivery) ?? 0})`, disabled: !availableFilters.delivery.has(delivery),
                       })),
                     ]}
                   />
-                  <Choice name="Filter acting" value={filters.acting} onChange={v=>updateFilter("acting",v)} items={[{value:"",label:"All acting"},...Array.from(new Set(project?.rows.map(r=>r.acting || "unspecified"))).sort().map(value=>({value,label:value==='unspecified'?'Not specified':label(value),disabled:!availableFilters.acting.has(value)}))]} />
+                  <Choice name="Filter acting" value={filters.acting} onChange={v=>updateFilter("acting",v)} items={[{value:"",label:"All acting"},...Array.from(new Set(project?.rows.map(r=>r.acting || "unspecified"))).sort().map(value=>({value,label:`${value === 'unspecified' ? 'Not specified' : label(value)} (${availableFilters.acting.get(value) ?? 0})`,disabled:!availableFilters.acting.has(value)}))]} />
                   {traits.length > 0 && (
                     <Choice
                       name="Trait"
@@ -766,7 +776,19 @@ export default function App() {
                       onChange={(value) => updateFilter("trait", value)}
                       items={[
                         { value: "", label: "All traits" },
-                        ...traits.map((trait) => ({ value: trait, label: trait, disabled: !availableFilters.trait.has(trait) })),
+                        ...traits.map((trait) => ({ value: trait, label: `${trait} (${availableFilters.trait.get(trait) ?? 0})`, disabled: !availableFilters.trait.has(trait) })),
+                      ]}
+                    />
+                  )}
+                  {project?.buildCoverage?.missingSlots && !project.trial && (
+                    <Choice
+                      name="Pack coverage"
+                      value={filters.coverage}
+                      onChange={(value) => updateFilter("coverage", value)}
+                      items={[
+                        { value: "", label: "All coverage" },
+                        { value: "required", label: `Required gaps (${availableFilters.coverage.get("required") ?? 0})`,
+                          disabled: !availableFilters.coverage.has("required") },
                       ]}
                     />
                   )}
@@ -1034,6 +1056,14 @@ export default function App() {
                       </Button>
                     )}
                   </div>
+                  {filters.coverage && (
+                    <div className="mb-3 flex flex-wrap items-center gap-2 text-xs" aria-label="Required groups for this take">
+                      <span className="text-muted-foreground">Approving this take covers</span>
+                      {Array.from(new Set((missingBySlot.get(selectedRow.slot) ?? []).map(coverageLabel))).map((group) => (
+                        <Badge key={group} variant="outline">{group}</Badge>
+                      ))}
+                    </div>
+                  )}
                   <section
                     className="recording-guidance"
                     aria-label="Recording guidance"
@@ -1313,6 +1343,14 @@ export default function App() {
             )}
             <div className="pack-progress">
               {project?.buildCoverage && <p>Approve one take in each required group to build. Record extra variations if you want.</p>}
+              {!project?.trial && project?.buildCoverage?.missingSlots && project.buildCoverage.missing.length > 0 && (
+                <Button variant="outline" size="sm" disabled={busy}
+                  onClick={async () => {
+                    if (await changeFilters({ ...emptyFilters, coverage: "required" })) setModal(null);
+                  }}>
+                  Show required gaps
+                </Button>
+              )}
               <strong>
                 {(project?.buildCoverage?.covered ?? project?.coverage.approved ?? 0).toLocaleString()}
                 <span>

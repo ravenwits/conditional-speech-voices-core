@@ -21,9 +21,24 @@ function C.cancel(entry,reason,broadcast)
     end
     C.lastPlayback={line=entry.line,outcome=reason,elapsed=V.now()-entry.queued,started=entry.started~=nil}
     if entry.packet then require('CSV/ProductionReport').observe('playback_'..(entry.preview and 'preview_' or 'gameplay_')..entry.packet.voice..'_'..entry.line..'_'..reason,{})end
-    if broadcast and not entry.preview and not entry.private and entry.player:isLocalPlayer() and isClient() and entry.packet then
-        sendClientCommand(entry.player,'CSV','stop',entry.packet)
+    if broadcast and entry.relayed and isClient() then
+        local sent,err=pcall(sendClientCommand,entry.player,'CSV','stop',entry.packet)
+        if not sent then diagnostic('relay-stop-error',tostring(err))end
     end
+end
+local function observeStart(entry,now)
+    if entry.started then return end
+    entry.started=now
+    entry.deadline=now+entry.duration+300
+    Trace.step(entry.trace,'engine_active','engine_observed')
+    if entry.relayOnStart and entry.player:isLocalPlayer() and isClient() then
+        local sent,err=pcall(sendClientCommand,entry.player,'CSV','speak',entry.packet)
+        entry.relayed=sent
+        if not sent then diagnostic('relay-start-error',tostring(err))end
+    end
+    local callback=entry.onStarted
+    entry.onStarted=nil
+    if callback then callback()end
 end
 function C.stopPacket(p)
     if type(p)~='table' or not V.finite(p.actor) or not V.finite(p.seq) then return false end
@@ -102,15 +117,13 @@ function C.sweep()
         elseif e.started and now>=e.deadline then reason='duration_limit' end
         end
         if reason then
-            C.cancel(e,reason,reason=='concealment_interrupt' or reason=='consuming' or reason=='sleeping')
+            C.cancel(e,reason,reason~='engine_finished')
             C.lastPlayback={line=e.line,outcome=reason,elapsed=now-e.queued,started=e.started~=nil}
             print('[CSV] playback ended line='..e.line..' reason='..reason..' elapsedMs='..tostring(now-e.queued))
         else
             -- isPlaying also includes queued sounds in the game's emitter.
             if not e.started and now-e.queued<5000 and ok and playing and not pending then
-                Trace.step(e.trace,'engine_active','engine_observed')
-                e.started=now;e.deadline=now+e.duration+300
-                if e.onStarted then e.onStarted();e.onStarted=nil end
+                observeStart(e,now)
                 print('[CSV] playback observed line='..e.line..' handle='..tostring(e.handle)..' (engine active; not proof of audibility)')
             end
             local updated,updateError=pcall(function()
@@ -228,7 +241,7 @@ function C.emit(player,ctx,volume)
     Trace.step(ctx.trace,'play_requested','spoken',{line=p.line,radius=p.radius,noiseRadius=ctx.policy.noiseRadius})
     local played,reason,info,entry=C.play(p,player,false,{trace=ctx.trace,group=ctx.group,nativeAlert=ctx.facts.nativeAlert})
     ctx.playbackEntry=entry
-    if entry then entry.group=ctx.group end
+    if entry then entry.group=ctx.group;entry.relayOnStart=true end
     if not played then Trace.step(ctx.trace,'blocked',reason or 'rejected')end
     ctx.outcome=played and 'played' or (reason or 'rejected')
     ctx.info=info or {line=p.line,delivery=V.delivery(p.voice,p.line),pitch=p.pitch}
@@ -248,12 +261,8 @@ function C.emit(player,ctx,volume)
         local ok,playing=pcall(entry.emitter.isPlaying,entry.emitter,entry.handle)
         local pending=false
         if entry.emitter.hasSoundsToStart then local checked,value=pcall(entry.emitter.hasSoundsToStart,entry.emitter);pending=not checked or value==true end
-        if ok and playing and not pending then
-            entry.started=V.now();entry.deadline=entry.started+entry.duration+300
-            Trace.step(entry.trace,'engine_active','engine_observed');entry.onStarted();entry.onStarted=nil
-        end
+        if ok and playing and not pending then observeStart(entry,V.now())end
     end
-    if played and isClient() then sendClientCommand(player,'CSV','speak',p) end
     return played
 end
 end

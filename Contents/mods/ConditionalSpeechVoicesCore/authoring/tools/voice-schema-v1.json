@@ -1371,7 +1371,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 24
+          "line": 8
         }
       ]
     },
@@ -1531,7 +1531,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 33
+          "line": 58
         }
       ]
     },
@@ -1696,7 +1696,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 25
+          "line": 8
         }
       ]
     },
@@ -1784,7 +1784,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 17
+          "line": 18
         }
       ]
     },
@@ -1918,7 +1918,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 35
+          "line": 60
         }
       ]
     },
@@ -1966,7 +1966,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 35
+          "line": 60
         }
       ]
     },
@@ -2001,7 +2001,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 1
+          "line": 2
         }
       ]
     },
@@ -2058,7 +2058,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 16
+          "line": 17
         },
         {
           "file": "42/media/lua/client/CSV/Selection.lua",
@@ -2321,7 +2321,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 14
+          "line": 15
         },
         {
           "file": "42/media/lua/shared/CSV/Expressions.lua",
@@ -2385,7 +2385,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 13
+          "line": 14
         }
       ]
     },
@@ -2497,7 +2497,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 11
+          "line": 12
         },
         {
           "file": "42/media/lua/client/CSV/Selection.lua",
@@ -3212,7 +3212,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 34
+          "line": 59
         }
       ]
     },
@@ -3369,7 +3369,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 1
+          "line": 2
         },
         {
           "file": "42/media/lua/client/CSV/Selection.lua",
@@ -3438,7 +3438,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 33
+          "line": 58
         }
       ]
     },
@@ -3944,7 +3944,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 15
+          "line": 16
         }
       ]
     },
@@ -3985,7 +3985,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 19
+          "line": 44
         }
       ]
     },
@@ -3997,7 +3997,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 16
+          "line": 41
         }
       ]
     },
@@ -4009,7 +4009,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 17
+          "line": 42
         }
       ]
     },
@@ -4021,7 +4021,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 20
+          "line": 45
         }
       ]
     },
@@ -4070,7 +4070,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/Traits.lua",
-          "line": 33
+          "line": 58
         }
       ]
     },
@@ -4106,7 +4106,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 12
+          "line": 13
         }
       ]
     },
@@ -4183,7 +4183,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 1
+          "line": 2
         }
       ]
     },
@@ -4207,7 +4207,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 14
+          "line": 15
         }
       ]
     },
@@ -4219,7 +4219,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 7
+          "line": 8
         }
       ]
     },
@@ -4231,7 +4231,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 30
+          "line": 31
         }
       ]
     },
@@ -4243,7 +4243,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 16
+          "line": 17
         }
       ]
     },
@@ -4259,7 +4259,7 @@
         },
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 27
+          "line": 28
         }
       ]
     },
@@ -4271,7 +4271,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 11
+          "line": 12
         }
       ]
     },
@@ -4283,7 +4283,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 32
+          "line": 33
         }
       ]
     },
@@ -4295,7 +4295,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 13
+          "line": 14
         }
       ]
     },
@@ -4307,7 +4307,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 15
+          "line": 16
         }
       ]
     },
@@ -4319,7 +4319,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 28
+          "line": 29
         }
       ]
     },
@@ -4343,7 +4343,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 25
+          "line": 26
         }
       ]
     },
@@ -4355,7 +4355,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 31
+          "line": 32
         }
       ]
     },
@@ -4367,7 +4367,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 17
+          "line": 18
         }
       ]
     },
@@ -4379,7 +4379,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 29
+          "line": 30
         }
       ]
     },
@@ -4391,7 +4391,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 12
+          "line": 13
         }
       ]
     },
@@ -4403,7 +4403,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 8
+          "line": 9
         }
       ]
     },
@@ -4415,7 +4415,7 @@
       "references": [
         {
           "file": "42/media/lua/shared/CSV/TraitSpeechRules.lua",
-          "line": 26
+          "line": 27
         }
       ]
     },
@@ -4702,8 +4702,8 @@
     "42/media/lua/client/CSV/PeopleMenu.lua": "e62800a3f48044d210f22b1c4b471e7408d5eabbf459d8cc53879470b9cd12be",
     "42/media/lua/client/CSV/PeoplePerception.lua": "fd0181fe9ff8ee2b30718f4a00164f1126a5cecc23a4dbc1b2e8adc2953bc00b",
     "42/media/lua/client/CSV/Pitch.lua": "ebca7e5cc5b5c8ec47c400172d90c53254e8a578a4059a86389340baccb3bae2",
-    "42/media/lua/client/CSV/Playback.lua": "df1c3f693bd12486ff8b92087f235b384625647d057c8b938c14ad4ca29d1ea4",
-    "42/media/lua/client/CSV/ProductionReport.lua": "9da680caa8392844bdec7a779b27fc9ca2e30791fdce8a34f099233115ff358a",
+    "42/media/lua/client/CSV/Playback.lua": "45cf651fd5016e2ff069130a5be393efed812f11ffc10b09fd1053c1b7673175",
+    "42/media/lua/client/CSV/ProductionReport.lua": "cb520f302f077a097d926f2f9e1d32cc1e8156932f9f95e3b661ddaa944eac4c",
     "42/media/lua/client/CSV/Psychology.lua": "cac5bcb8352c6c8f32ffc6048b8721893537b929e741ebaba68e6e41e6b0ea4d",
     "42/media/lua/client/CSV/PsychologyQueue.lua": "18a3baa63281efdad9735b90b6abdbf30fbb91bcf6e06e353c0c86dce661c54f",
     "42/media/lua/client/CSV/Recovery.lua": "b25d0471d7e7d49b3d9c7c179e7037e43e7df5cc62c2b02355ddeca8671c3ae0",
@@ -4772,14 +4772,14 @@
     "42/media/lua/shared/CSV/Release.lua": "ca454fc3f00bbfacf9403952a5466db4032b12c00cb75eb83964453f1e11aabd",
     "42/media/lua/shared/CSV/ReloadRules.lua": "6d17d5f1bb915c33aad880592b3739bea6a82b22ea718bb49ca6360f9fa4eddc",
     "42/media/lua/shared/CSV/Rules.lua": "fff7310431095c9d06be9640d63049504afa0bec1a1eddc14d7b270c31299eab",
-    "42/media/lua/shared/CSV/Safety.lua": "6c38693f29f49b768eb1f74a7116e9d122b96d6a5f4b72045e545dc91b10ca5b",
+    "42/media/lua/shared/CSV/Safety.lua": "962759f3bf08130c9fbbf23ee77129f1eab459b750a0d05ba13094e247686b79",
     "42/media/lua/shared/CSV/SemanticSpeech.lua": "f2153a302c2a708e95695f68e2391ff89ee97913ddb9d50262e93560818ce1fb",
     "42/media/lua/shared/CSV/Sort.lua": "940a47d4c7080bc00ea7a969850538682e5177ed6d2e5f2d06689a8cd6fe706a",
-    "42/media/lua/shared/CSV/State.lua": "c3e74bc69ddb6866903141e53a6e187e18ea0d0b07da516f43b416ecadd493e9",
+    "42/media/lua/shared/CSV/State.lua": "e52e3402daeb9b2b730ba6ff712c8783f0945b5087608a3b89365f02894f55a9",
     "42/media/lua/shared/CSV/ThreatEvidence.lua": "5ae10662641b972d6d37236177d26feac9f341343a0415629dd6c4b02aa75b27",
     "42/media/lua/shared/CSV/TraitScenarios.lua": "06944f65b535118eb8de2da7001b0720b638c0d35411254b98998c306d71487b",
-    "42/media/lua/shared/CSV/TraitSpeechRules.lua": "1f5c9f6be737e98b8b354d8cf2081d28b7c08ca161c709438d5a22987134a8c4",
-    "42/media/lua/shared/CSV/Traits.lua": "ddb0902cf724df392ee06e81beee334941c45c04c564023e802bace369ee48bb",
+    "42/media/lua/shared/CSV/TraitSpeechRules.lua": "46334446a9a06299c286257eb3df7a3489604c82d8fdbbc3dc487546cac0e9c8",
+    "42/media/lua/shared/CSV/Traits.lua": "8d3ce451d19667d63d514d71867c33d96826808b4546c02898d8e2b6bc7cf941",
     "42/media/lua/shared/CSV/VehicleCombatRules.lua": "30da1c0bcef4406c47ff836d8f4f4df389f9c26ad01aa9b26a0c642ace71ea28",
     "42/media/lua/shared/CSV/VehicleRules.lua": "8d2235b71abe4797b580d067c4daed97131ad1094f4ea4322dcd6e48b8830992",
     "42/media/lua/shared/CSV/VoiceContract.lua": "08d47b94fe216fd71eeef50df73775819c98f6dd8dc2a262feaf3e27dbc99884",
@@ -4787,7 +4787,7 @@
     "42/media/lua/shared/CSV/VoicePresentation.lua": "e9e2a6a3b621a76da129e1e05ace3c2838f8cc9efef19474d846c0edf3c4212e",
     "42/media/lua/shared/CSV/VoiceRequirements.lua": "f928b12ef714e2c64cd23596cd0dd5a558ab05f782495dce35f8bd7c5a8ef441",
     "42/media/lua/shared/CSV/Whispers.lua": "428af70467540ab8a4db9ff65a2f7898115c14098fd8de4e3293b966c2e40a5a",
-    "authoring/tools/export_studio_schema.py": "70913f8227bcf53abf1cdca097b6bf0d70a4ca5d8bf67e5fae47c230c07330f7",
+    "authoring/tools/export_studio_schema.py": "f9ff2048116421da01cea0ddc74204ee8f0c3e10be9c989577977c1a77120852",
     "authoring/tools/voice-contract-v1.json": "d8de9deca0754d6af2464e046c0cb4b56f847bcae84b911a75bdbb564a2a8916",
     "authoring/tools/voice-template-v1.json": "ded32b6ae92551dff9c5e6a1fd3769d241b0ab12fc9d08cd1375cd329b494cb9"
   },
@@ -4934,7 +4934,10 @@
       "nativeEvents": [],
       "profile": "normal",
       "slot": "Agoraphobic_1",
-      "source": "Agoraphobic_1"
+      "source": "Agoraphobic_1",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Agoraphobic_2": {
       "acting": "unspecified",
@@ -4946,7 +4949,10 @@
       "nativeEvents": [],
       "profile": "normal",
       "slot": "Agoraphobic_2",
-      "source": "Agoraphobic_2"
+      "source": "Agoraphobic_2",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Agoraphobic_3": {
       "acting": "unspecified",
@@ -4958,7 +4964,10 @@
       "nativeEvents": [],
       "profile": "normal",
       "slot": "Agoraphobic_3",
-      "source": "Agoraphobic_3"
+      "source": "Agoraphobic_3",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "AmmoCount_1": {
       "acting": "unspecified",
@@ -5319,7 +5328,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "BloodAversion_1",
-      "source": "BloodAversion_1"
+      "source": "BloodAversion_1",
+      "traits": [
+        "Fear of Blood"
+      ]
     },
     "BloodAversion_2": {
       "acting": "unspecified",
@@ -5330,7 +5342,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "BloodAversion_2",
-      "source": "BloodAversion_2"
+      "source": "BloodAversion_2",
+      "traits": [
+        "Fear of Blood"
+      ]
     },
     "BoredMore_1": {
       "acting": "unspecified",
@@ -5547,7 +5562,10 @@
       "nativeEvents": [],
       "profile": "normal",
       "slot": "Claustrophobic_1",
-      "source": "Claustrophobic_1"
+      "source": "Claustrophobic_1",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Claustrophobic_2": {
       "acting": "unspecified",
@@ -5559,7 +5577,10 @@
       "nativeEvents": [],
       "profile": "normal",
       "slot": "Claustrophobic_2",
-      "source": "Claustrophobic_2"
+      "source": "Claustrophobic_2",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Claustrophobic_3": {
       "acting": "unspecified",
@@ -5571,7 +5592,10 @@
       "nativeEvents": [],
       "profile": "normal",
       "slot": "Claustrophobic_3",
-      "source": "Claustrophobic_3"
+      "source": "Claustrophobic_3",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "ColdMild_1": {
       "acting": "unspecified",
@@ -5860,7 +5884,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "DryCoping_1",
-      "source": "DryCoping_1"
+      "source": "DryCoping_1",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "DryCoping_2": {
       "acting": "unspecified",
@@ -5871,7 +5898,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "DryCoping_2",
-      "source": "DryCoping_2"
+      "source": "DryCoping_2",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "Endurance_1": {
       "acting": "unspecified",
@@ -6736,7 +6766,10 @@
       "nativeEvents": [],
       "profile": "congested",
       "slot": "Expr_congested_Agoraphobic_1",
-      "source": "Agoraphobic_1"
+      "source": "Agoraphobic_1",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_congested_Agoraphobic_2": {
       "acting": "congested",
@@ -6747,7 +6780,10 @@
       "nativeEvents": [],
       "profile": "congested",
       "slot": "Expr_congested_Agoraphobic_2",
-      "source": "Agoraphobic_2"
+      "source": "Agoraphobic_2",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_congested_AmmoReserve_1": {
       "acting": "congested",
@@ -6937,7 +6973,10 @@
       "nativeEvents": [],
       "profile": "congested",
       "slot": "Expr_congested_Claustrophobic_1",
-      "source": "Claustrophobic_1"
+      "source": "Claustrophobic_1",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_congested_Claustrophobic_2": {
       "acting": "congested",
@@ -6948,7 +6987,10 @@
       "nativeEvents": [],
       "profile": "congested",
       "slot": "Expr_congested_Claustrophobic_2",
-      "source": "Claustrophobic_2"
+      "source": "Claustrophobic_2",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_congested_ColdMild_1": {
       "acting": "congested",
@@ -8408,7 +8450,10 @@
       "nativeEvents": [],
       "profile": "frightened",
       "slot": "Expr_frightened_Agoraphobic_1",
-      "source": "Agoraphobic_1"
+      "source": "Agoraphobic_1",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_frightened_Agoraphobic_2": {
       "acting": "frightened",
@@ -8419,7 +8464,10 @@
       "nativeEvents": [],
       "profile": "frightened",
       "slot": "Expr_frightened_Agoraphobic_2",
-      "source": "Agoraphobic_2"
+      "source": "Agoraphobic_2",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_frightened_Agoraphobic_3": {
       "acting": "frightened",
@@ -8430,7 +8478,10 @@
       "nativeEvents": [],
       "profile": "frightened",
       "slot": "Expr_frightened_Agoraphobic_3",
-      "source": "Agoraphobic_3"
+      "source": "Agoraphobic_3",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_frightened_Bleeding_1": {
       "acting": "frightened",
@@ -8496,7 +8547,10 @@
       "nativeEvents": [],
       "profile": "frightened",
       "slot": "Expr_frightened_Claustrophobic_1",
-      "source": "Claustrophobic_1"
+      "source": "Claustrophobic_1",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_frightened_Claustrophobic_2": {
       "acting": "frightened",
@@ -8507,7 +8561,10 @@
       "nativeEvents": [],
       "profile": "frightened",
       "slot": "Expr_frightened_Claustrophobic_2",
-      "source": "Claustrophobic_2"
+      "source": "Claustrophobic_2",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_frightened_Claustrophobic_3": {
       "acting": "frightened",
@@ -8518,7 +8575,10 @@
       "nativeEvents": [],
       "profile": "frightened",
       "slot": "Expr_frightened_Claustrophobic_3",
-      "source": "Claustrophobic_3"
+      "source": "Claustrophobic_3",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_frightened_GunJammed_1": {
       "acting": "frightened",
@@ -9198,7 +9258,10 @@
       "nativeEvents": [],
       "profile": "slurred",
       "slot": "Expr_slurred_Agoraphobic_1",
-      "source": "Agoraphobic_1"
+      "source": "Agoraphobic_1",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_slurred_Agoraphobic_2": {
       "acting": "slurred",
@@ -9209,7 +9272,10 @@
       "nativeEvents": [],
       "profile": "slurred",
       "slot": "Expr_slurred_Agoraphobic_2",
-      "source": "Agoraphobic_2"
+      "source": "Agoraphobic_2",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_slurred_AmmoReserve_1": {
       "acting": "slurred",
@@ -9399,7 +9465,10 @@
       "nativeEvents": [],
       "profile": "slurred",
       "slot": "Expr_slurred_Claustrophobic_1",
-      "source": "Claustrophobic_1"
+      "source": "Claustrophobic_1",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_slurred_Claustrophobic_2": {
       "acting": "slurred",
@@ -9410,7 +9479,10 @@
       "nativeEvents": [],
       "profile": "slurred",
       "slot": "Expr_slurred_Claustrophobic_2",
-      "source": "Claustrophobic_2"
+      "source": "Claustrophobic_2",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_slurred_ColdMild_1": {
       "acting": "slurred",
@@ -10870,7 +10942,10 @@
       "nativeEvents": [],
       "profile": "stammer",
       "slot": "Expr_stammer_Agoraphobic_1",
-      "source": "Agoraphobic_1"
+      "source": "Agoraphobic_1",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_stammer_Agoraphobic_2": {
       "acting": "stammer",
@@ -10881,7 +10956,10 @@
       "nativeEvents": [],
       "profile": "stammer",
       "slot": "Expr_stammer_Agoraphobic_2",
-      "source": "Agoraphobic_2"
+      "source": "Agoraphobic_2",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_stammer_Agoraphobic_3": {
       "acting": "stammer",
@@ -10892,7 +10970,10 @@
       "nativeEvents": [],
       "profile": "stammer",
       "slot": "Expr_stammer_Agoraphobic_3",
-      "source": "Agoraphobic_3"
+      "source": "Agoraphobic_3",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Expr_stammer_Claustrophobic_1": {
       "acting": "stammer",
@@ -10903,7 +10984,10 @@
       "nativeEvents": [],
       "profile": "stammer",
       "slot": "Expr_stammer_Claustrophobic_1",
-      "source": "Claustrophobic_1"
+      "source": "Claustrophobic_1",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_stammer_Claustrophobic_2": {
       "acting": "stammer",
@@ -10914,7 +10998,10 @@
       "nativeEvents": [],
       "profile": "stammer",
       "slot": "Expr_stammer_Claustrophobic_2",
-      "source": "Claustrophobic_2"
+      "source": "Claustrophobic_2",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_stammer_Claustrophobic_3": {
       "acting": "stammer",
@@ -10925,7 +11012,10 @@
       "nativeEvents": [],
       "profile": "stammer",
       "slot": "Expr_stammer_Claustrophobic_3",
-      "source": "Claustrophobic_3"
+      "source": "Claustrophobic_3",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Expr_stammer_Hyperthermia_1": {
       "acting": "stammer",
@@ -12087,7 +12177,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillControlled_1",
-      "source": "KillControlled_1"
+      "source": "KillControlled_1",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "KillControlled_2": {
       "acting": "unspecified",
@@ -12098,7 +12191,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillControlled_2",
-      "source": "KillControlled_2"
+      "source": "KillControlled_2",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "KillControlled_3": {
       "acting": "unspecified",
@@ -12109,7 +12205,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillControlled_3",
-      "source": "KillControlled_3"
+      "source": "KillControlled_3",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "KillControlled_4": {
       "acting": "unspecified",
@@ -12120,7 +12219,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillControlled_4",
-      "source": "KillControlled_4"
+      "source": "KillControlled_4",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "KillControlled_5": {
       "acting": "unspecified",
@@ -12131,7 +12233,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillControlled_5",
-      "source": "KillControlled_5"
+      "source": "KillControlled_5",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "KillControlled_6": {
       "acting": "unspecified",
@@ -12142,7 +12247,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillControlled_6",
-      "source": "KillControlled_6"
+      "source": "KillControlled_6",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "KillControlled_7": {
       "acting": "unspecified",
@@ -12153,7 +12261,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillControlled_7",
-      "source": "KillControlled_7"
+      "source": "KillControlled_7",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "KillControlled_8": {
       "acting": "unspecified",
@@ -12164,7 +12275,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillControlled_8",
-      "source": "KillControlled_8"
+      "source": "KillControlled_8",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "KillCount_1": {
       "acting": "unspecified",
@@ -12340,7 +12454,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillUneasy_1",
-      "source": "KillUneasy_1"
+      "source": "KillUneasy_1",
+      "traits": [
+        "Cowardly",
+        "Fear of Blood"
+      ]
     },
     "KillUneasy_2": {
       "acting": "unspecified",
@@ -12351,7 +12469,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillUneasy_2",
-      "source": "KillUneasy_2"
+      "source": "KillUneasy_2",
+      "traits": [
+        "Cowardly",
+        "Fear of Blood"
+      ]
     },
     "KillUneasy_3": {
       "acting": "unspecified",
@@ -12362,7 +12484,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillUneasy_3",
-      "source": "KillUneasy_3"
+      "source": "KillUneasy_3",
+      "traits": [
+        "Cowardly",
+        "Fear of Blood"
+      ]
     },
     "KillUneasy_4": {
       "acting": "unspecified",
@@ -12373,7 +12499,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillUneasy_4",
-      "source": "KillUneasy_4"
+      "source": "KillUneasy_4",
+      "traits": [
+        "Cowardly",
+        "Fear of Blood"
+      ]
     },
     "KillUneasy_5": {
       "acting": "unspecified",
@@ -12384,7 +12514,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillUneasy_5",
-      "source": "KillUneasy_5"
+      "source": "KillUneasy_5",
+      "traits": [
+        "Cowardly",
+        "Fear of Blood"
+      ]
     },
     "KillUneasy_6": {
       "acting": "unspecified",
@@ -12395,7 +12529,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillUneasy_6",
-      "source": "KillUneasy_6"
+      "source": "KillUneasy_6",
+      "traits": [
+        "Cowardly",
+        "Fear of Blood"
+      ]
     },
     "KillUneasy_7": {
       "acting": "unspecified",
@@ -12406,7 +12544,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillUneasy_7",
-      "source": "KillUneasy_7"
+      "source": "KillUneasy_7",
+      "traits": [
+        "Cowardly",
+        "Fear of Blood"
+      ]
     },
     "KillUneasy_8": {
       "acting": "unspecified",
@@ -12417,7 +12559,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "KillUneasy_8",
-      "source": "KillUneasy_8"
+      "source": "KillUneasy_8",
+      "traits": [
+        "Cowardly",
+        "Fear of Blood"
+      ]
     },
     "Kill_1": {
       "acting": "unspecified",
@@ -14198,7 +14344,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "NicotineNeed_1",
-      "source": "NicotineNeed_1"
+      "source": "NicotineNeed_1",
+      "traits": [
+        "Smoker"
+      ]
     },
     "NicotineNeed_2": {
       "acting": "unspecified",
@@ -14209,7 +14358,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "NicotineNeed_2",
-      "source": "NicotineNeed_2"
+      "source": "NicotineNeed_2",
+      "traits": [
+        "Smoker"
+      ]
     },
     "NoxiousSmell_1": {
       "acting": "unspecified",
@@ -15601,7 +15753,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleBrave_1",
-      "source": "StartleBrave_1"
+      "source": "StartleBrave_1",
+      "traits": [
+        "Brave"
+      ]
     },
     "StartleBrave_2": {
       "acting": "unspecified",
@@ -15612,7 +15767,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleBrave_2",
-      "source": "StartleBrave_2"
+      "source": "StartleBrave_2",
+      "traits": [
+        "Brave"
+      ]
     },
     "StartleBrave_3": {
       "acting": "unspecified",
@@ -15623,7 +15781,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleBrave_3",
-      "source": "StartleBrave_3"
+      "source": "StartleBrave_3",
+      "traits": [
+        "Brave"
+      ]
     },
     "StartleBrave_4": {
       "acting": "unspecified",
@@ -15634,7 +15795,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleBrave_4",
-      "source": "StartleBrave_4"
+      "source": "StartleBrave_4",
+      "traits": [
+        "Brave"
+      ]
     },
     "StartleBrave_5": {
       "acting": "unspecified",
@@ -15645,7 +15809,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleBrave_5",
-      "source": "StartleBrave_5"
+      "source": "StartleBrave_5",
+      "traits": [
+        "Brave"
+      ]
     },
     "StartleBrave_6": {
       "acting": "unspecified",
@@ -15656,7 +15823,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleBrave_6",
-      "source": "StartleBrave_6"
+      "source": "StartleBrave_6",
+      "traits": [
+        "Brave"
+      ]
     },
     "StartleBrave_7": {
       "acting": "unspecified",
@@ -15667,7 +15837,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleBrave_7",
-      "source": "StartleBrave_7"
+      "source": "StartleBrave_7",
+      "traits": [
+        "Brave"
+      ]
     },
     "StartleBrave_8": {
       "acting": "unspecified",
@@ -15678,7 +15851,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleBrave_8",
-      "source": "StartleBrave_8"
+      "source": "StartleBrave_8",
+      "traits": [
+        "Brave"
+      ]
     },
     "StartleCowardly_1": {
       "acting": "unspecified",
@@ -15689,7 +15865,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleCowardly_1",
-      "source": "StartleCowardly_1"
+      "source": "StartleCowardly_1",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "StartleCowardly_2": {
       "acting": "unspecified",
@@ -15700,7 +15879,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleCowardly_2",
-      "source": "StartleCowardly_2"
+      "source": "StartleCowardly_2",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "StartleCowardly_3": {
       "acting": "unspecified",
@@ -15711,7 +15893,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleCowardly_3",
-      "source": "StartleCowardly_3"
+      "source": "StartleCowardly_3",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "StartleCowardly_4": {
       "acting": "unspecified",
@@ -15722,7 +15907,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleCowardly_4",
-      "source": "StartleCowardly_4"
+      "source": "StartleCowardly_4",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "StartleCowardly_5": {
       "acting": "unspecified",
@@ -15733,7 +15921,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleCowardly_5",
-      "source": "StartleCowardly_5"
+      "source": "StartleCowardly_5",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "StartleCowardly_6": {
       "acting": "unspecified",
@@ -15744,7 +15935,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleCowardly_6",
-      "source": "StartleCowardly_6"
+      "source": "StartleCowardly_6",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "StartleCowardly_7": {
       "acting": "unspecified",
@@ -15755,7 +15949,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleCowardly_7",
-      "source": "StartleCowardly_7"
+      "source": "StartleCowardly_7",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "StartleCowardly_8": {
       "acting": "unspecified",
@@ -15766,7 +15963,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleCowardly_8",
-      "source": "StartleCowardly_8"
+      "source": "StartleCowardly_8",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "StartleDesensitized_1": {
       "acting": "unspecified",
@@ -15777,7 +15977,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleDesensitized_1",
-      "source": "StartleDesensitized_1"
+      "source": "StartleDesensitized_1",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "StartleDesensitized_2": {
       "acting": "unspecified",
@@ -15788,7 +15991,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleDesensitized_2",
-      "source": "StartleDesensitized_2"
+      "source": "StartleDesensitized_2",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "StartleDesensitized_3": {
       "acting": "unspecified",
@@ -15799,7 +16005,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleDesensitized_3",
-      "source": "StartleDesensitized_3"
+      "source": "StartleDesensitized_3",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "StartleDesensitized_4": {
       "acting": "unspecified",
@@ -15810,7 +16019,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleDesensitized_4",
-      "source": "StartleDesensitized_4"
+      "source": "StartleDesensitized_4",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "StartleDesensitized_5": {
       "acting": "unspecified",
@@ -15821,7 +16033,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleDesensitized_5",
-      "source": "StartleDesensitized_5"
+      "source": "StartleDesensitized_5",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "StartleDesensitized_6": {
       "acting": "unspecified",
@@ -15832,7 +16047,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleDesensitized_6",
-      "source": "StartleDesensitized_6"
+      "source": "StartleDesensitized_6",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "StartleDesensitized_7": {
       "acting": "unspecified",
@@ -15843,7 +16061,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleDesensitized_7",
-      "source": "StartleDesensitized_7"
+      "source": "StartleDesensitized_7",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "StartleDesensitized_8": {
       "acting": "unspecified",
@@ -15854,7 +16075,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "StartleDesensitized_8",
-      "source": "StartleDesensitized_8"
+      "source": "StartleDesensitized_8",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "StartleNormal_1": {
       "acting": "unspecified",
@@ -16277,7 +16501,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitCold_1",
-      "source": "TraitCold_1"
+      "source": "TraitCold_1",
+      "traits": [
+        "Prone to Illness"
+      ]
     },
     "TraitCold_2": {
       "acting": "unspecified",
@@ -16288,7 +16515,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitCold_2",
-      "source": "TraitCold_2"
+      "source": "TraitCold_2",
+      "traits": [
+        "Prone to Illness"
+      ]
     },
     "TraitDriver_1": {
       "acting": "unspecified",
@@ -16299,7 +16529,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitDriver_1",
-      "source": "TraitDriver_1"
+      "source": "TraitDriver_1",
+      "traits": [
+        "Sunday Driver"
+      ]
     },
     "TraitDriver_2": {
       "acting": "unspecified",
@@ -16310,7 +16543,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitDriver_2",
-      "source": "TraitDriver_2"
+      "source": "TraitDriver_2",
+      "traits": [
+        "Sunday Driver"
+      ]
     },
     "TraitFall_1": {
       "acting": "unspecified",
@@ -16321,7 +16557,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitFall_1",
-      "source": "TraitFall_1"
+      "source": "TraitFall_1",
+      "traits": [
+        "Clumsy"
+      ]
     },
     "TraitFall_2": {
       "acting": "unspecified",
@@ -16332,7 +16571,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitFall_2",
-      "source": "TraitFall_2"
+      "source": "TraitFall_2",
+      "traits": [
+        "Clumsy"
+      ]
     },
     "TraitFull_1": {
       "acting": "unspecified",
@@ -16343,7 +16585,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitFull_1",
-      "source": "TraitFull_1"
+      "source": "TraitFull_1",
+      "traits": [
+        "Light Eater",
+        "Slow Metabolism"
+      ]
     },
     "TraitFull_2": {
       "acting": "unspecified",
@@ -16354,7 +16600,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitFull_2",
-      "source": "TraitFull_2"
+      "source": "TraitFull_2",
+      "traits": [
+        "Light Eater",
+        "Slow Metabolism"
+      ]
     },
     "TraitFumble_1": {
       "acting": "unspecified",
@@ -16365,7 +16615,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitFumble_1",
-      "source": "TraitFumble_1"
+      "source": "TraitFumble_1",
+      "traits": [
+        "All Thumbs"
+      ]
     },
     "TraitFumble_2": {
       "acting": "unspecified",
@@ -16376,7 +16629,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitFumble_2",
-      "source": "TraitFumble_2"
+      "source": "TraitFumble_2",
+      "traits": [
+        "All Thumbs"
+      ]
     },
     "TraitHunger_1": {
       "acting": "unspecified",
@@ -16387,7 +16643,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitHunger_1",
-      "source": "TraitHunger_1"
+      "source": "TraitHunger_1",
+      "traits": [
+        "Fast Metabolism",
+        "Hearty Appetite"
+      ]
     },
     "TraitHunger_2": {
       "acting": "unspecified",
@@ -16398,7 +16658,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitHunger_2",
-      "source": "TraitHunger_2"
+      "source": "TraitHunger_2",
+      "traits": [
+        "Fast Metabolism",
+        "Hearty Appetite"
+      ]
     },
     "TraitIlliterate_1": {
       "acting": "unspecified",
@@ -16409,7 +16673,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitIlliterate_1",
-      "source": "TraitIlliterate_1"
+      "source": "TraitIlliterate_1",
+      "traits": [
+        "Illiterate"
+      ]
     },
     "TraitIlliterate_2": {
       "acting": "unspecified",
@@ -16420,7 +16687,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitIlliterate_2",
-      "source": "TraitIlliterate_2"
+      "source": "TraitIlliterate_2",
+      "traits": [
+        "Illiterate"
+      ]
     },
     "TraitLoad_1": {
       "acting": "unspecified",
@@ -16431,7 +16701,12 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitLoad_1",
-      "source": "TraitLoad_1"
+      "source": "TraitLoad_1",
+      "traits": [
+        "Disorganized",
+        "Feeble",
+        "Weak"
+      ]
     },
     "TraitLoad_2": {
       "acting": "unspecified",
@@ -16442,7 +16717,12 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitLoad_2",
-      "source": "TraitLoad_2"
+      "source": "TraitLoad_2",
+      "traits": [
+        "Disorganized",
+        "Feeble",
+        "Weak"
+      ]
     },
     "TraitNausea_1": {
       "acting": "unspecified",
@@ -16453,7 +16733,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitNausea_1",
-      "source": "TraitNausea_1"
+      "source": "TraitNausea_1",
+      "traits": [
+        "Weak Stomach"
+      ]
     },
     "TraitNausea_2": {
       "acting": "unspecified",
@@ -16464,7 +16747,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitNausea_2",
-      "source": "TraitNausea_2"
+      "source": "TraitNausea_2",
+      "traits": [
+        "Weak Stomach"
+      ]
     },
     "TraitReading_1": {
       "acting": "unspecified",
@@ -16475,7 +16761,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitReading_1",
-      "source": "TraitReading_1"
+      "source": "TraitReading_1",
+      "traits": [
+        "Slow Reader"
+      ]
     },
     "TraitReading_2": {
       "acting": "unspecified",
@@ -16486,7 +16775,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitReading_2",
-      "source": "TraitReading_2"
+      "source": "TraitReading_2",
+      "traits": [
+        "Slow Reader"
+      ]
     },
     "TraitReluctant_1": {
       "acting": "unspecified",
@@ -16497,7 +16789,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitReluctant_1",
-      "source": "TraitReluctant_1"
+      "source": "TraitReluctant_1",
+      "traits": [
+        "Reluctant Fighter"
+      ]
     },
     "TraitReluctant_2": {
       "acting": "unspecified",
@@ -16508,7 +16803,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitReluctant_2",
-      "source": "TraitReluctant_2"
+      "source": "TraitReluctant_2",
+      "traits": [
+        "Reluctant Fighter"
+      ]
     },
     "TraitRest_1": {
       "acting": "unspecified",
@@ -16519,7 +16817,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitRest_1",
-      "source": "TraitRest_1"
+      "source": "TraitRest_1",
+      "traits": [
+        "Restless Sleeper",
+        "Sleepyhead"
+      ]
     },
     "TraitRest_2": {
       "acting": "unspecified",
@@ -16530,7 +16832,11 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitRest_2",
-      "source": "TraitRest_2"
+      "source": "TraitRest_2",
+      "traits": [
+        "Restless Sleeper",
+        "Sleepyhead"
+      ]
     },
     "TraitScratch_1": {
       "acting": "unspecified",
@@ -16541,7 +16847,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitScratch_1",
-      "source": "TraitScratch_1"
+      "source": "TraitScratch_1",
+      "traits": [
+        "Thin-skinned"
+      ]
     },
     "TraitScratch_2": {
       "acting": "unspecified",
@@ -16552,7 +16861,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitScratch_2",
-      "source": "TraitScratch_2"
+      "source": "TraitScratch_2",
+      "traits": [
+        "Thin-skinned"
+      ]
     },
     "TraitSight_1": {
       "acting": "unspecified",
@@ -16563,7 +16875,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitSight_1",
-      "source": "TraitSight_1"
+      "source": "TraitSight_1",
+      "traits": [
+        "Short Sighted"
+      ]
     },
     "TraitSight_2": {
       "acting": "unspecified",
@@ -16574,7 +16889,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitSight_2",
-      "source": "TraitSight_2"
+      "source": "TraitSight_2",
+      "traits": [
+        "Short Sighted"
+      ]
     },
     "TraitStudy_1": {
       "acting": "unspecified",
@@ -16585,7 +16903,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitStudy_1",
-      "source": "TraitStudy_1"
+      "source": "TraitStudy_1",
+      "traits": [
+        "Slow Learner"
+      ]
     },
     "TraitStudy_2": {
       "acting": "unspecified",
@@ -16596,7 +16917,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitStudy_2",
-      "source": "TraitStudy_2"
+      "source": "TraitStudy_2",
+      "traits": [
+        "Slow Learner"
+      ]
     },
     "TraitThirst_1": {
       "acting": "unspecified",
@@ -16607,7 +16931,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitThirst_1",
-      "source": "TraitThirst_1"
+      "source": "TraitThirst_1",
+      "traits": [
+        "High Thirst"
+      ]
     },
     "TraitThirst_2": {
       "acting": "unspecified",
@@ -16618,7 +16945,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitThirst_2",
-      "source": "TraitThirst_2"
+      "source": "TraitThirst_2",
+      "traits": [
+        "High Thirst"
+      ]
     },
     "TraitVigilant_1": {
       "acting": "unspecified",
@@ -16629,7 +16959,12 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitVigilant_1",
-      "source": "TraitVigilant_1"
+      "source": "TraitVigilant_1",
+      "traits": [
+        "Conspicuous",
+        "Deaf",
+        "Hard of Hearing"
+      ]
     },
     "TraitVigilant_2": {
       "acting": "unspecified",
@@ -16640,7 +16975,12 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitVigilant_2",
-      "source": "TraitVigilant_2"
+      "source": "TraitVigilant_2",
+      "traits": [
+        "Conspicuous",
+        "Deaf",
+        "Hard of Hearing"
+      ]
     },
     "TraitWound_1": {
       "acting": "unspecified",
@@ -16651,7 +16991,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitWound_1",
-      "source": "TraitWound_1"
+      "source": "TraitWound_1",
+      "traits": [
+        "Slow Healer"
+      ]
     },
     "TraitWound_2": {
       "acting": "unspecified",
@@ -16662,7 +17005,10 @@
       "nativeEvents": [],
       "profile": "contextual",
       "slot": "TraitWound_2",
-      "source": "TraitWound_2"
+      "source": "TraitWound_2",
+      "traits": [
+        "Slow Healer"
+      ]
     },
     "Uncomfortable_1": {
       "acting": "unspecified",
@@ -17285,7 +17631,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_Agoraphobic_1",
-      "source": "Agoraphobic_1"
+      "source": "Agoraphobic_1",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Whisper_Agoraphobic_2": {
       "acting": "unspecified",
@@ -17296,7 +17645,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_Agoraphobic_2",
-      "source": "Agoraphobic_2"
+      "source": "Agoraphobic_2",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Whisper_Agoraphobic_3": {
       "acting": "unspecified",
@@ -17307,7 +17659,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_Agoraphobic_3",
-      "source": "Agoraphobic_3"
+      "source": "Agoraphobic_3",
+      "traits": [
+        "Agoraphobic"
+      ]
     },
     "Whisper_AmmoCount_1": {
       "acting": "unspecified",
@@ -17626,7 +17981,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_BloodAversion_1",
-      "source": "BloodAversion_1"
+      "source": "BloodAversion_1",
+      "traits": [
+        "Fear of Blood"
+      ]
     },
     "Whisper_BloodAversion_2": {
       "acting": "unspecified",
@@ -17637,7 +17995,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_BloodAversion_2",
-      "source": "BloodAversion_2"
+      "source": "BloodAversion_2",
+      "traits": [
+        "Fear of Blood"
+      ]
     },
     "Whisper_BoredMore_1": {
       "acting": "unspecified",
@@ -17816,7 +18177,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_Claustrophobic_1",
-      "source": "Claustrophobic_1"
+      "source": "Claustrophobic_1",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Whisper_Claustrophobic_2": {
       "acting": "unspecified",
@@ -17827,7 +18191,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_Claustrophobic_2",
-      "source": "Claustrophobic_2"
+      "source": "Claustrophobic_2",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Whisper_Claustrophobic_3": {
       "acting": "unspecified",
@@ -17838,7 +18205,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_Claustrophobic_3",
-      "source": "Claustrophobic_3"
+      "source": "Claustrophobic_3",
+      "traits": [
+        "Claustrophobic"
+      ]
     },
     "Whisper_ColdMild_1": {
       "acting": "unspecified",
@@ -19648,7 +20018,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_NicotineNeed_1",
-      "source": "NicotineNeed_1"
+      "source": "NicotineNeed_1",
+      "traits": [
+        "Smoker"
+      ]
     },
     "Whisper_NicotineNeed_2": {
       "acting": "unspecified",
@@ -19659,7 +20032,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_NicotineNeed_2",
-      "source": "NicotineNeed_2"
+      "source": "NicotineNeed_2",
+      "traits": [
+        "Smoker"
+      ]
     },
     "Whisper_NoxiousSmell_3": {
       "acting": "unspecified",
@@ -20826,7 +21202,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_StartleBrave_1",
-      "source": "StartleBrave_1"
+      "source": "StartleBrave_1",
+      "traits": [
+        "Brave"
+      ]
     },
     "Whisper_StartleBrave_2": {
       "acting": "unspecified",
@@ -20837,7 +21216,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_StartleBrave_2",
-      "source": "StartleBrave_2"
+      "source": "StartleBrave_2",
+      "traits": [
+        "Brave"
+      ]
     },
     "Whisper_StartleCowardly_1": {
       "acting": "unspecified",
@@ -20848,7 +21230,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_StartleCowardly_1",
-      "source": "StartleCowardly_1"
+      "source": "StartleCowardly_1",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "Whisper_StartleCowardly_2": {
       "acting": "unspecified",
@@ -20859,7 +21244,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_StartleCowardly_2",
-      "source": "StartleCowardly_2"
+      "source": "StartleCowardly_2",
+      "traits": [
+        "Cowardly"
+      ]
     },
     "Whisper_StartleDesensitized_1": {
       "acting": "unspecified",
@@ -20870,7 +21258,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_StartleDesensitized_1",
-      "source": "StartleDesensitized_1"
+      "source": "StartleDesensitized_1",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "Whisper_StartleDesensitized_2": {
       "acting": "unspecified",
@@ -20881,7 +21272,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_StartleDesensitized_2",
-      "source": "StartleDesensitized_2"
+      "source": "StartleDesensitized_2",
+      "traits": [
+        "Desensitized"
+      ]
     },
     "Whisper_StartleNormal_1": {
       "acting": "unspecified",
@@ -21185,7 +21579,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitCold_1",
-      "source": "TraitCold_1"
+      "source": "TraitCold_1",
+      "traits": [
+        "Prone to Illness"
+      ]
     },
     "Whisper_TraitCold_2": {
       "acting": "unspecified",
@@ -21196,7 +21593,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitCold_2",
-      "source": "TraitCold_2"
+      "source": "TraitCold_2",
+      "traits": [
+        "Prone to Illness"
+      ]
     },
     "Whisper_TraitDriver_1": {
       "acting": "unspecified",
@@ -21207,7 +21607,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitDriver_1",
-      "source": "TraitDriver_1"
+      "source": "TraitDriver_1",
+      "traits": [
+        "Sunday Driver"
+      ]
     },
     "Whisper_TraitDriver_2": {
       "acting": "unspecified",
@@ -21218,7 +21621,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitDriver_2",
-      "source": "TraitDriver_2"
+      "source": "TraitDriver_2",
+      "traits": [
+        "Sunday Driver"
+      ]
     },
     "Whisper_TraitFall_1": {
       "acting": "unspecified",
@@ -21229,7 +21635,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitFall_1",
-      "source": "TraitFall_1"
+      "source": "TraitFall_1",
+      "traits": [
+        "Clumsy"
+      ]
     },
     "Whisper_TraitFall_2": {
       "acting": "unspecified",
@@ -21240,7 +21649,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitFall_2",
-      "source": "TraitFall_2"
+      "source": "TraitFall_2",
+      "traits": [
+        "Clumsy"
+      ]
     },
     "Whisper_TraitFull_1": {
       "acting": "unspecified",
@@ -21251,7 +21663,11 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitFull_1",
-      "source": "TraitFull_1"
+      "source": "TraitFull_1",
+      "traits": [
+        "Light Eater",
+        "Slow Metabolism"
+      ]
     },
     "Whisper_TraitFull_2": {
       "acting": "unspecified",
@@ -21262,7 +21678,11 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitFull_2",
-      "source": "TraitFull_2"
+      "source": "TraitFull_2",
+      "traits": [
+        "Light Eater",
+        "Slow Metabolism"
+      ]
     },
     "Whisper_TraitFumble_1": {
       "acting": "unspecified",
@@ -21273,7 +21693,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitFumble_1",
-      "source": "TraitFumble_1"
+      "source": "TraitFumble_1",
+      "traits": [
+        "All Thumbs"
+      ]
     },
     "Whisper_TraitFumble_2": {
       "acting": "unspecified",
@@ -21284,7 +21707,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitFumble_2",
-      "source": "TraitFumble_2"
+      "source": "TraitFumble_2",
+      "traits": [
+        "All Thumbs"
+      ]
     },
     "Whisper_TraitHunger_1": {
       "acting": "unspecified",
@@ -21295,7 +21721,11 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitHunger_1",
-      "source": "TraitHunger_1"
+      "source": "TraitHunger_1",
+      "traits": [
+        "Fast Metabolism",
+        "Hearty Appetite"
+      ]
     },
     "Whisper_TraitHunger_2": {
       "acting": "unspecified",
@@ -21306,7 +21736,11 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitHunger_2",
-      "source": "TraitHunger_2"
+      "source": "TraitHunger_2",
+      "traits": [
+        "Fast Metabolism",
+        "Hearty Appetite"
+      ]
     },
     "Whisper_TraitIlliterate_1": {
       "acting": "unspecified",
@@ -21317,7 +21751,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitIlliterate_1",
-      "source": "TraitIlliterate_1"
+      "source": "TraitIlliterate_1",
+      "traits": [
+        "Illiterate"
+      ]
     },
     "Whisper_TraitIlliterate_2": {
       "acting": "unspecified",
@@ -21328,7 +21765,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitIlliterate_2",
-      "source": "TraitIlliterate_2"
+      "source": "TraitIlliterate_2",
+      "traits": [
+        "Illiterate"
+      ]
     },
     "Whisper_TraitLoad_1": {
       "acting": "unspecified",
@@ -21339,7 +21779,12 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitLoad_1",
-      "source": "TraitLoad_1"
+      "source": "TraitLoad_1",
+      "traits": [
+        "Disorganized",
+        "Feeble",
+        "Weak"
+      ]
     },
     "Whisper_TraitLoad_2": {
       "acting": "unspecified",
@@ -21350,7 +21795,12 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitLoad_2",
-      "source": "TraitLoad_2"
+      "source": "TraitLoad_2",
+      "traits": [
+        "Disorganized",
+        "Feeble",
+        "Weak"
+      ]
     },
     "Whisper_TraitNausea_1": {
       "acting": "unspecified",
@@ -21361,7 +21811,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitNausea_1",
-      "source": "TraitNausea_1"
+      "source": "TraitNausea_1",
+      "traits": [
+        "Weak Stomach"
+      ]
     },
     "Whisper_TraitNausea_2": {
       "acting": "unspecified",
@@ -21372,7 +21825,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitNausea_2",
-      "source": "TraitNausea_2"
+      "source": "TraitNausea_2",
+      "traits": [
+        "Weak Stomach"
+      ]
     },
     "Whisper_TraitReading_1": {
       "acting": "unspecified",
@@ -21383,7 +21839,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitReading_1",
-      "source": "TraitReading_1"
+      "source": "TraitReading_1",
+      "traits": [
+        "Slow Reader"
+      ]
     },
     "Whisper_TraitReading_2": {
       "acting": "unspecified",
@@ -21394,7 +21853,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitReading_2",
-      "source": "TraitReading_2"
+      "source": "TraitReading_2",
+      "traits": [
+        "Slow Reader"
+      ]
     },
     "Whisper_TraitReluctant_1": {
       "acting": "unspecified",
@@ -21405,7 +21867,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitReluctant_1",
-      "source": "TraitReluctant_1"
+      "source": "TraitReluctant_1",
+      "traits": [
+        "Reluctant Fighter"
+      ]
     },
     "Whisper_TraitReluctant_2": {
       "acting": "unspecified",
@@ -21416,7 +21881,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitReluctant_2",
-      "source": "TraitReluctant_2"
+      "source": "TraitReluctant_2",
+      "traits": [
+        "Reluctant Fighter"
+      ]
     },
     "Whisper_TraitRest_1": {
       "acting": "unspecified",
@@ -21427,7 +21895,11 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitRest_1",
-      "source": "TraitRest_1"
+      "source": "TraitRest_1",
+      "traits": [
+        "Restless Sleeper",
+        "Sleepyhead"
+      ]
     },
     "Whisper_TraitRest_2": {
       "acting": "unspecified",
@@ -21438,7 +21910,11 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitRest_2",
-      "source": "TraitRest_2"
+      "source": "TraitRest_2",
+      "traits": [
+        "Restless Sleeper",
+        "Sleepyhead"
+      ]
     },
     "Whisper_TraitScratch_1": {
       "acting": "unspecified",
@@ -21449,7 +21925,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitScratch_1",
-      "source": "TraitScratch_1"
+      "source": "TraitScratch_1",
+      "traits": [
+        "Thin-skinned"
+      ]
     },
     "Whisper_TraitScratch_2": {
       "acting": "unspecified",
@@ -21460,7 +21939,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitScratch_2",
-      "source": "TraitScratch_2"
+      "source": "TraitScratch_2",
+      "traits": [
+        "Thin-skinned"
+      ]
     },
     "Whisper_TraitSight_1": {
       "acting": "unspecified",
@@ -21471,7 +21953,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitSight_1",
-      "source": "TraitSight_1"
+      "source": "TraitSight_1",
+      "traits": [
+        "Short Sighted"
+      ]
     },
     "Whisper_TraitSight_2": {
       "acting": "unspecified",
@@ -21482,7 +21967,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitSight_2",
-      "source": "TraitSight_2"
+      "source": "TraitSight_2",
+      "traits": [
+        "Short Sighted"
+      ]
     },
     "Whisper_TraitStudy_1": {
       "acting": "unspecified",
@@ -21493,7 +21981,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitStudy_1",
-      "source": "TraitStudy_1"
+      "source": "TraitStudy_1",
+      "traits": [
+        "Slow Learner"
+      ]
     },
     "Whisper_TraitStudy_2": {
       "acting": "unspecified",
@@ -21504,7 +21995,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitStudy_2",
-      "source": "TraitStudy_2"
+      "source": "TraitStudy_2",
+      "traits": [
+        "Slow Learner"
+      ]
     },
     "Whisper_TraitThirst_1": {
       "acting": "unspecified",
@@ -21515,7 +22009,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitThirst_1",
-      "source": "TraitThirst_1"
+      "source": "TraitThirst_1",
+      "traits": [
+        "High Thirst"
+      ]
     },
     "Whisper_TraitThirst_2": {
       "acting": "unspecified",
@@ -21526,7 +22023,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitThirst_2",
-      "source": "TraitThirst_2"
+      "source": "TraitThirst_2",
+      "traits": [
+        "High Thirst"
+      ]
     },
     "Whisper_TraitVigilant_1": {
       "acting": "unspecified",
@@ -21537,7 +22037,12 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitVigilant_1",
-      "source": "TraitVigilant_1"
+      "source": "TraitVigilant_1",
+      "traits": [
+        "Conspicuous",
+        "Deaf",
+        "Hard of Hearing"
+      ]
     },
     "Whisper_TraitVigilant_2": {
       "acting": "unspecified",
@@ -21548,7 +22053,12 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitVigilant_2",
-      "source": "TraitVigilant_2"
+      "source": "TraitVigilant_2",
+      "traits": [
+        "Conspicuous",
+        "Deaf",
+        "Hard of Hearing"
+      ]
     },
     "Whisper_TraitWound_1": {
       "acting": "unspecified",
@@ -21559,7 +22069,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitWound_1",
-      "source": "TraitWound_1"
+      "source": "TraitWound_1",
+      "traits": [
+        "Slow Healer"
+      ]
     },
     "Whisper_TraitWound_2": {
       "acting": "unspecified",
@@ -21570,7 +22083,10 @@
       "nativeEvents": [],
       "profile": "whisper",
       "slot": "Whisper_TraitWound_2",
-      "source": "TraitWound_2"
+      "source": "TraitWound_2",
+      "traits": [
+        "Slow Healer"
+      ]
     },
     "Whisper_Unhappy_1": {
       "acting": "unspecified",
@@ -22088,10 +22604,10 @@
     "42/media/lua/shared/CSV/RecoveryRules.lua": "return {\n[\"ReliefAnger\"]={field=\"anger\",source=\"Angry\",threshold=1},\n[\"ReliefBoredom\"]={field=\"boredom\",source=\"Bored\",threshold=1},\n[\"ReliefSobriety\"]={field=\"drunk\",source=\"Drunk\",threshold=1},\n[\"ReliefBleeding\"]={field=\"bleeding\",source=\"Bleeding\",threshold=1},\n[\"ReliefEndurance\"]={field=\"endurance\",source=\"Endurance\",threshold=2},\n[\"ReliefThirst\"]={field=\"thirst\",source=\"Thirst\",threshold=2},\n[\"ReliefHunger\"]={field=\"hunger\",source=\"Hungry\",threshold=1},\n[\"ReliefCold\"]={field=\"cold\",source=\"Hypothermia\",threshold=1},\n[\"ReliefHeat\"]={field=\"heat\",source=\"Hyperthermia\",threshold=1},\n[\"ReliefRest\"]={field=\"tired\",source=\"Tired\",threshold=1},\n[\"ReliefPain\"]={field=\"pain\",source=\"Pain\",threshold=1},\n[\"ReliefStress\"]={field=\"stress\",source=\"Stress\",threshold=1},\n[\"ReliefWet\"]={field=\"wet\",source=\"Wet\",threshold=1},\n[\"ReliefLoad\"]={field=\"load\",source=\"HeavyLoad\",threshold=1},\n[\"ReliefSickness\"]={field=\"sick\",source=\"Sick\",threshold=1},\n[\"ReliefColdSymptoms\"]={field=\"coldSymptoms\",source=\"HasACold\",threshold=1},\n[\"ReliefMood\"]={field=\"unhappy\",source=\"Unhappy\",threshold=1},\n[\"ReliefDiscomfort\"]={field=\"discomfort\",source=\"Uncomfortable\",threshold=1},\n}\n",
     "42/media/lua/shared/CSV/ReloadRules.lua": "local R={groups={ReloadPanic=true,ReloadBreathless=true,ReloadSteady=true,ReloadShaken=true}}\nfunction R.group(f)\n local active=require('CSV/Concealment').active(f)\n local threat=active or (f.near or 0)>0 and (f.visible or 0)>0 or f.humanThreat==true\n if not threat then return nil,'no_verified_threat' end\n if f.fire then return nil,'on_fire' end\n if f.sneaking and not active then return nil,'concealed' end\n if (f.endurance or 0)>=3 then return 'ReloadBreathless' end\n if (f.panic or 0)>=4 then return 'ReloadPanic' end\n if (f.unhappy or 0)>=3 and (f.stress or 0)>=2 then return 'ReloadShaken' end\n local traits=f.traits or {}\n if (traits.brave or traits.desensitized) and (f.panic or 0)<3 then return 'ReloadSteady' end\n if (f.panic or 0)>=2 then return 'ReloadPanic' end\n return 'ReloadSteady'\nend\nfunction R.allowed(id,event)\n return not (id=='ReloadPanic_3' and event and event.insert)\nend\nreturn R\n",
     "42/media/lua/shared/CSV/Rules.lua": "local R={policies={}}\nR.policies['Agoraphobic']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['AnimalTracks']={pool={1},event=true,levels={1,2,2,3}}\nR.policies['Bleeding']={pool={1,3},event=false,levels={1,1,1,3}}\nR.policies['Bored']={pool={2},event=false,levels={2,2,2,2}}\nR.policies['ChopTree']={pool={1,2},event=true,levels={1,2,2,3}}\nR.policies['Claustrophobic']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['Drunk']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['Endurance']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['Explore']={pool={2},event=true,levels={1,2,2,3}}\nR.policies['FoodEaten']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['FoodRaw']={pool={1,2,3},event=true,levels={1,2,2,3}}\nR.policies['FoodRotten']={pool={1},event=true,levels={1,2,2,3}}\nR.policies['Foraged']={pool={1,3},event=true,levels={1,2,2,3}}\nR.policies['FoundLoot']={pool={},event=true,levels={1,2,2,3}}\nR.policies['GunJammed']={pool={1,2,3},event=true,levels={1,2,2,3}}\nR.policies['HasACold']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['HeavyLoad']={pool={2,3},event=false,levels={2,2,2,3}}\nR.policies['Holes']={pool={1,2},event=true,levels={1,2,2,3}}\nR.policies['Hungry']={pool={1,2},event=false,levels={1,2,2,2}}\nR.policies['Hyperthermia']={pool={2,3},event=false,levels={2,2,2,3}}\nR.policies['Hypothermia']={pool={2,3},event=false,levels={2,2,2,3}}\nR.policies['Injured']={pool={2,3},event=false,levels={2,2,2,3}}\nR.policies['Kill']={pool={1,2},event=true,levels={1,2,2,3}}\nR.policies['LevelUp']={pool={1,2,3},event=true,levels={1,2,2,3}}\nR.policies['LowAmmo']={pool={1,2,3},event=true,levels={1,2,2,3}}\nR.policies['MultiHit']={pool={},event=true,levels={1,2,2,3}}\nR.policies['OnDawn']={pool={1,2},event=true,levels={1,2,2,3}}\nR.policies['OnDusk']={pool={1,2,3},event=true,levels={1,2,2,3}}\nR.policies['OutOfAmmo']={pool={1,2,3},event=true,levels={1,2,2,3}}\nR.policies['Pain']={pool={1,3},event=false,levels={1,1,1,3}}\nR.policies['Panic']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['PanicCallback']={pool={},event=false,levels={1,2,2,3}}\nR.policies['Sick']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['SickFromFood']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['Stress']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['Thirst']={pool={1,2},event=false,levels={1,2,2,2}}\nR.policies['Tired']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['Unhappy']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['VehicleDamage']={pool={1,2},event=true,levels={1,2,2,3}}\nR.policies['Wet']={pool={1,2},event=false,levels={1,2,2,2}}\nR.policies['Windchill']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['NoxiousSmell']={pool={3},event=false,levels={3,3,3,3}}\nR.policies['Uncomfortable']={pool={},event=false,levels={1,2,2,3}}\nR.policies['CantSprint']={pool={1,2,3},event=false,levels={1,2,2,3}}\nR.policies['Angry']={pool={1,2,3},event=false,levels={1,2,2,3}}\nfunction R.pool(V,player,group,intensity,maximum,facts,voice)\n    local groups=(V.bank and V.bank(voice).data or V.data).groups\n    local s=facts or require('CSV/State').capture(player)\n    if group=='FoundLoot' then return {s.pickup==true and groups.FoundLoot[3] or groups.Explore[2]} end\n    if group=='ChopTree' and s.treeDown==true then return {groups.ChopTree[3]} end\n    if group=='MultiHit' and s.reactiveCrowd and s.reactiveCrowd>=3 then return groups.MultiHit end\n    if group=='Wet' and s.cold and s.cold>=2 and intensity and intensity>=3 then return {groups.Wet[3]} end\n    if group=='PanicCallback' then return {groups.Panic[1]} end\n    local policy=R.policies[group];if not policy then return nil end\n    if group=='GunJammed' and s.jammed==false then return {} end\n    if group=='OutOfAmmo' and (s.empty~=true or s.jammed==true) then return {} end\n    if group=='Panic' and s.fire==true then return {groups.Panic[3]} end\n    local out={}\n    if not policy.event and V.finite(maximum) and maximum>1 then\n        local level=math.max(1,math.min(4,math.floor(1+3*(math.max(1,intensity or 1)-1)/(maximum-1)+0.5)))\n        local index=policy.levels[level]\n        for _,i in ipairs(policy.pool)do if i==index then out[1]=(groups[group] or {})[i] end end\n    else\n        for _,i in ipairs(policy.pool)do out[#out+1]=(groups[group] or {})[i] end\n    end\n    return out\nend\nreturn R\n",
-    "42/media/lua/shared/CSV/Safety.lua": "local M={}\nfunction M.clear(s)\n if s.near~=0 or type(s.visible)~='number' or s.humanThreat==true or s.nativeAlert or require('CSV/Concealment').active(s) then return false end\n return s.encounterThreat==false or s.visible==0 and s.encounterThreat~=true\nend\nfunction M.settled(s)return M.clear(s) and s.recentThreat==false end\nreturn M\n",
+    "42/media/lua/shared/CSV/Safety.lua": "local M={}\nfunction M.clear(s)\n if s.threatScanIncomplete or s.near~=0 or type(s.visible)~='number' or s.humanThreat==true or s.nativeAlert or require('CSV/Concealment').active(s) then return false end\n return s.encounterThreat==false or s.visible==0 and s.encounterThreat~=true\nend\nfunction M.settled(s)return M.clear(s) and s.recentThreat==false end\nreturn M\n",
     "42/media/lua/shared/CSV/SemanticSpeech.lua": "local M={repeatMs=90000,meaningRepeatMs=30000}\n-- Only audited equivalents share a short cooldown. Needs keep their severity,\n-- and danger/injury events are not placed behind this additional gate.\nlocal meanings={StillAlive_1='survived',StillAlive_2='survived',StillAlive_3='survived',\n AfterZombieSteady_2='survived',InjuryAftermath_1='survived',InjuryAftermath_3='survived',\n Thirst_1='water1',Thirst_2='water2',Thirst_3='water3',NeedThirst_3='water3',\n ThirstCritical_1='water4',ThirstCritical_2='water4',ThirstCritical_3='water4',\n Hungry_1='food1',Hungry_2='food2',Hungry_3='food3',NeedHungry_4='food4',\n HungerSevere_1='food3',HungerSevere_2='food3',HungerSevere_3='food3'}\nfunction M.meaning(line)return meanings[M.source(line.id)]end\nfunction M.source(id)\n local nextId=require('CSV/Expressions').source(id) or id:match('^Whisper_(.+)$')\n if nextId and nextId~=id then return M.source(nextId)end\n return id\nend\nfunction M.key(line)\n -- Recorded wording, not event group, owns repetition across reused clips and deliveries.\n return 'text:'..(line.text or M.source(line.id)):lower():gsub('[%p%s]+',' ')\nend\nfunction M.stamp(history,line)\n return math.max(history[M.key(line)] or 0,history[M.source(line.id)] or 0,history[line.id] or 0)\nend\nfunction M.recent(history,line,now)\n local at=M.stamp(history,line)\n if at>0 and now>=at and now-at<M.repeatMs then return true end\n local meaning=M.meaning(line);local used=meaning and history['meaning:'..meaning]\n return used~=nil and now>=used and now-used<M.meaningRepeatMs\nend\nfunction M.allowed(line,f)\n local id=M.source(line.id)\n if id:match('^CriticalFading_') then return type(f.health)=='number' and f.health>0 and f.health<=25 end\n if id:match('^CriticalWound_') then return type(f.health)=='number' and f.health>0 and f.health<=25 and ((f.bleeding or 0)>0 or f.acute==true) end\n if not require('CSV/KillSpeech').allowed(id,f) then return false end\n if id=='InjuryAftermath_3' then return type(f.pain)=='number' and f.pain>0 end\n if id=='MortalFear_3' then return (f.endurance or 0)>=2 or (f.panic or 0)>=4 end\n return true\nend\nfunction M.shared(C,V,player,voice,line,group,f)\n if not line or not V.extended(voice) or not require('CSV/Extras').approved then return line end\n if (group=='Panic' or group=='PanicCallback') and (f.panic or 0)>=3 and require('CSV/Concealment').active(f) and not f.fire then\n  local h=C.history[player] or {};local best=line;local stamp=M.stamp(h,line)\n  for _,id in ipairs({'MortalFear_1','MortalFear_2','MortalFear_3'})do\n   local candidate=V.bank(voice).extras.catalog[id]\n   candidate=candidate and V.localize(voice,candidate)\n   if candidate and V.clip(voice,id) and M.allowed(candidate,f) then\n    local used=M.stamp(h,candidate)\n    if used<stamp then best=candidate;stamp=used end\n   end\n  end\n  return best\n end\n return line\nend\nfunction M.remember(h,line,now)\n h[M.key(line)]=now;h[M.source(line.id)]=now\n local meaning=M.meaning(line);if meaning then h['meaning:'..meaning]=now end\nend\nreturn M\n",
-    "42/media/lua/shared/CSV/TraitSpeechRules.lua": "local R={groups={TraitRest='Tired',TraitWound='Pain',TraitFumble='Explore',TraitReading='Explore',TraitStudy='Explore',TraitFall='Explore',TraitScratch='Pain',TraitIlliterate='Explore'}}\nlocal function above(value,min)return type(value)=='number' and value>=min end\nfunction R.context(group,s)\n local t=s.traits or {}\n if s.fire or require('CSV/Concealment').active(s) or above(s.attacking,1) or s.humanThreat then return end\n if group=='Threat' and above(s.near,1) and s.panic==0 then\n  if t.sunday and s.traitDriver==true then return 'TraitDriver' end\n  if (t.deaf or t.hardHearing or t.conspicuous) and above(s.visible,1) then return 'TraitVigilant' end\n end\n if above(s.near,1) then return end\n if group=='Hungry' and (t.hearty or t.fastMetabolism) and above(s.hunger,1) and s.hunger<3 then return 'TraitHunger' end\n if group=='Thirst' and t.highThirst and above(s.thirst,1) and s.thirst<3 then return 'TraitThirst' end\n if group=='HeavyLoad' and (t.weak or t.feeble or t.disorganized) and above(s.load,1) and above(s.endurance,1) then return 'TraitLoad' end\n if group=='HasACold' and t.illness and above(s.coldSymptoms,1) then return 'TraitCold' end\n if group=='Sick' and t.weakStomach and above(s.sick,1) then return 'TraitNausea' end\n if group=='FoodEaten' and (t.lightEater or t.slowMetabolism) and s.hunger==0 then return 'TraitFull' end\n if group=='Darkness' and t.shortSighted and require('CSV/OutcomeRules').classify(s.outcome)=='Darkness' then return 'TraitSight' end\nend\nfunction R.classify(e)\n if not e or not e.verified or not e.completed or e.cancelled then return end\n local f=e.after or {};local t=f.traits or {};local g=e.traitGroup\n if not f.awake then return end\n if e.actionObject and f.actionObject~=e.actionObject then return end\n if e.cutAt and f.cutAt~=e.cutAt then return end\n if g=='TraitRest' and (t.restless or t.sleepy) and above(f.tired,2) then return g end\n if g=='TraitWound' and t.slowHealer and f.lingering then return g end\n if g=='TraitFumble' and t.allThumbs and f.action=='ISInventoryTransferAction' and above(f.visible,1) then return g end\n if g=='TraitReading' and t.slowReader and f.action=='ISReadABook' and above(f.stress,1) then return g end\n if g=='TraitStudy' and t.slowLearner and f.action=='ISResearchRecipe' then return g end\n if g=='TraitFall' and t.clumsy and f.falling==false then return g end\n if g=='TraitScratch' and t.thinSkin and f.recentCut then return g end\n if g=='TraitIlliterate' and t.illiterate and f.inspectLiterature then return g end\nend\nreturn R\n",
-    "42/media/lua/shared/CSV/Traits.lua": "local T={}\nlocal names={brave='BRAVE',cowardly='COWARDLY',desensitized='DESENSITIZED',agoraphobic='AGORAPHOBIC',claustrophobic='CLAUSTROPHOBIC',hemophobic='HEMOPHOBIC',smoker='SMOKER'}\nfor key,value in pairs({allThumbs='ALL_THUMBS',clumsy='CLUMSY',conspicuous='CONSPICUOUS',disorganized='DISORGANIZED',hearty='HEARTY_APPETITE',highThirst='HIGH_THIRST',illiterate='ILLITERATE',outOfShape='OUT_OF_SHAPE',illness='PRONE_TO_ILLNESS',feeble='FEEBLE',pacifist='PACIFIST',restless='INSOMNIAC',shortSighted='SHORT_SIGHTED',asthmatic='ASTHMATIC',sleepy='NEEDS_MORE_SLEEP',slowHealer='SLOW_HEALER',slowLearner='SLOW_LEARNER',slowReader='SLOW_READER',sunday='SUNDAY_DRIVER',thinSkin='THIN_SKINNED',unfit='UNFIT',weak='WEAK',weakStomach='WEAK_STOMACH',fastMetabolism='WEIGHT_LOSS',slowMetabolism='WEIGHT_GAIN',lightEater='LIGHT_EATER',deaf='DEAF',hardHearing='HARD_OF_HEARING'})do names[key]=value end\n\nfunction T.read(player)\n local result={}\n for name,constant in pairs(names)do\n  local trait=CharacterTrait and CharacterTrait[constant]\n  if trait then local ok,value=pcall(function()return player:hasTrait(trait)end);if ok and type(value)=='boolean' then result[name]=value end end\n end\n return result\nend\nfunction T.startle(s)\n local t=s.traits or {}\n -- Actual distress wins over a character-sheet preference. Do not add panic twice.\n if (s.panic or 0)>=3 then return 'StartleCowardly' end\n if t.desensitized then return 'StartleDesensitized' end\n if t.cowardly then return 'StartleCowardly' end\n if t.brave then return 'StartleBrave' end\n return 'StartleNormal'\nend\nfunction T.phobiaAllowed(group,s)\n local t=s.traits or {}\n if group=='Agoraphobic' then return t.agoraphobic~=false and s.outside~=false end\n if group=='Claustrophobic' then return t.claustrophobic~=false and s.outside~=true end\n return true\nend\nfunction T.context(group,s)\n local selected=require('CSV/TraitSpeechRules').context(group,s)\n if selected then return selected end\n local t=s.traits or {}\n if s.fire or require('CSV/Concealment').active(s) or (s.near or 0)>0 or s.humanThreat then return nil end\n if (group=='Stress' or group=='Panic') and t.hemophobic and (s.bleeding or 0)>0 and (s.panic or 0)>0 then return 'BloodAversion' end\n if group=='Stress' and t.smoker and (s.nicotineStress or 0)>0 then return 'NicotineNeed' end\n if group=='Endurance' and (s.endurance or 0)>=3 and s.sneaking==false and (s.pain or 0)==0 and (s.bleeding or 0)==0 and (s.drunk or 0)==0 and (s.coldSymptoms or 0)==0 then return 'ExhaustedCoping' end\nend\nfunction T.startleAllowed(id,s)\n local n=tonumber(id:match('_(%d+)$')) or 0\n if s.sneaking and not require('CSV/Concealment').active(s) then return n<=2 end\n if n>=7 and not require('CSV/Concealment').active(s) then return false end\n if id=='StartleCowardly_8' and (s.panic or 0)<3 then return false end\n return true\nend\nfunction T.dryCoping(s)\n local e=s.psychology;local t=s.traits or {}\n return s.recentDistress~=true and e and e.verified and e.kind=='zombieKill' and e.experience=='practiced' and t.desensitized==true\n  and s.sneaking==false and s.near==0 and s.visible==0 and s.recentThreat==false and not s.humanThreat and not s.fire\n  and s.panic==0 and s.pain==0 and s.bleeding==0 and (s.endurance or 4)<2 and s.drunk==0 and s.coldSymptoms==0\nend\nreturn T\n",
+    "42/media/lua/shared/CSV/TraitSpeechRules.lua": "local matches=require('CSV/Traits').matches\nlocal R={groups={TraitRest='Tired',TraitWound='Pain',TraitFumble='Explore',TraitReading='Explore',TraitStudy='Explore',TraitFall='Explore',TraitScratch='Pain',TraitIlliterate='Explore'}}\nlocal function above(value,min)return type(value)=='number' and value>=min end\nfunction R.context(group,s)\n local t=s.traits or {}\n if s.fire or require('CSV/Concealment').active(s) or above(s.attacking,1) or s.humanThreat then return end\n if group=='Threat' and above(s.near,1) and s.panic==0 then\n  if matches('TraitDriver',t) and s.traitDriver==true then return 'TraitDriver' end\n  if matches('TraitVigilant',t) and above(s.visible,1) then return 'TraitVigilant' end\n end\n if above(s.near,1) then return end\n if group=='Hungry' and matches('TraitHunger',t) and above(s.hunger,1) and s.hunger<3 then return 'TraitHunger' end\n if group=='Thirst' and matches('TraitThirst',t) and above(s.thirst,1) and s.thirst<3 then return 'TraitThirst' end\n if group=='HeavyLoad' and matches('TraitLoad',t) and above(s.load,1) and above(s.endurance,1) then return 'TraitLoad' end\n if group=='HasACold' and matches('TraitCold',t) and above(s.coldSymptoms,1) then return 'TraitCold' end\n if group=='Sick' and matches('TraitNausea',t) and above(s.sick,1) then return 'TraitNausea' end\n if group=='FoodEaten' and matches('TraitFull',t) and s.hunger==0 then return 'TraitFull' end\n if group=='Darkness' and matches('TraitSight',t) and require('CSV/OutcomeRules').classify(s.outcome)=='Darkness' then return 'TraitSight' end\nend\nfunction R.classify(e)\n if not e or not e.verified or not e.completed or e.cancelled then return end\n local f=e.after or {};local t=f.traits or {};local g=e.traitGroup\n if not f.awake then return end\n if e.actionObject and f.actionObject~=e.actionObject then return end\n if e.cutAt and f.cutAt~=e.cutAt then return end\n if g=='TraitRest' and matches(g,t) and above(f.tired,2) then return g end\n if g=='TraitWound' and matches(g,t) and f.lingering then return g end\n if g=='TraitFumble' and matches(g,t) and f.action=='ISInventoryTransferAction' and above(f.visible,1) then return g end\n if g=='TraitReading' and matches(g,t) and f.action=='ISReadABook' and above(f.stress,1) then return g end\n if g=='TraitStudy' and matches(g,t) and f.action=='ISResearchRecipe' then return g end\n if g=='TraitFall' and matches(g,t) and f.falling==false then return g end\n if g=='TraitScratch' and matches(g,t) and f.recentCut then return g end\n if g=='TraitIlliterate' and matches(g,t) and f.inspectLiterature then return g end\nend\nreturn R\n",
+    "42/media/lua/shared/CSV/Traits.lua": "local T={}\nlocal names={brave='BRAVE',cowardly='COWARDLY',desensitized='DESENSITIZED',agoraphobic='AGORAPHOBIC',claustrophobic='CLAUSTROPHOBIC',hemophobic='HEMOPHOBIC',smoker='SMOKER'}\nfor key,value in pairs({allThumbs='ALL_THUMBS',clumsy='CLUMSY',conspicuous='CONSPICUOUS',disorganized='DISORGANIZED',hearty='HEARTY_APPETITE',highThirst='HIGH_THIRST',illiterate='ILLITERATE',outOfShape='OUT_OF_SHAPE',illness='PRONE_TO_ILLNESS',feeble='FEEBLE',pacifist='PACIFIST',restless='INSOMNIAC',shortSighted='SHORT_SIGHTED',asthmatic='ASTHMATIC',sleepy='NEEDS_MORE_SLEEP',slowHealer='SLOW_HEALER',slowLearner='SLOW_LEARNER',slowReader='SLOW_READER',sunday='SUNDAY_DRIVER',thinSkin='THIN_SKINNED',unfit='UNFIT',weak='WEAK',weakStomach='WEAK_STOMACH',fastMetabolism='WEIGHT_LOSS',slowMetabolism='WEIGHT_GAIN',lightEater='LIGHT_EATER',deaf='DEAF',hardHearing='HARD_OF_HEARING'})do names[key]=value end\n\n-- These links describe which traits can lead to a recording situation.\n-- Some situations can also be selected without the trait.\nT.recordingTraits={\n Agoraphobic={agoraphobic='Agoraphobic'},Claustrophobic={claustrophobic='Claustrophobic'},\n BloodAversion={hemophobic='Fear of Blood'},NicotineNeed={smoker='Smoker'},\n StartleBrave={brave='Brave'},StartleCowardly={cowardly='Cowardly'},StartleDesensitized={desensitized='Desensitized'},\n TraitDriver={sunday='Sunday Driver'},\n TraitVigilant={deaf='Deaf',hardHearing='Hard of Hearing',conspicuous='Conspicuous'},\n TraitHunger={hearty='Hearty Appetite',fastMetabolism='Fast Metabolism'},TraitThirst={highThirst='High Thirst'},\n TraitLoad={weak='Weak',feeble='Feeble',disorganized='Disorganized'},\n TraitCold={illness='Prone to Illness'},TraitNausea={weakStomach='Weak Stomach'},\n TraitFull={lightEater='Light Eater',slowMetabolism='Slow Metabolism'},TraitSight={shortSighted='Short Sighted'},\n TraitRest={restless='Restless Sleeper',sleepy='Sleepyhead'},TraitWound={slowHealer='Slow Healer'},\n TraitFumble={allThumbs='All Thumbs'},TraitReading={slowReader='Slow Reader'},\n TraitStudy={slowLearner='Slow Learner'},TraitFall={clumsy='Clumsy'},\n TraitScratch={thinSkin='Thin-skinned'},TraitIlliterate={illiterate='Illiterate'},\n TraitReluctant={pacifist='Reluctant Fighter'},\n KillUneasy={cowardly='Cowardly',hemophobic='Fear of Blood'},\n KillControlled={desensitized='Desensitized'},DryCoping={desensitized='Desensitized'},\n}\nfunction T.matches(group,traits)\n for trait in pairs(T.recordingTraits[group])do if traits[trait] then return true end end\n return false\nend\n\nfunction T.read(player)\n local result={}\n for name,constant in pairs(names)do\n  local trait=CharacterTrait and CharacterTrait[constant]\n  if trait then local ok,value=pcall(function()return player:hasTrait(trait)end);if ok and type(value)=='boolean' then result[name]=value end end\n end\n return result\nend\nfunction T.startle(s)\n local t=s.traits or {}\n -- Actual distress wins over a character-sheet preference. Do not add panic twice.\n if (s.panic or 0)>=3 then return 'StartleCowardly' end\n if T.matches('StartleDesensitized',t) then return 'StartleDesensitized' end\n if T.matches('StartleCowardly',t) then return 'StartleCowardly' end\n if T.matches('StartleBrave',t) then return 'StartleBrave' end\n return 'StartleNormal'\nend\nfunction T.phobiaAllowed(group,s)\n local t=s.traits or {}\n if group=='Agoraphobic' then return t.agoraphobic~=false and s.outside~=false end\n if group=='Claustrophobic' then return t.claustrophobic~=false and s.outside~=true end\n return true\nend\nfunction T.context(group,s)\n local selected=require('CSV/TraitSpeechRules').context(group,s)\n if selected then return selected end\n local t=s.traits or {}\n if s.fire or require('CSV/Concealment').active(s) or (s.near or 0)>0 or s.humanThreat then return nil end\n if (group=='Stress' or group=='Panic') and T.matches('BloodAversion',t) and (s.bleeding or 0)>0 and (s.panic or 0)>0 then return 'BloodAversion' end\n if group=='Stress' and T.matches('NicotineNeed',t) and (s.nicotineStress or 0)>0 then return 'NicotineNeed' end\n if group=='Endurance' and (s.endurance or 0)>=3 and s.sneaking==false and (s.pain or 0)==0 and (s.bleeding or 0)==0 and (s.drunk or 0)==0 and (s.coldSymptoms or 0)==0 then return 'ExhaustedCoping' end\nend\nfunction T.startleAllowed(id,s)\n local n=tonumber(id:match('_(%d+)$')) or 0\n if s.sneaking and not require('CSV/Concealment').active(s) then return n<=2 end\n if n>=7 and not require('CSV/Concealment').active(s) then return false end\n if id=='StartleCowardly_8' and (s.panic or 0)<3 then return false end\n return true\nend\nfunction T.dryCoping(s)\n local e=s.psychology;local t=s.traits or {}\n return s.recentDistress~=true and e and e.verified and e.kind=='zombieKill' and e.experience=='practiced' and t.desensitized==true\n  and s.sneaking==false and s.near==0 and s.visible==0 and s.recentThreat==false and not s.humanThreat and not s.fire\n  and s.panic==0 and s.pain==0 and s.bleeding==0 and (s.endurance or 4)<2 and s.drunk==0 and s.coldSymptoms==0\nend\nreturn T\n",
     "42/media/lua/shared/CSV/VehicleCombatRules.lua": "local R={groups={},maxSampleAge=500,contactSettle=250,quietGap=6000}\nfor _,stem in ipairs({'VehicleCrowd','VehicleSiege','VehicleImpact','VehicleKill'})do\n for _,role in ipairs({'Driver','Passenger'})do R.groups[stem..role]='VehicleDamage' end\nend\n-- Three occupied quadrants alone can still be a crowd on one side. Require\n-- at least four threats and no empty angular half-circle around the vehicle.\nfunction R.surrounded(angles)\n if #angles<4 then return false end\n local sorted={};for i,a in ipairs(angles)do sorted[i]=a end;require('CSV/Sort').sort(sorted)\n local gap=sorted[1]+math.pi*2-sorted[#sorted]\n for i=2,#sorted do gap=math.max(gap,sorted[i]-sorted[i-1])end\n return gap<math.pi\nend\nfunction R.contact(a,b,now)\n return a and b and a.alive==true and b.contact==true and b.collision==true\n  and (a.contact==false or a.trackedContact==true)\n  and a.car==b.car and a.driver~=nil and a.driver==b.driver and b.attacker==b.driver\n  and a.weaponRevision==b.weaponRevision and a.burning==false and b.burning==false\n  and now>=a.at and now-a.at<=R.maxSampleAge\nend\nfunction R.classify(e)\n if not e or e.kind~='vehicle_combat' or e.completed~=true or e.cancelled or e.verified~=true then return nil end\n local role=e.role=='driver' and 'Driver' or e.role=='passenger' and 'Passenger'\n if not role or not e.after or e.after.occupied~=true then return nil end\n if e.event=='crowd' or e.event=='siege' then\n  if e.surrounded~=true or (e.targets or 0)<4 then return nil end\n  if e.event=='siege' and ((e.panic or 0)<3 or (e.attacks or 0)<1) then return nil end\n  return (e.event=='siege' and 'VehicleSiege' or 'VehicleCrowd')..role\n end\n if e.aliveBefore~=true or e.nativeContact~=true or e.driverMatched~=true or e.noInterveningHit~=true then return nil end\n if e.event=='impact' then return 'VehicleImpact'..role end\n if e.event=='kill' and e.dead==true and e.observed==true then return 'VehicleKill'..role end\nend\nreturn R\n",
     "42/media/lua/shared/CSV/VehicleRules.lua": "local R={groups={EngineRecovered='VehicleDamage',EngineStalled='VehicleDamage',FuelEmpty='VehicleDamage',HotwireDone='VehicleDamage',CarAlarm='VehicleDamage',HeadlightsFailed='VehicleDamage'}}\nR.urgent={EngineStalled=true,FuelEmpty=true,CarAlarm=true,HeadlightsFailed=true}\nfor g,parent in pairs(require('CSV/VehicleCombatRules').groups)do R.groups[g]=parent;R.urgent[g]=true end\nfunction R.classify(e)\n if e and e.kind=='vehicle_combat' then return require('CSV/VehicleCombatRules').classify(e) end\n if not e or e.completed~=true or e.cancelled or e.localAction~=true then return nil end\n local a,b=e.before or {},e.after or {}\n if e.kind=='vehicle_recovered' and e.failedStart==true and a.running==false and b.running==true then return 'EngineRecovered' end\n if e.kind=='vehicle_stop' and a.running==true and b.running==false and e.manual~=true then\n  -- A stop alone cannot distinguish the key, a mod, damage or fuel starvation.\n  if e.nativeCause=='fuel' and type(a.fuel)=='number' and a.fuel>0 and b.fuel==0 then return 'FuelEmpty' end\n  if e.nativeCause=='damage' or e.nativeCause=='fuel' then return 'EngineStalled' end\n end\n if e.kind=='vehicle_hotwire' and a.hotwired==false and b.hotwired==true then return 'HotwireDone' end\n if e.kind=='vehicle_alarm' and e.synchronous==true and a.alarm==false and b.alarm==true then return 'CarAlarm' end\n if e.kind=='vehicle_lights' and a.lights==false and b.lights==true and b.canLight==false and type(b.battery)=='number' and b.battery>0 and b.dark==true then return 'HeadlightsFailed' end\nend\nreturn R\n",
     "42/media/lua/shared/CSV/VoicePresentation.lua": "-- Recording metadata. Existing gameplay profile IDs remain unchanged.\nreturn {\n profiles={shaken={delivery='normal',acting='shaken'},exhausted={delivery='normal',acting='exhausted'},normal={delivery='normal'},contextual={delivery='normal'},native={delivery='nonverbal'},\n whisper={delivery='whisper'},shout={delivery='shout'},nonverbal={delivery='nonverbal'},\n angry={delivery='normal',acting='angry'},breathless={delivery='normal',acting='breathless'},\n frightened={delivery='normal',acting='frightened'},sad={delivery='normal',acting='sad'},\n congested={delivery='normal',acting='congested'},slurred={delivery='normal',acting='slurred'},\n stammer={delivery='normal',acting='stammer'}},\n -- Counts are separate meanings, not interchangeable alternatives.\n distinctGroups={AmmoCount=true,KillCount=true},\n -- A generic take must remain eligible when the more specific claim is unproven.\n genericExclusions={ReloadPanic_3=true,AfterZombieShaken_2=true,InjuryAftermath_3=true,\n KillControlled_1=true,KillDesperate_4=true,KillDesperate_5=true},\n coveragePools={\n  blockedWindow={'DoorBlocked_3'},\n  concealedKill={'Kill_1'},concealedDistressedKill={'Kill_2'},\n  quietStartleBrave={'StartleBrave_1','StartleBrave_2'},\n  quietStartleNormal={'StartleNormal_1','StartleNormal_2'},\n  quietStartleCowardly={'StartleCowardly_1','StartleCowardly_2'},\n  quietStartleDesensitized={'StartleDesensitized_1','StartleDesensitized_2'},\n  treeFelled={'ChopTree_3'},coldWet={'Wet_3'},pickup={'FoundLoot_3'}\n }\n}\n",
