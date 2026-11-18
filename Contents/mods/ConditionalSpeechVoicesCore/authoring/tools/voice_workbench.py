@@ -12,6 +12,7 @@ import subprocess
 from urllib.parse import parse_qs, urlparse
 import webbrowser
 import studio_schema
+import studio_elevenlabs as elevenlabs
 from workshop_artwork import available_flag_languages, cover_image
 
 import voice_project as project
@@ -26,6 +27,11 @@ def make_server(manifest, ffmpeg, core, port=0):
     workspace_root = manifest.parent.parent if manifest.parent.name == 'my_voice' else None
     active_project = 'current'
     token = secrets.token_urlsafe(32)
+    checkout = next((folder for folder in Path(__file__).resolve().parents
+                     if (folder / 'studio' / 'package.json').is_file()), None)
+    # A distributed copy uses its local projects root.
+    env_root = (checkout or workspace_root) if workspace_root else manifest.parent
+    speech = elevenlabs.StudioSpeech(env_root / '.env.local')
 
     @lru_cache(maxsize=16)
     def preview(template, language):
@@ -97,7 +103,34 @@ def make_server(manifest, ffmpeg, core, port=0):
                 self.respond({'error': 'Unauthorized local request'}, status=403)
                 return
             try:
-                if url.path == '/project': self.respond(dict(project.rows(manifest), projectKey=active_project, languageFlags=available_flag_languages()))
+                if url.path == '/project':
+                    voice = project.read(manifest).get('authoring', {}).get('elevenLabsVoice', '')
+                    state = project.rows(manifest)
+                    language = elevenlabs.language_code(state['language'])
+                    self.respond(dict(state, projectKey=active_project, languageFlags=available_flag_languages(),
+                                      elevenLabs={'configured': bool(speech.key), 'voice': voice,
+                                                  'languageCode': language.upper() if language else ''}))
+                elif url.path == '/elevenlabs/credits':
+                    self.respond(elevenlabs.credits(speech.key))
+                elif url.path == '/elevenlabs/history':
+                    self.respond(speech.history(manifest))
+                elif url.path == '/elevenlabs/library':
+                    query = parse_qs(url.query)
+                    language = elevenlabs.language_code(project.read(manifest)['bank']['language'])
+                    self.respond(elevenlabs.library_voices(
+                        speech.key, language, query.get('next', [''])[0][:12], query.get('search', [''])[0][:100]))
+                elif url.path == '/elevenlabs/voices':
+                    query = parse_qs(url.query)
+                    self.respond(elevenlabs.voices(speech.key, query.get('next', [''])[0][:2048], query.get('search', [''])[0][:100]))
+                elif url.path in ('/elevenlabs/preview', '/audio/elevenlabs'):
+                    identifier = parse_qs(url.query).get('id', [''])[0]
+                    if url.path == '/elevenlabs/preview':
+                        self.respond(speech.status(manifest, active_project, identifier))
+                    else:
+                        future = speech.candidate(manifest, active_project, identifier)['future']
+                        if not future.done():
+                            raise ValueError('Audio is still generating.')
+                        self.respond(future.result()[0], 'audio/mpeg')
                 elif url.path == '/recording-list':
                     studio_schema.verify_current()
                     current = project.rows(manifest)
@@ -112,11 +145,14 @@ def make_server(manifest, ffmpeg, core, port=0):
                                       language=current['language'], recordings=recordings))
                 elif url.path == '/schema': self.respond(studio_schema.load())
                 elif url.path == '/projects':
-                    choices=[dict(key='current',name=project.read(initial_manifest)['name'])]
+                    def choice(key, path):
+                        config = project.read(path)
+                        return dict(key=key, name=config['name'], language=config.get('bank', {}).get('language'))
+                    choices = [choice('current', initial_manifest)]
                     if projects_root.is_dir():
                         for folder in sorted(projects_root.iterdir()):
                             path=project.contained(projects_root,folder.name+'/project.json')
-                            if path.is_file(): choices.append(dict(key=folder.name,name=project.read(path)['name']))
+                            if path.is_file(): choices.append(choice(folder.name, path))
                     if workspace_root:
                         for path in sorted(workspace_root.glob('*/project.json')):
                             key = path.parent.name
@@ -124,7 +160,7 @@ def make_server(manifest, ffmpeg, core, port=0):
                                 continue
                             try:
                                 saved = project.contained(workspace_root, key + '/project.json')
-                                choices.append(dict(key='saved:' + key, name=project.read(saved)['name']))
+                                choices.append(choice('saved:' + key, saved))
                             except (ValueError, OSError, KeyError):
                                 continue
                     self.respond(choices)
@@ -151,7 +187,8 @@ def make_server(manifest, ffmpeg, core, port=0):
                 upload = self.path == '/import'
                 limit = project.MAX_AUDIO if upload else (512*1024 if self.path=="/review" else 65536)
                 if not 0 < length <= limit: raise ValueError('Request is empty or too large')
-                if self.headers.get('X-Revision') != project.digest(manifest):
+                # Opening selects a destination. It never saves edits to the source project.
+                if self.path != '/open' and self.headers.get('X-Revision') != project.digest(manifest):
                     self.respond({'error': 'Project changed. Reload before saving.'}, status=409)
                     return
                 body = self.rfile.read(length)
@@ -159,11 +196,13 @@ def make_server(manifest, ffmpeg, core, port=0):
                     with tempfile.TemporaryDirectory() as folder:
                         source = Path(folder) / 'recording'
                         source.write_bytes(body)
-                        project.import_audio(manifest, self.headers.get('X-Slot'), source, ffmpeg)
+                        project.import_audio(manifest, self.headers.get('X-Slot'), source, ffmpeg, keep_previous=True)
                     result = {'message': 'Imported. Listen before approving.'}
                 else:
                     data = json.loads(body)
-                    fields={'/save':{'slot','text','direction','state'}, '/metadata':{'name','author','description','packVersion','steamProfile'},
+                    fields={'/elevenlabs/connect':{'key', 'project'}, '/elevenlabs/settings':{'voice', 'project', 'owner', 'name'},
+                            '/elevenlabs/describe':{'slot', 'project'}, '/elevenlabs/generate':{'slot', 'project'},
+                            '/elevenlabs/accept':{'slot', 'project', 'id'}, '/profanity':{'slot','enabled'}, '/save':{'slot','text','direction','state'}, '/metadata':{'name','author','description','packVersion','steamProfile'},
                             '/update':{'apply'}, '/jobs':{'rate'}, '/measure':set(), '/package':{'rightsConfirmed'},
                             '/create':{'voice','name','language','female','trial'}, '/open':{'key'}, '/open-pack':{'folder'}, '/browse-pack-folders':{'folder','native'}, '/remove-project':{'key'},
                             '/undo-review':set(), '/review':{'slots','state'}, '/process':{'slot','gainDb','semitones','restore','speed','trimStart','trimEnd'}}
@@ -172,9 +211,38 @@ def make_server(manifest, ffmpeg, core, port=0):
                         return
                     if not isinstance(data,dict) or set(data)-fields[self.path]:
                         raise ValueError('Unknown fields or action. Core rules are read-only.')
-                    if self.path == '/save':
-                        project.edit(manifest, data['slot'], data['text'], data['direction'], data['state'])
-                        result = {'message': 'Saved to project file.'}
+                    if self.path.startswith('/elevenlabs/') and data.get('project') != active_project:
+                        self.respond({'error': 'The active project changed. Reopen the project before continuing.'}, status=409)
+                        return
+                    if self.path == '/elevenlabs/connect':
+                        result = speech.connect(data['key'])
+                    elif self.path == '/elevenlabs/settings':
+                        voice = data['voice']
+                        if voice != '' and (not speech.key or not elevenlabs.voice_identifier(voice)):
+                            raise ValueError('Connect ElevenLabs and choose a voice first.')
+                        config = project.read(manifest)
+                        if 'owner' in data:
+                            voice = elevenlabs.add_library_voice(speech.key, data['owner'], voice, data.get('name'))
+                        authoring = config.setdefault('authoring', {})
+                        if voice:
+                            authoring['elevenLabsVoice'] = voice
+                        else:
+                            authoring.pop('elevenLabsVoice', None)
+                        project.write(manifest, config)
+                        result = {'message': 'ElevenLabs settings saved.', 'voice': voice}
+                    elif self.path == '/elevenlabs/describe':
+                        voice, payload = speech.describe(manifest, data['slot'])
+                        estimate, samples = speech.estimate(manifest, voice, payload)
+                        result = {'voice': voice, 'characterCount': len(payload['text']), 'prompt': payload['text'],
+                                  'estimatedCredits': estimate, 'estimateSamples': samples}
+                    elif self.path == '/elevenlabs/generate':
+                        result = speech.generate(manifest, data['slot'], active_project)
+                    elif self.path == '/elevenlabs/accept':
+                        result = speech.accept(manifest, active_project, data['slot'], data['id'], ffmpeg)
+                    elif self.path == '/save':
+                        row = project.edit(manifest, data['slot'], data['text'], data['direction'], data['state'])
+                        result = {'message': 'Saved to project file.', 'row': row}
+                    elif self.path == '/profanity': result={'row':project.mark_profanity(manifest,data['slot'],data['enabled'])}
                     elif self.path == '/undo-review': result=project.undo_review(manifest)
                     elif self.path == '/review': result=project.review_many(manifest,data['slots'],data['state'])
                     elif self.path == '/metadata':
@@ -331,7 +399,7 @@ def serve(manifest, ffmpeg, core, port=0, open_browser=True):
     project.voice_id(project.read(manifest))
     server, url = make_server(manifest, ffmpeg, core, port)
     print(url, flush=True)
-    print('Local editor only. Ctrl+C stops it. No recording service is contacted.', flush=True)
+    print('Local editor. Ctrl+C stops it. ElevenLabs is optional.', flush=True)
     if open_browser: webbrowser.open(url)
     try: server.serve_forever()
     except KeyboardInterrupt: pass

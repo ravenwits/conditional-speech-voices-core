@@ -85,4 +85,13 @@ return {
     Alt_NativePainMoodle_1={source="NativePainMoodle_1", acting="pain", delivery="nonverbal", group="NativePainMoodle", native=true},
     Alt_NativeEffort_1={source="NativeEffort_1", acting="strained", delivery="nonverbal", group="NativeEffort", native=true},
     Alt_NativeWhisperCall_1={source="NativeWhisperCall_1", acting="controlled", delivery="whisper", group="NativeWhisperCall", native=true},
+    Alt_InjuryAcute_2={source="InjuryAcute_2", acting="pain", delivery="normal", group="InjuryAcute"},
+    Alt_InjuryAcute_3={source="InjuryAcute_3", acting="pain", delivery="normal", group="InjuryAcute"},
+    Alt_PainGeneric_1={source="PainGeneric_1", acting="strained", delivery="normal", group="PainGeneric"},
+    Alt_PainGeneric_3={source="PainGeneric_3", acting="strained", delivery="normal", group="PainGeneric"},
+    Alt_CriticalWound_1={source="CriticalWound_1", acting="strained", delivery="normal", group="CriticalWound"},
+    Alt_PanicEscape_3={source="PanicEscape_3", acting="breathless", delivery="normal", group="ContextPanicEscape"},
+    Alt_PanicGrounding_3={source="PanicGrounding_3", acting="catchingBreath", delivery="normal", group="ContextPanicGrounding"},
+    Alt_OutOfAmmo_2={source="OutOfAmmo_2", acting="startled", delivery="normal", group="OutOfAmmo"},
+    Alt_MortalFear_2={source="MortalFear_2", acting="frightened", delivery="normal", group="MortalFear"},
 }

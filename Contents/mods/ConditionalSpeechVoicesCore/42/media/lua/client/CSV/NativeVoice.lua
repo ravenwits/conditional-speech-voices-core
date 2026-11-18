@@ -14,8 +14,8 @@ end
 function N.prefix(pitch,voice)
  return assert(V.pack.voices[voice],'Unknown voice').prefix..tostring(math.floor(math.max(-100,math.min(100,pitch or 0))+100.5))
 end
--- The engine picks a clip uniformly. Leave some exertions unvoiced while
--- keeping the animation, impact sound, and the native vocal handle intact.
+-- The engine picks a clip uniformly. A silent melee choice has no source,
+-- so it stays in the pool without creating a playing audio handle.
 local silentChoices={MeleeAttack=6,MeleeStab=6,MeleeStabOnGround=6,MeleeAttackHeavy=3,
  MeleeShove=6,MeleeStomp=6,Exercise=6,CorpseDragging=6,CorpseHighEffort=3,CorpseLowEffort=6}
 -- Gain is applied by NativeVolume for all voices, never baked into native clips.
@@ -48,12 +48,16 @@ function N.ensure(pitch,voice)
    local ids=event.ids
    if not ids or #ids==0 then error('Missing custom voice replacement '..suffix)end
    for index=1,#ids+(silentChoices[suffix] or 0) do
-    local id=ids[1+(index-1)%#ids]
-    local source=GameSounds.getSound('CSV_'..voice..'_'..id)
-    local clip=source and source:getRandomClip()
-    local file=clip and clip:getFile()
-    if not file or not file:match('^media/sound/CSV/[%w_]+%.mp3$') then error('Missing custom voice file '..id)end
-    body[#body+1]='clip { file = '..file..', volume = '..tostring(index<=#ids and clip:getVolume() or 0)..', pitch = '..tostring(V.pitchMultiplier(pitch,voice))..', distanceMin = '..tostring(clip:getMinDistance())..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
+    if index>#ids and suffix:sub(1,5)=='Melee' then
+     body[#body+1]='clip { }'
+    else
+     local id=ids[1+(index-1)%#ids]
+     local source=GameSounds.getSound('CSV_'..voice..'_'..id)
+     local clip=source and source:getRandomClip()
+     local file=clip and clip:getFile()
+     if not file or not file:match('^media/sound/CSV/[%w_]+%.mp3$') then error('Missing custom voice file '..id)end
+     body[#body+1]='clip { file = '..file..', volume = '..tostring(index<=#ids and clip:getVolume() or 0)..', pitch = '..tostring(V.pitchMultiplier(pitch,voice))..', distanceMin = '..tostring(clip:getMinDistance())..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
+    end
    end
   end
   body[#body+1]='}'
@@ -99,6 +103,18 @@ function N.painActive(player)
  local emitter=player:getEmitter()
  if not emitter or type(prefix)~='string' or prefix=='' then return false end
  for _,suffix in ipairs(data.pain)do if emitter:isPlaying(prefix..suffix) then return true,suffix end end
+ return false
+end
+
+local meleeEffort={'MeleeAttack','MeleeAttackHeavy','MeleeStab','MeleeStabOnGround','MeleeShove','MeleeStomp'}
+function N.effortActive(player)
+ if not N.ready(player) then return false end
+ local emitter=player:getEmitter()
+ if not emitter then return false end
+ local prefix=player:getDescriptor():getVoicePrefix()
+ for _,suffix in ipairs(meleeEffort) do
+  if emitter:isPlaying(prefix..suffix) then return true,suffix end
+ end
  return false
 end
 

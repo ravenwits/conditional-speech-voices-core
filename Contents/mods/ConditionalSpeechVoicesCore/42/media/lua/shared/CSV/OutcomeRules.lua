@@ -5,6 +5,8 @@ R.groups.WindowLocked='Explore'
 R.groups.WindowBarricaded='Explore'
 R.groups.CarWindowOpened='VehicleDamage'
 R.groups.CarWindowBroken='VehicleDamage'
+R.routines={GeneratorStarted=true,GeneratorRepaired=true,CampfireLit=true,SawLogsDone=true,ClothingPatched=true,ClothingSewn=true,SmokeFinished=true,BookReading=true,MealPrepared=true}
+for group in pairs(R.routines)do R.groups[group]='Explore' end
 function R.urgent(g)return g=='WeaponBroken' or require('CSV/VehicleRules').urgent[g]==true end
 function R.ready(f)
  if not f or f.jammed~=false or type(f.condition)~='number' or f.condition<=0 then return false end
@@ -15,6 +17,7 @@ end
 function R.classify(e)
  if not e or e.completed~=true or e.cancelled==true then return nil end
  if e.kind and e.kind:match('^vehicle_') then return require('CSV/VehicleRules').classify(e) end
+ if e.kind=='routine' and e.verified==true and R.routines[e.routineGroup] then return e.routineGroup end
  if e.kind=='trait' then return require('CSV/TraitSpeechRules').classify(e) end
  local a,b=e.before or {},e.after or {}
  if e.kind=='darkness' and b.awake==true and type(b.light)=='number' and b.light>=0 and b.light<=.18 then return 'Darkness' end

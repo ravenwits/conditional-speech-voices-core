@@ -23,14 +23,22 @@ function M.call(player)
     local sneaking = player:isSneaking()
     if not sneaking and hasShoutItem(player) then return false end
     if not player:isCanShout() then return true end
-    local bank = V.bank(V.voice(player))
+    local voice = V.voice(player)
+    local bank = V.bank(voice)
     local pool = bank.native.replacements[sneaking and 'WhisperHey' or 'ShoutHey']
     local previous = recent[player]
     if previous and player:getEmitter():isPlaying(player:getDescriptor():getVoicePrefix()..'CSV'..previous) then M.metrics.blocked=M.metrics.blocked+1;return true end
-    local candidates = {}
-    for _,id in ipairs(pool) do if id ~= previous then candidates[#candidates+1]=id end end
-    if #candidates==0 then candidates=pool end
-    if #candidates==0 then return false end
+    local candidates, fallback = {}, {}
+    local prefs = V.client and V.client.preferences and V.client.preferences()
+    local profanity = prefs and prefs.profanity == false and require('CSV/Profanity') or nil
+    for _,id in ipairs(pool) do
+        if not profanity or profanity.allowed(id,prefs,voice) then
+            fallback[#fallback+1]=id
+            if id ~= previous then candidates[#candidates+1]=id end
+        end
+    end
+    if #candidates==0 then candidates=fallback end
+    if #candidates==0 then M.metrics.blocked=M.metrics.blocked+1;return true end
     local id = candidates[ZombRand(#candidates)+1]
     local item = player:getPrimaryHandItem()
     local mega = item and item:hasTag(ItemTag.MEGAPHONE)

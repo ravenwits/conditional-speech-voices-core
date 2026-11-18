@@ -29,8 +29,11 @@ function S.evidence(group)
 end
 function S.cases()
  local cases={}
+ local retired=require 'CSV/VoiceRetired'
  for group in pairs(require('CSV/OutcomeRules').groups)do
-  for _,mode in ipairs({'safe','whisper','concealed','combat','cancelled','unknown'})do
+  local seated=retired['Whisper_'..group..'_1']=='requires_vehicle_seat'
+  local modes=seated and {'safe','combat','cancelled','unknown'} or {'safe','whisper','concealed','combat','cancelled','unknown'}
+  for _,mode in ipairs(modes)do
    local e=S.evidence(group);local f={outcome=e,sneaking=mode=='whisper' or mode=='concealed',near=mode=='combat' and 2 or 0,accessibleNear=mode=='combat' and 2 or 0,visible=mode=='combat' and 2 or 0,recentThreat=mode=='combat',panic=0}
    if mode=='cancelled' then e.cancelled=true end
    if mode=='unknown' then f.outcome=nil end

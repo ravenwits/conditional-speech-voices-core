@@ -26,6 +26,14 @@ function M.injury(player)
     require('CSV/Callout').interrupt(player)
 end
 
+local function ordinary(entry)
+    return not entry.preview and (entry.priority or 1)<3
+end
+
+local function effortActive(player)
+    return require('CSV/NativeVoice').effortActive(player)
+end
+
 function M.nativeUpdate(player, pain)
     if pain == nil then pain = require('CSV/NativeVoice').painActive(player) end
     if pain then
@@ -33,6 +41,16 @@ function M.nativeUpdate(player, pain)
         M.stopSpeech(player, 'native_' .. tostring(V.voice(player)) .. '_pain', true)
     elseif require('CSV/Callout').busy(player) then
         M.claimCallout(player)
+    else
+        local client = V.client
+        local effort
+        for i = #(client and client.active or {}), 1, -1 do
+            local entry = client.active[i]
+            if entry.player == player and ordinary(entry) then
+                if effort == nil then effort = effortActive(player) end
+                if effort then client.cancel(entry, 'native_melee_effort', true) end
+            end
+        end
     end
 end
 
@@ -48,6 +66,7 @@ function M.check(player, request)
         return false, 'native_' .. tostring(V.voice(player)) .. '_pain'
     end
     if require('CSV/Callout').busy(player) then return false, 'native_callout' end
+    if ordinary(request) and effortActive(player) then return false, 'native_melee_effort' end
     local client = V.client
     for _, active in ipairs(client and client.active or {}) do
         if active.player == player and not canInterrupt(request, active) then

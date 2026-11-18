@@ -22,14 +22,15 @@ local function collect(player)
  local stats=Actors.call(player,'getStats')
  local moodles=Actors.call(player,'getMoodles')
  local body=Actors.call(player,'getBodyDamage')
- s.sneaking=Actors.call(player,'isSneaking')
+ local vehicle=Actors.call(player,'getVehicle')
+ if vehicle then s.sneaking=false else s.sneaking=Actors.call(player,'isSneaking') end
  s.fire=Actors.call(player,'isOnFire')
  s.visible=Actors.call(stats,'getNumVisibleZombies')
  s.engineLastSeen=Actors.call(player,'getLastSeenZomboidTime')
  s.traits=require('CSV/Traits').read(player)
  if s.traits.sunday then
-  local car=Actors.call(player,'getVehicle');local speed=Actors.call(car,'getCurrentSpeedKmHour')
-  s.traitDriver=Actors.call(car,'isDriver',player)==true and type(speed)=='number' and math.abs(speed)>1
+  local speed=Actors.call(vehicle,'getCurrentSpeedKmHour')
+  s.traitDriver=Actors.call(vehicle,'isDriver',player)==true and type(speed)=='number' and math.abs(speed)>1
  end
  s.outside=Actors.call(square,'isOutside')
  s.nicotineStress=Actors.call(stats,'getNicotineStress')

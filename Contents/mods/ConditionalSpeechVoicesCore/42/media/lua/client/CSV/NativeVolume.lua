@@ -12,9 +12,12 @@ function M.update()
    if voice then
     local prefix=p:getDescriptor():getVoicePrefix()
     local native=V.bank(voice).native
-    -- Every voice uses the same gain and engine cap; definitions stay intact.
     local requested=C.volumeGain(true)*10^(5/20)
-    local function add(suffix)desired[prefix..suffix]=requested end
+    local function add(suffix)
+     -- Melee grunts should sit below dialogue. Apply before the engine cap.
+     local effort=suffix:sub(1,5)=='Melee'
+     desired[prefix..suffix]=effort and requested*10^(-6/20) or requested
+    end
     for _,suffix in ipairs(suffixes)do add(suffix)end
     if native then
      for _,suffix in ipairs(native.suffixes or {})do add(suffix)end

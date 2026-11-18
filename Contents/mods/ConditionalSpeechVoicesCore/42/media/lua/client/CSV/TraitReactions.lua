@@ -65,7 +65,14 @@ function T.observe(p,f,now)
  if f.actionObject~=s.action then s.action=f.actionObject;s.actionAt=now;s.actionDone=false end
  if f.actionObject and not s.actionDone and now-s.actionAt>=1000 then
   if f.action=='ISInventoryTransferAction' then s.actionDone=T.queue(p,'TraitFumble',f)
-  elseif now-s.actionAt>=20000 and f.action=='ISReadABook' then s.actionDone=T.queue(p,'TraitReading',f)
+  elseif now-s.actionAt>=20000 and f.action=='ISReadABook' then
+   s.actionDone=T.queue(p,'TraitReading',f)
+   local item=call(f.actionObject.item,'getFullType')
+   if not s.actionDone and item then
+    s.readBooks=s.readBooks or {}
+    if s.readBooks[item] then s.actionDone=true
+    elseif require('CSV/RoutineActions').read(p,f.actionObject) then s.readBooks[item]=true;s.actionDone=true end
+   end
   elseif now-s.actionAt>=20000 and f.action=='ISResearchRecipe' then s.actionDone=T.queue(p,'TraitStudy',f) end
  end
  s.before=f

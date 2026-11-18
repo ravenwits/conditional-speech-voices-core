@@ -14,6 +14,7 @@ export function AudioPlayer({
   navigation,
   controlRef,
   slot,
+  initialAudio,
   missing,
   disabled,
   onError,
@@ -21,6 +22,7 @@ export function AudioPlayer({
   navigation?: ReactNode;
   controlRef?: React.Ref<{ toggle: () => void }>;
   slot: string;
+  initialAudio?: Blob;
   missing: boolean;
   disabled: boolean;
   onError: (message: string) => void;
@@ -67,7 +69,7 @@ export function AudioPlayer({
     setPending(true);
     try {
       if (!audio.current) {
-        const blob = await request<Blob>(
+        const blob = initialAudio ?? await request<Blob>(
           "/audio?slot=" + encodeURIComponent(slot),
         );
         if (!alive.current) return;

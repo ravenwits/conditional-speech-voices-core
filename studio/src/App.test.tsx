@@ -79,12 +79,89 @@ beforeEach(() => {
   vi.mocked(action).mockResolvedValue({});
 });
 it("keeps the selected take when approving it", async () => {
+  vi.mocked(action).mockResolvedValueOnce({ row: { slot: "Slot_0", text: "Line 0", direction: "", state: "approved" } });
   render(<App />);
   await screen.findByDisplayValue("Line 0");
   await userEvent.click(within(document.querySelector(".review-actions") as HTMLElement).getByRole("button", { name: "Approve" }));
   await waitFor(() => expect(action).toHaveBeenCalledWith("/save", expect.objectContaining({slot: "Slot_0", state: "approved"})));
+  await waitFor(() => expect(screen.getByText("Approved", { exact: true })).toBeTruthy());
+  expect(vi.mocked(request).mock.calls.filter(([path]) => path === "/project")).toHaveLength(1);
   expect((screen.getByRole("textbox", {name: "Spoken text / caption"}) as HTMLTextAreaElement).value).toBe("Line 0");
 });
+it("keeps the retake status when saving text and disables the current review action", async () => {
+  const reviewed = structuredClone(project);
+  reviewed.rows[0].state = "redo";
+  reviewed.rows[1].state = "approved";
+  vi.mocked(request).mockImplementation(async path => path === "/project" ? reviewed : path === "/schema" ? schema : []);
+  vi.mocked(action).mockResolvedValue({ row: { ...reviewed.rows[0], text: "Revised caption" } });
+
+  render(<App />);
+  const editor = await screen.findByRole("textbox", { name: "Spoken text / caption" });
+  const review = within(screen.getByRole("button", { name: "Needs a retake" }).closest(".review-actions") as HTMLElement);
+  expect((review.getByRole("button", { name: "Needs a retake" }) as HTMLButtonElement).disabled).toBe(true);
+
+  fireEvent.change(editor, { target: { value: "Revised caption" } });
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(action).toHaveBeenCalledWith("/save", expect.objectContaining({ state: "redo", text: "Revised caption" })));
+  expect((review.getByRole("button", { name: "Needs a retake" }) as HTMLButtonElement).disabled).toBe(true);
+  await userEvent.click(screen.getByRole("button", { name: /Line 1.*Slot_1/ }));
+  expect((review.getByRole("button", { name: "Approve" }) as HTMLButtonElement).disabled).toBe(true);
+});
+
+it("shows flags and keeps settings on the current project row only", async () => {
+  vi.mocked(request).mockImplementation(async (path) =>
+    path === "/project" ? { ...structuredClone(project), projectKey: "active" } : path === "/schema" ? schema : [
+      { key: "current", name: "My_Voice" },
+      { key: "active", name: "Test voice", language: "EN" },
+      { key: "other", name: "Other voice", language: "TR" },
+    ],
+  );
+  render(<App />);
+  await screen.findByDisplayValue("Line 0");
+  const menu = screen.getByRole("button", { name: "Studio menu" });
+  await userEvent.click(menu);
+  expect(screen.queryByRole("button", { name: "Project settings" })).toBeNull();
+  await userEvent.click(await screen.findByRole("combobox", { name: "Choose project" }));
+  const gear = await screen.findByRole("button", { name: "Settings for Test voice" });
+  expect(screen.queryByRole("button", { name: "Remove Test voice" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Settings for Other voice" })).toBeNull();
+  const current = screen.getAllByRole("row")[0];
+  expect(current.textContent).toContain("Test voice");
+  expect(within(current).getByText("current").classList.contains("text-primary")).toBe(true);
+  expect(current.querySelector('[data-slot="combobox-item"] svg')).toBeNull();
+  expect(screen.getByRole("gridcell", { name: "Other voice" }).querySelector("img")?.getAttribute("src")).toBe("/studio/flag/TR");
+  expect((screen.getByRole("button", { name: "Remove My_Voice" }) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByText("Startup")).toBeTruthy();
+  expect((screen.getByRole("button", { name: "Remove Other voice" }) as HTMLButtonElement).disabled).toBe(false);
+  await userEvent.click(gear);
+  expect(await screen.findByRole("dialog", { name: "Project" })).toBeTruthy();
+});
+it("asks before switching projects with an unsaved script and preserves the draft on cancel", async () => {
+  vi.mocked(request).mockImplementation(async path => path === "/project"
+    ? structuredClone(project) : path === "/schema" ? schema : [
+      { key: "current", name: "Test voice" },
+      { key: "other", name: "Other voice" },
+    ]);
+  render(<App />);
+  await screen.findByDisplayValue("Line 0");
+  fireEvent.change(screen.getByRole("textbox", { name: "Spoken text / caption" }), {
+    target: { value: "Line [whispers] 0" },
+  });
+  async function selectOtherProject() {
+    await userEvent.click(screen.getByRole("button", { name: "Studio menu" }));
+    await userEvent.click(screen.getByRole("combobox", { name: "Choose project" }));
+    await userEvent.click(await screen.findByRole("gridcell", { name: "Other voice" }));
+  }
+  await selectOtherProject();
+  expect(await screen.findByRole("alertdialog", { name: "Discard unsaved changes?" })).toBeTruthy();
+  expect(action).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole("button", { name: "Keep editing" }));
+  expect(screen.getByDisplayValue("Line [whispers] 0")).toBeTruthy();
+  await selectOtherProject();
+  await userEvent.click(await screen.findByRole("button", { name: "Discard changes" }));
+  await waitFor(() => expect(action).toHaveBeenCalledWith("/open", { key: "other" }));
+});
+
 it("requires distribution confirmation each time the build dialog opens", async () => {
   const ready = structuredClone(project);
   ready.rows = [ {...ready.rows[0], state: "approved"} ];
@@ -149,6 +226,7 @@ it("keeps recordings behind accessible project and prepare dialogs; new projects
   await userEvent.keyboard("{Escape}");
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   expect(screen.getByDisplayValue("Line 0")).toBeTruthy();
+  await userEvent.click(screen.getByRole("button", { name: "Studio menu" }));
   await waitFor(() =>
     expect(
       (
@@ -157,9 +235,6 @@ it("keeps recordings behind accessible project and prepare dialogs; new projects
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(false),
-  );
-  await userEvent.click(
-    screen.getByRole("combobox", { name: "Choose project" }),
   );
   await userEvent.click(
     await screen.findByRole("button", { name: "New project" }),
@@ -226,9 +301,10 @@ it("exposes variations on demand and keeps guidance read-only", async () => {
     document.querySelector(".recording-guidance p")?.textContent,
   ).toBeTruthy();
 });
-it("puts batch import in the library and build actions in the pack footer", async () => {
+it("puts batch import in the Studio menu and build actions in the pack footer", async () => {
   render(<App />);
   await screen.findByDisplayValue("Line 0");
+  await userEvent.click(screen.getByRole("button", { name: "Studio menu" }));
   await userEvent.click(screen.getByRole("button", { name: "Batch import" }));
   const dialog = await screen.findByRole("dialog");
   expect(
@@ -254,6 +330,7 @@ it("puts batch import in the library and build actions in the pack footer", asyn
 it("searches languages with game-compatible codes", async () => {
   render(<App />);
   await screen.findByDisplayValue("Line 0");
+  await userEvent.click(screen.getByRole("button", { name: "Studio menu" }));
   await waitFor(() =>
     expect(
       (
@@ -262,9 +339,6 @@ it("searches languages with game-compatible codes", async () => {
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(false),
-  );
-  await userEvent.click(
-    screen.getByRole("combobox", { name: "Choose project" }),
   );
   await userEvent.click(
     await screen.findByRole("button", { name: "New project" }),
@@ -328,6 +402,7 @@ it("shows activity while measuring, then reports the result", async () => {
         finish = resolve;
       }),
   );
+  await userEvent.click(screen.getByRole("button", { name: "Studio menu" }));
   await userEvent.click(
     screen.getByRole("button", { name: "Check audio levels" }),
   );
@@ -335,7 +410,7 @@ it("shows activity while measuring, then reports the result", async () => {
     await screen.findByRole("progressbar", { name: "Checking audio levels" }),
   ).toBeTruthy();
   expect(
-    (screen.getByRole("button", { name: "Checking…" }) as HTMLButtonElement)
+    (screen.getByRole("button", { name: "Studio menu" }) as HTMLButtonElement)
       .disabled,
   ).toBe(true);
   finish({
@@ -426,7 +501,8 @@ it("downloads the server's current slots when an older server lacks the list end
   try {
     render(<App />);
     await screen.findByDisplayValue("Line 0");
-    await userEvent.click(screen.getByRole("button", { name: "Batch import" }));
+    await userEvent.click(screen.getByRole("button", { name: "Studio menu" }));
+  await userEvent.click(screen.getByRole("button", { name: "Batch import" }));
     await userEvent.click(screen.getByRole("button", { name: "Download slot names" }));
     await waitFor(() => expect(link).toHaveBeenCalledOnce());
     const reader = new FileReader();
@@ -547,4 +623,145 @@ it("removes the opening screen when loading fails", async () => {
   render(<App />);
   await waitFor(() => expect(screen.queryByRole("dialog", {name: "Opening project…"})).toBeNull());
   expect(await screen.findByText("Project could not be opened.")).toBeTruthy();
+});
+
+it("advances within the active review filter and scrolls the selected slot", async () => {
+ const data = structuredClone(project);
+ data.rows = data.rows.slice(0,4).map((row,i)=>({...row,state:i===1 ? "approved" : "pending"}));
+ data.coverage={missing:0,pending:3,approved:1,redo:0};
+ vi.mocked(request).mockImplementation(async path=>path==="/project" ? data : path==="/schema" ? schema : [{key:"current",name:"Test voice"}]);
+ vi.mocked(action).mockResolvedValue({row:{slot:"Slot_0",text:"Line 0",direction:"",state:"approved"}});
+ const scroll = vi.fn();
+ HTMLElement.prototype.scrollIntoView=scroll;
+ render(<App/>);
+ await screen.findByDisplayValue("Line 0");
+ await userEvent.click(screen.getByRole("combobox",{name:"Recording status"}));
+ await userEvent.click(await screen.findByRole("option",{name:/Needs listening/}));
+ await userEvent.click(within(document.querySelector(".review-actions") as HTMLElement).getByRole("button",{name:"Approve"}));
+ await waitFor(()=>expect((screen.getByRole("textbox",{name:"Spoken text / caption"}) as HTMLTextAreaElement).value).toBe("Line 2"));
+ await waitFor(()=>expect(scroll).toHaveBeenCalledWith({block:"nearest"}));
+});
+
+it("highlights inline tags and blocks saving an unmatched or doubled bracket", async () => {
+  render(<App />);
+  const editor = await screen.findByRole("textbox", { name: "Spoken text / caption" });
+  fireEvent.change(editor, { target: { value: "[[whispers]] Line 0" } });
+  expect(screen.getByText("Use one pair of square brackets per audio tag.")).toBeTruthy();
+  expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.change(editor, { target: { value: "[whispers Line 0" } });
+  expect(editor.getAttribute("aria-invalid")).toBe("true");
+  fireEvent.change(editor, { target: { value: "whispers Line 0" } });
+  expect(screen.getByText("If this is an audio cue, put it in square brackets [ ].")).toBeTruthy();
+  expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(false);
+  fireEvent.change(editor, { target: { value: "[whispers] Line 0" } });
+  expect(editor.getAttribute("aria-invalid")).toBeNull();
+  expect(document.querySelector(".caption-mirror .caption-inline-tag.text-primary")).toBeTruthy();
+});
+
+it("shows credits and previews a selected take without changing it before acceptance", async () => {
+  const linked = { ...project, rows: [project.rows[0]], elevenLabs: { configured: true, voice: "my-private-voice" } };
+  const script = "[low voice] Line [short breath] 0 [sighs]";
+  vi.mocked(action).mockResolvedValue({ row: { ...project.rows[0], speechScript: script } });
+  vi.mocked(request).mockImplementation(async (path) => {
+    if (path === "/project") return linked;
+    if (path === "/schema") return schema;
+    if (path === "/elevenlabs/credits") return { used: 66, limit: 1300, remaining: 1234 };
+    if (path === "/elevenlabs/describe") return { result: {
+      prompt: script, characterCount: script.length, estimatedCredits: script.length,
+    } };
+    if (path === "/elevenlabs/generate") return { result: { id: "candidate" } };
+    if (path === "/elevenlabs/preview?id=candidate") return { ready: true, cost: 17 };
+    if (path === "/audio/elevenlabs?id=candidate") return new Blob([], { type: "audio/mpeg" });
+    if (path === "/elevenlabs/accept") return { result: {} };
+    return [{ key: "current", name: "Test voice" }];
+  });
+
+  render(<App />);
+  await userEvent.hover(await screen.findByRole("button", { name: "ElevenLabs balance, 5% used, 1,234 credits left" }));
+  expect(await screen.findByText("1,234 credits")).toBeTruthy();
+  await userEvent.unhover(screen.getByRole("button", { name: "ElevenLabs balance, 5% used, 1,234 credits left" }));
+  const editor = screen.getByRole("textbox", { name: "Spoken text / caption" }) as HTMLTextAreaElement;
+  fireEvent.change(editor, { target: { value: script } });
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(action).toHaveBeenCalledWith("/save", expect.objectContaining({ text: script })));
+  expect(editor.value).toBe(script);
+  await userEvent.click(await screen.findByRole("button", { name: "Generate" }));
+  expect((await within(await screen.findByRole("dialog", { name: "Generate with ElevenLabs" })).findByText("[short breath]")).classList.contains("text-primary")).toBe(true);
+  expect(screen.getByText("Estimated credits")).toBeTruthy();
+  expect(screen.queryByRole("combobox", { name: "Add audio tag" })).toBeNull();
+  expect(vi.mocked(request).mock.calls.some(([path]) => path === "/elevenlabs/generate")).toBe(false);
+  await userEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+  const accept = await screen.findByRole("button", { name: "Use this take" });
+  expect(vi.mocked(request).mock.calls.some(([path]) => path === "/elevenlabs/accept")).toBe(false);
+  await userEvent.click(accept);
+  await waitFor(() => expect(request).toHaveBeenCalledWith(
+    "/elevenlabs/accept", { project: "current", slot: "Slot_0", id: "candidate" }, {}, true, true,
+  ));
+});
+
+it("lists voice IDs and flags only for the active project language", async () => {
+  const linked = {
+    ...project, rows: [project.rows[0]], language: "TR",
+    elevenLabs: { configured: true, voice: "private-tr-id", languageCode: "TR" },
+  };
+  vi.mocked(request).mockImplementation(async (path) => {
+    if (path === "/project") return linked;
+    if (path === "/schema") return schema;
+    if (path.startsWith("/elevenlabs/voices")) return {
+      voices: [
+        ...(path.endsWith("search=English") ? [] : [{ id: "private-tr-id", name: "My private voice", languages: ["TR"], owned: true }]),
+        { id: "english-voice", name: "English voice", languages: ["EN", "TR"], primaryLanguage: "EN" },
+      ],
+      next: null,
+    };
+    if (path.startsWith("/elevenlabs/library")) return {
+      voices: [{ id: "public-tr", name: "Turkish library voice", owner: "public-owner", primaryLanguage: "TR" }],
+      next: null,
+    };
+    if (path === "/elevenlabs/settings") return { result: { voice: "copied-tr" } };
+    if (path === "/elevenlabs/credits") return { used: 1, limit: 100, remaining: 99 };
+    return [{ key: "current", name: "Test voice" }];
+  });
+  render(<App />);
+  await screen.findByDisplayValue("Line 0");
+  await userEvent.click(screen.getByRole("button", { name: "Studio menu" }));
+  await userEvent.click(screen.getByRole("button", { name: "ElevenLabs settings" }));
+  const select = await screen.findByRole("combobox", { name: "ElevenLabs voice" });
+  await waitFor(() => expect(select.textContent).toContain("private-tr-id"));
+  expect(select.querySelector("img")?.getAttribute("src")).toBe("/studio/flag/TR");
+  await userEvent.click(select);
+  const personal = await screen.findByRole("option", { name: /My private voice/ });
+  expect(screen.getAllByRole("option")[0]).toBe(personal);
+  expect(screen.queryByRole("option", { name: /English voice/ })).toBeNull();
+  const libraryVoice = await screen.findByRole("option", { name: /Turkish library voice/ });
+  expect(libraryVoice.querySelector("img")?.getAttribute("src")).toBe("/studio/flag/TR");
+  await userEvent.click(libraryVoice);
+  await userEvent.click(screen.getByRole("button", { name: "Add to My Voices and use" }));
+  await waitFor(() => expect(request).toHaveBeenCalledWith(
+    "/elevenlabs/settings", { project: "current", voice: "public-tr", owner: "public-owner", name: "Turkish library voice" }, {}, true, true,
+  ));
+});
+
+it("keeps the player loading while an imported take is uploaded and fetched", async () => {
+  let finishImport!: () => void;
+  let finishAudio!: (blob: Blob) => void;
+  vi.mocked(request).mockImplementation(async (path) => {
+    if (path === "/project") return { ...project, rows: [project.rows[0]] };
+    if (path === "/schema") return schema;
+    if (path === "/import") return new Promise<void>((resolve) => { finishImport = resolve; });
+    if (path === "/audio?slot=Slot_0") return new Promise<Blob>((resolve) => { finishAudio = resolve; });
+    return [{ key: "current", name: "Test voice" }];
+  });
+  render(<App />);
+  await screen.findByDisplayValue("Line 0");
+  const file = new File(["audio"], "take.mp3", { type: "audio/mpeg" });
+  const input = document.querySelector('input[type="file"]:not([multiple])')!;
+  fireEvent.change(input, { target: { files: [file] } });
+  expect(await screen.findByText("Importing audio…")).toBeTruthy();
+  finishImport();
+  expect(await screen.findByText("Loading the imported take…")).toBeTruthy();
+  await waitFor(() => expect(request).toHaveBeenCalledWith("/audio?slot=Slot_0"));
+  finishAudio(new Blob([], { type: "audio/mpeg" }));
+  await waitFor(() => expect(screen.queryByText("Loading the imported take…")).toBeNull());
+  expect(await screen.findByRole("button", { name: "Play recording" })).toBeTruthy();
 });

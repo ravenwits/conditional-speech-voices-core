@@ -4,13 +4,16 @@ import hashlib
 import json
 import math
 import re
+import secrets
+import shutil
 import stat
 from pathlib import Path
 import subprocess
 import tempfile
 from functools import lru_cache
+import recording_guidance
 import studio_schema
-from recording_limits import MAX_CAPTION, MAX_SECONDS
+from recording_limits import MAX_CAPTION, MAX_SECONDS, MAX_SPEECH_SCRIPT
 
 TOOLS = Path(__file__).resolve().parent
 MAX_AUDIO = 16 * 1024 * 1024
@@ -70,6 +73,7 @@ def category(slot):
 
 
 def guidance(slot):
+    """Keep the legacy defaults for saved notes and existing review fingerprints."""
     definition=studio_schema.entry(slot)
     kind = {"whisper":"Whisper","shout":"Shout"}.get(definition["delivery"],category(slot))
     base = {
@@ -138,6 +142,10 @@ def guidance(slot):
         severity={1:'Mild need. A passing observation, without distress.',2:'Noticeable discomfort. Let it interrupt the thought.',3:'Severe discomfort. Strained, but still able to finish the sentence.',4:'Extreme need. Weak or distressed; leave room for breath.'}
         base += ' ' + ' '.join(severity[level] for level in levels if level in severity)
     return base.strip()
+
+
+def core_guidance(slot, language):
+    return recording_guidance.performance(slot, language)[0]
 
 
 def recording_note(config,slot):
@@ -252,38 +260,119 @@ def rows(manifest):
     result = []
     root = manifest.parent.resolve()
     directories = {}
+    core_profanity = studio_schema.template()["profanity"]["ids"]
     for slot, clip in (slots(config).items() if not schema_error else []):
         definition=studio_schema.entry(slot)
-        result.append(dict(slot=slot, category=category(slot), family=definition['family'], delivery=definition['delivery'], acting=definition.get('acting','unspecified'), context=definition['group'], optional=definition.get('optional',False), traits=definition.get('traits',[]), text=config['bank']['lines'].get(slot, ''),
+        note, tags = recording_guidance.performance(slot, config['bank']['language'])
+        caption, script = recording_text(config, slot)
+        result.append(dict(slot=slot, category=category(slot), family=definition['family'], delivery=definition['delivery'], acting=definition.get('acting','unspecified'), context=definition['group'], profanity=bool(config['bank'].get('profanity',{}).get('ids',{}).get(slot)), profanityLocked=slot in core_profanity, optional=definition.get('optional',False), traits=definition.get('traits',[]), text=caption,
+            speechScript=script,
             reference=config.get('authoring', {}).get('references', {}).get(slot, ''),
             direction=recording_note(config,slot),
-            guidance=config.get("authoring",{}).get("recordingGuidance",{}).get(slot) or guidance(slot),
+            guidance=note, elevenLabsTags=tags,
             state=status(config, slot, root, clip, directories=directories),
             audioEdit={k:v for k,v in config.get('authoring',{}).get('audioEdits',{}).get(slot,{}).items() if k in ('gainDb','semitones','speed','trimStart','trimEnd')}))
-    return dict(canUndoReview=bool(config.get('authoring',{}).get('lastBulkReview')),limits=dict(caption=MAX_CAPTION,seconds=MAX_SECONDS,audioBytes=MAX_AUDIO),steamProfile=config.get('steamProfile',''),name=config['name'], author=config['author'], description=config['description'], voice=voice_id(config),
-                language=config['bank']['language'], packVersion=config['bank']['revision'], trial=bool(config.get('trial')),
+    return dict(canUndoReview=bool(config.get('authoring',{}).get('lastBulkReview')),limits=dict(caption=MAX_CAPTION,speechScript=MAX_SPEECH_SCRIPT,seconds=MAX_SECONDS,audioBytes=MAX_AUDIO),steamProfile=config.get('steamProfile',''),name=config['name'], author=config['author'], description=config['description'], voice=voice_id(config),
+                characterBase=config['bank']['voices'][0].get('base', ''), language=config['bank']['language'], packVersion=config['bank']['revision'], trial=bool(config.get('trial')),
                 buildCoverage=coverage(config, manifest.parent, {r['slot'] for r in result if r['state']=='approved'}), revision=digest(manifest), rows=result, schemaError=schema_error, coverage={state:sum(r['state']==state for r in result) for state in ['missing','pending','approved','redo']})
+
+
+def discard_replaced_takes(manifest, approved_slots):
+    root = manifest.parent.resolve()
+    for slot in approved_slots:
+        try:
+            backup = root / 'elevenlabs-backups' / slot
+            if backup != backup.resolve() or not backup.is_dir():
+                continue
+            for file in backup.iterdir():
+                if re.fullmatch(r'[A-Za-z0-9_-]{32}\.mp3', file.name) and not file.is_symlink() and file.is_file():
+                    file.unlink()
+        except OSError:
+            # Committed reviews remain valid if cleanup cannot reach a backup.
+            continue
+
+
+AUDIO_TAG = re.compile(r'\[[^\[\]\r\n]+\]')
+
+
+def strip_audio_tags(text):
+    if re.search(r'[［］]', text):
+        raise ValueError('Use standard square brackets [ ].')
+    if re.search(r'\[\s*\]', text):
+        raise ValueError('Write a cue inside the brackets.')
+    if re.search(r'\[\s*\[|\]\s*\]', text):
+        raise ValueError('Use one pair of square brackets per audio tag.')
+    caption = AUDIO_TAG.sub('', text)
+    if '[' in caption or ']' in caption:
+        raise ValueError('Close each audio tag with ] and keep brackets out of the tag itself.')
+    caption = re.sub(r'[^\S\r\n]{2,}', ' ', caption)
+    return re.sub(r'[^\S\r\n]+(?=[,.!?;:…])', '', caption).strip()
+
+
+def recording_text(config, slot):
+    caption = config['bank']['lines'].get(slot, '')
+    script = config.get('authoring', {}).get('elevenLabsScripts', {}).get(slot)
+    if script is None and AUDIO_TAG.search(caption) and category(slot) == 'Dialogue':
+        try:
+            spoken = strip_audio_tags(caption)
+        except ValueError:
+            return caption, None
+        if any(char.isalnum() for char in spoken):
+            return spoken, caption
+    return caption, script
 
 
 def edit(manifest, slot, text, direction, state):
     config = read(manifest)
     studio_schema.validate(config)
-    if slot not in slots(config): raise ValueError('Unknown recording slot')
+    clip = slots(config).get(slot)
+    if clip is None: raise ValueError('Unknown recording slot')
     if state not in ('pending', 'approved', 'redo'): raise ValueError('Unknown review state')
-    if not isinstance(text, str) or not text.strip() or len(text) > MAX_CAPTION:
-        raise ValueError(f'Supply a caption of 1 to {MAX_CAPTION} characters')
+    if not isinstance(text, str) or len(text) > MAX_SPEECH_SCRIPT:
+        raise ValueError(f'Supply a recording script of up to {MAX_SPEECH_SCRIPT} characters')
+    text = text.strip()
+    tagged = category(slot) == 'Dialogue' and bool(re.search(r'[\[\]［］]', text))
+    caption = strip_audio_tags(text) if tagged else text
+    if not caption or len(caption) > MAX_CAPTION or (tagged and not any(char.isalnum() for char in caption)):
+        raise ValueError(f'Supply a spoken caption of 1 to {MAX_CAPTION} characters')
     if not isinstance(direction, str) or len(direction) > 4000:
         raise ValueError('Direction is too long')
-    set_caption(config['bank'], slot, text.strip())
+    set_caption(config['bank'], slot, caption)
     authoring = config.setdefault('authoring', {})
+    if tagged:
+        authoring.setdefault('elevenLabsScripts', {})[slot] = text
+    elif 'elevenLabsScripts' in authoring:
+        authoring['elevenLabsScripts'].pop(slot, None)
     authoring.setdefault('directions', {})[slot] = direction
-    if state == 'approved' and status(config, slot, manifest.parent) == 'missing':
+    path = contained(manifest.parent, config['assets'][clip['sound']]['source'])
+    info = path.stat() if path.is_file() else None
+    if state == 'approved' and info is None:
         raise ValueError('Import a recording before approving it')
-    authoring.setdefault('reviews', {})[slot] = dict(status=state, fingerprint=fingerprint(config, slot, manifest.parent))
+    authoring.setdefault('reviews', {})[slot] = dict(status=state, fingerprint=take_fingerprint(config, slot, clip, path, info))
     write(manifest, config)
+    if state == 'approved':
+        discard_replaced_takes(manifest, [slot])
+    return dict(slot=slot, text=caption, speechScript=text if tagged else None,
+                direction=recording_note(config, slot), state=state if info else 'missing')
 
 
-def import_audio(manifest, slot, source, ffmpeg):
+def mark_profanity(manifest, slot, enabled):
+    config = read(manifest)
+    studio_schema.validate(config)
+    if not isinstance(slot, str) or slot not in slots(config) or not isinstance(enabled, bool):
+        raise ValueError('Invalid profanity tag')
+    if slot in studio_schema.template()['profanity']['ids']:
+        raise ValueError('Core profanity tags are read-only.')
+    ids = config['bank']['profanity']['ids']
+    if enabled:
+        ids[slot] = True
+    else:
+        ids.pop(slot, None)
+    write(manifest, config)
+    return {'slot': slot, 'profanity': enabled}
+
+
+def import_audio(manifest, slot, source, ffmpeg, *, keep_previous=False):
     revision = digest(manifest)
     config = read(manifest)
     studio_schema.validate(config)
@@ -308,14 +397,30 @@ def import_audio(manifest, slot, source, ffmpeg):
             raise ValueError(f'Recording must be between 0 and {MAX_SECONDS} seconds; it was not imported')
         if digest(manifest) != revision:
             raise ValueError('Project changed during import. Retry without concurrent edits.')
+        previous = contained(manifest.parent, config['assets'][clip['sound']]['source'])
+        if keep_previous and previous.is_file():
+            identifier = secrets.token_urlsafe(24)
+            archive = contained(manifest.parent, f'elevenlabs-backups/{slot}/{identifier}.mp3')
+            archive.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(previous, archive)
+        rollback = Path(folder) / 'previous.mp3'
+        if target.is_file():
+            shutil.copy2(target, rollback)
         converted.replace(target)
-    config['assets'][clip['sound']]['source'] = target.relative_to(manifest.parent.resolve()).as_posix()
-    clip['duration'] = 0
-    config['bank']['peaklimits'].pop(voice_id(config) + '_' + slot, None)
-    config.setdefault('authoring', {}).setdefault('reviews', {}).pop(slot, None)
-    config['authoring'].get('audioEdits',{}).pop(slot,None)
-    config['authoring'].get('measurements',{}).pop(clip['sound'],None)
-    write(manifest, config)
+        try:
+            config['assets'][clip['sound']]['source'] = target.relative_to(manifest.parent.resolve()).as_posix()
+            clip['duration'] = 0
+            config['bank']['peaklimits'].pop(voice_id(config) + '_' + slot, None)
+            config.setdefault('authoring', {}).setdefault('reviews', {}).pop(slot, None)
+            config['authoring'].get('audioEdits',{}).pop(slot,None)
+            config['authoring'].get('measurements',{}).pop(clip['sound'],None)
+            write(manifest, config)
+        except Exception:
+            if rollback.is_file():
+                rollback.replace(target)
+            else:
+                target.unlink(missing_ok=True)
+            raise
 
 
 def refresh(manifest, apply=False, preserve_trial=False):
@@ -341,8 +446,30 @@ def refresh(manifest, apply=False, preserve_trial=False):
     for name in ('name', 'author', 'description', 'poster', 'modId', 'module', 'steamProfile'):
         if name in old: fresh[name] = old[name]
     fresh['bank'].update(id=old['bank']['id'], revision=old['bank']['revision'])
-    fresh['bank']['voices'][0].update(voice)
+    updated_voice = fresh['bank']['voices'][0]
+    updated_voice.update(voice)
+    if updated_voice.get('preview') not in new_slots:
+        updated_voice['preview'] = 'NativeCall_1'
+    if updated_voice.get('previewLines'):
+        previews = [slot for slot in updated_voice['previewLines'] if slot in new_slots]
+        if previews:
+            updated_voice['previewLines'] = previews
+        else:
+            updated_voice.pop('previewLines')
+        if updated_voice.get('previewLast') not in previews:
+            updated_voice.pop('previewLast', None)
     fresh['authoring'].update(copy.deepcopy(old.get('authoring', {})))
+    for slot, enabled in old['bank'].get('profanity', {}).get('ids', {}).items():
+        if slot in new_slots and enabled is True:
+            fresh['bank']['profanity']['ids'].setdefault(slot, True)
+    if 'elevenLabsScripts' in fresh['authoring']:
+        fresh['authoring']['elevenLabsScripts'] = {slot: text for slot, text in fresh['authoring']['elevenLabsScripts'].items() if slot in new_slots}
+    bulk = fresh['authoring'].get('lastBulkReview')
+    if bulk:
+        for key in ('before', 'after'):
+            bulk[key] = {slot: review for slot, review in bulk[key].items() if slot in new_slots}
+        if not bulk['after']:
+            fresh['authoring'].pop('lastBulkReview')
     fresh['authoring']['references'] = new_refs
     fresh['authoring']['referenceDirections'] = new_directions
     for slot,note in list(fresh['authoring'].get('directions',{}).items()):
@@ -373,8 +500,8 @@ def jobs(manifest, rate=0):
     for slot,clip in slots(config).items():
         state = status(config, slot, manifest.parent,clip)
         if state not in ('missing', 'redo'): continue
-        text = config['bank']['lines'].get(slot, '')
-        direction = recording_note(config,slot)
+        text, _ = recording_text(config, slot)
+        direction = core_guidance(slot, config['bank']['language'])
         job = dict(slot=slot, text=text, direction=direction, language=config['bank']['language'],
                    filename=slot + '.mp3',
                    category=category(slot), context=context(slot))
@@ -503,8 +630,13 @@ def package(manifest, output, ffmpeg, core):
     if readiness['missing']:
         raise ValueError(str(len(readiness['missing']))+' situations or native events need an approved recording')
     # Keep the editable catalogue intact. Only approved takes enter the game pack.
-    selected={slot for slot,clip in slots(config).items() if status(config,slot,manifest.parent,clip)=='approved'}
+    recordings = slots(config)
+    selected={slot for slot,clip in recordings.items() if status(config,slot,manifest.parent,clip)=='approved'}
     voice=voice_id(config);bank=config['bank'];bank['coverage']='situations-v1'
+    for slot in recordings:
+        caption, _ = recording_text(config, slot)
+        if caption != bank['lines'].get(slot, ''):
+            set_caption(bank, slot, caption)
     bank['data']['clips']={key:clip for key,clip in bank['data']['clips'].items() if key[len(voice)+1:] in selected}
     used={clip['sound'] for clip in bank['data']['clips'].values()}
     config['assets']={key:asset for key,asset in config['assets'].items() if key in used}
@@ -547,6 +679,8 @@ def review_many(manifest, selected, state):
     config['authoring']['lastBulkReview']=dict(before=before,after={slot:reviews[slot] for slot in selected})
     if digest(manifest)!=revision: raise ValueError('Project changed. Reload before reviewing.')
     write(manifest,config)
+    if state == 'approved':
+        discard_replaced_takes(manifest, selected)
     return dict(message=f'{len(selected)} recordings '+('approved.' if state=='approved' else 'marked for a retake. Files were kept.'))
 
 
@@ -589,4 +723,4 @@ def coverage(config,root,available=None):
     pools=dict(studio_schema.load()['coverage']['pools'])
     pools.update({'Native / '+event:pool for event,pool in config['bank']['native']['replacements'].items()})
     missing={name:pool for name,pool in pools.items() if not available.intersection(pool)}
-    return dict(required=len(pools),covered=len(pools)-len(missing),missing=list(missing),missingSlots=missing)
+    return dict(required=len(pools),covered=len(pools)-len(missing),missing=list(missing),missingSlots=missing,pools=pools)

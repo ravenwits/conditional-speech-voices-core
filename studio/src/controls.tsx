@@ -43,7 +43,7 @@ export function Choice({
   name: string;
   value: string;
   onChange: (v: string) => void;
-  items: { value: string; label: string; disabled?: boolean }[];
+  items: { value: string; label: string; disabled?: boolean; content?: ReactNode }[];
   disabled?: boolean;
   triggerClassName?: string;
 }) {
@@ -57,12 +57,12 @@ export function Choice({
       disabled={disabled}
     >
       <SelectTrigger aria-label={name} className={`w-full min-w-0 ${triggerClassName}`}>
-        <SelectValue />
+        <SelectValue>{items.find((item) => item.value === value)?.content}</SelectValue>
       </SelectTrigger>
       <SelectPopup>
         {items.map((i) => (
           <SelectItem value={i.value} key={i.value} disabled={i.disabled}>
-            {i.label}
+            {i.content ?? i.label}
           </SelectItem>
         ))}
       </SelectPopup>
@@ -124,7 +124,7 @@ export function Modal({
   open: boolean;
   onClose: () => void;
   title: string;
-  description: string;
+  description: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   panelClassName?: string;

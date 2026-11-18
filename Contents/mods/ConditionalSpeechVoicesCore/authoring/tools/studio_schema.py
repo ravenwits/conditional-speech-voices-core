@@ -52,8 +52,16 @@ def validate(config):
         if strip_text(bank.get(branch,{}).get(key))!=strip_text(reference.get(branch,{}).get(key)):
             raise ValueError('Core-defined '+branch+'.'+key+' cannot be edited in Studio.')
     if bank.get('aliases')!=reference.get('aliases'): raise ValueError('Core aliases cannot be edited in Studio.')
-    for key in ('schema','contract','needTiers','criticalHealth','profanity'):
+    for key in ('schema','contract','needTiers','criticalHealth'):
         if bank.get(key)!=reference.get(key): raise ValueError('Core-defined '+key+' cannot be edited in Studio.')
+    profanity = bank.get('profanity', {})
+    base = reference.get('profanity', {})
+    ids = profanity.get('ids')
+    if (not isinstance(ids, dict)
+        or {k:v for k,v in profanity.items() if k != 'ids'} != {k:v for k,v in base.items() if k != 'ids'}
+        or any(ids.get(slot) != value for slot,value in base.get('ids', {}).items())
+        or any(slot not in load()['slots'] or value is not True for slot,value in ids.items() if slot not in base.get('ids', {}))):
+        raise ValueError('Invalid profanity tags. Core tags and rules cannot be changed.')
     for branch in ('native','expressions','whispers','extras'):
         if strip_text(bank.get(branch))!=strip_text(reference.get(branch)):
             raise ValueError('Core-defined '+branch+' cannot be edited in Studio.')

@@ -104,7 +104,7 @@ return {
   LostPerson={acting='uneasy'},FriendMissing={acting='uneasy'},
   FoundPerson={acting='waryRelief'},ShelterThreat={acting='shaken'}
  },
- optionalSlots={'WindowLocked_1','WindowBarricaded_1','CarWindowOpened_1','CarWindowBroken_1'},
+ optionalSlots={'GeneratorStarted_1','GeneratorRepaired_1','CampfireLit_1','SawLogsDone_1','ClothingPatched_1','ClothingSewn_1','SmokeFinished_1','BookReading_1','MealPrepared_1','WindowLocked_1','WindowBarricaded_1','CarWindowOpened_1','CarWindowBroken_1'},
  slotPresentation={
   Fire_2={delivery='shout'}
  },

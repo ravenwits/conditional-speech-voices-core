@@ -4,6 +4,51 @@
   "extras": {
     "approved": true,
     "catalog": {
+      "GeneratorStarted_1": {
+        "id": "GeneratorStarted_1",
+        "group": "GeneratorStarted",
+        "text": "It's running. Good."
+      },
+      "GeneratorRepaired_1": {
+        "id": "GeneratorRepaired_1",
+        "group": "GeneratorRepaired",
+        "text": "That should keep it running a little longer."
+      },
+      "CampfireLit_1": {
+        "id": "CampfireLit_1",
+        "group": "CampfireLit",
+        "text": "There. We've got a fire."
+      },
+      "SawLogsDone_1": {
+        "id": "SawLogsDone_1",
+        "group": "SawLogsDone",
+        "text": "There. A few more planks."
+      },
+      "ClothingPatched_1": {
+        "id": "ClothingPatched_1",
+        "group": "ClothingPatched",
+        "text": "That patch should hold."
+      },
+      "ClothingSewn_1": {
+        "id": "ClothingSewn_1",
+        "group": "ClothingSewn",
+        "text": "That should do."
+      },
+      "SmokeFinished_1": {
+        "id": "SmokeFinished_1",
+        "group": "SmokeFinished",
+        "text": "I needed that."
+      },
+      "BookReading_1": {
+        "id": "BookReading_1",
+        "group": "BookReading",
+        "text": "Just a few more pages."
+      },
+      "MealPrepared_1": {
+        "id": "MealPrepared_1",
+        "group": "MealPrepared",
+        "text": "That's coming together."
+      },
       "AfterHumanShaken_2": {
         "id": "AfterHumanShaken_2",
         "group": "AfterHumanShaken",
@@ -2174,11 +2219,6 @@
         "group": "HumanDanger",
         "text": "They're trying to hurt me. Keep moving."
       },
-      "SickFromFood_3": {
-        "id": "Whisper_SickFromFood_3",
-        "group": "SickFromFood",
-        "text": "Oh, hell. I think it is coming back up."
-      },
       "HumanDanger_2": {
         "id": "Whisper_HumanDanger_2",
         "group": "HumanDanger",
@@ -2273,11 +2313,6 @@
         "id": "Whisper_FoundPerson_1",
         "group": "FoundPerson",
         "text": "There they are. Okay."
-      },
-      "VehicleDamage_2": {
-        "id": "Whisper_VehicleDamage_2",
-        "group": "VehicleDamage",
-        "text": "Need to check what that hit broke."
       },
       "FoundPerson_2": {
         "id": "Whisper_FoundPerson_2",
@@ -2459,16 +2494,6 @@
         "group": "TraitHunger",
         "text": "Hungry again. How am I supposed to keep going?"
       },
-      "TraitDriver_2": {
-        "id": "Whisper_TraitDriver_2",
-        "group": "TraitDriver",
-        "text": "Eyes on the road. Nice and steady."
-      },
-      "TraitDriver_1": {
-        "id": "Whisper_TraitDriver_1",
-        "group": "TraitDriver",
-        "text": "Rushing will only make this worse."
-      },
       "TraitHunger_2": {
         "id": "Whisper_TraitHunger_2",
         "group": "TraitHunger",
@@ -2584,11 +2609,6 @@
         "group": "Agoraphobic",
         "text": "Too much open ground here."
       },
-      "VehicleKillPassenger_2": {
-        "id": "Whisper_VehicleKillPassenger_2",
-        "group": "VehicleKillPassenger",
-        "text": "That one's gone. I wish I hadn't looked."
-      },
       "Agoraphobic_2": {
         "id": "Whisper_Agoraphobic_2",
         "group": "Agoraphobic",
@@ -2613,11 +2633,6 @@
         "id": "Whisper_AnimalTracks_1",
         "group": "AnimalTracks",
         "text": "Tracks. Something came through here."
-      },
-      "VehicleKillPassenger_3": {
-        "id": "Whisper_VehicleKillPassenger_3",
-        "group": "VehicleKillPassenger",
-        "text": "It's dead. I need a second..."
       },
       "TraitSight_2": {
         "id": "Whisper_TraitSight_2",
@@ -2662,7 +2677,7 @@
       "Bleeding_3": {
         "id": "Whisper_Bleeding_3",
         "group": "Bleeding",
-        "text": "Shit, I need to stop this bleeding."
+        "text": "Shit, I need to deal with this wound."
       },
       "TraitRest_2": {
         "id": "Whisper_TraitRest_2",
@@ -2824,11 +2839,6 @@
         "group": "WeaponBroken",
         "text": "It's broken. Back up, find something else."
       },
-      "VehicleKillDriver_1": {
-        "id": "Whisper_VehicleKillDriver_1",
-        "group": "VehicleKillDriver",
-        "text": "That one's dead... keep your eyes up."
-      },
       "JamCleared_1": {
         "id": "Whisper_JamCleared_1",
         "group": "JamCleared",
@@ -2924,20 +2934,10 @@
         "group": "Panic",
         "text": "Steady. Slow breaths. One at a time."
       },
-      "FuelLow_3": {
-        "id": "Whisper_FuelLow_3",
-        "group": "FuelLow",
-        "text": "Running low on fuel. Need to plan a stop."
-      },
       "ReliefStress_1": {
         "id": "Whisper_ReliefStress_1",
         "group": "ReliefStress",
         "text": "Okay... I feel a little calmer now."
-      },
-      "BatteryDead_1": {
-        "id": "Whisper_BatteryDead_1",
-        "group": "BatteryDead",
-        "text": "Battery's dead. That's not starting."
       },
       "AmmoCount_2": {
         "id": "Whisper_AmmoCount_2",
@@ -2949,11 +2949,6 @@
         "group": "ReliefWet",
         "text": "Dry at last. That feels better."
       },
-      "BatteryDead_2": {
-        "id": "Whisper_BatteryDead_2",
-        "group": "BatteryDead",
-        "text": "No charge. Need another battery."
-      },
       "ChamberEmpty_1": {
         "id": "Whisper_ChamberEmpty_1",
         "group": "ChamberEmpty",
@@ -2963,16 +2958,6 @@
         "id": "Whisper_ReliefLoad_1",
         "group": "ReliefLoad",
         "text": "That is a weight off my shoulders."
-      },
-      "VehicleSiegePassenger_3": {
-        "id": "Whisper_VehicleSiegePassenger_3",
-        "group": "VehicleSiegePassenger",
-        "text": "Fuck... I can't take this! Please, do something!"
-      },
-      "EngineFailed_1": {
-        "id": "Whisper_EngineFailed_1",
-        "group": "EngineFailed",
-        "text": "Come on... it won't start."
       },
       "ReliefSickness_1": {
         "id": "Whisper_ReliefSickness_1",
@@ -2984,20 +2969,10 @@
         "group": "AmmoCount",
         "text": "6 rounds in the magazine."
       },
-      "EngineFailed_2": {
-        "id": "Whisper_EngineFailed_2",
-        "group": "EngineFailed",
-        "text": "Damn engine won't turn over for me."
-      },
       "ReliefColdSymptoms_1": {
         "id": "Whisper_ReliefColdSymptoms_1",
         "group": "ReliefColdSymptoms",
         "text": "Those cold symptoms have eased off."
-      },
-      "EngineFailed_3": {
-        "id": "Whisper_EngineFailed_3",
-        "group": "EngineFailed",
-        "text": "Still not starting. Need to check it."
       },
       "AmmoCount_8": {
         "id": "Whisper_AmmoCount_8",
@@ -3013,11 +2988,6 @@
         "id": "Whisper_AmmoCount_9",
         "group": "AmmoCount",
         "text": "9 rounds in the magazine."
-      },
-      "VehicleSiegePassenger_2": {
-        "id": "Whisper_VehicleSiegePassenger_2",
-        "group": "VehicleSiegePassenger",
-        "text": "Oh God! Don't let them get in!"
       },
       "ReliefDiscomfort_1": {
         "id": "Whisper_ReliefDiscomfort_1",
@@ -3369,11 +3339,6 @@
         "group": "ReliefRest",
         "text": "That tired feeling has eased off."
       },
-      "EngineRecovered_1": {
-        "id": "Whisper_EngineRecovered_1",
-        "group": "EngineRecovered",
-        "text": "Oh, thank God. Keep running."
-      },
       "RepeatedHit_2": {
         "id": "Whisper_RepeatedHit_2",
         "group": "RepeatedHit",
@@ -3388,11 +3353,6 @@
         "id": "Whisper_Discomfort_1",
         "group": "Discomfort",
         "text": "I cannot get comfortable."
-      },
-      "EngineRecovered_2": {
-        "id": "Whisper_EngineRecovered_2",
-        "group": "EngineRecovered",
-        "text": "There we go... I needed that."
       },
       "ReliefStress_2": {
         "id": "Whisper_ReliefStress_2",
@@ -3419,20 +3379,10 @@
         "group": "ReliefWet",
         "text": "Not soaking wet anymore. Good."
       },
-      "EngineStalled_3": {
-        "id": "Whisper_EngineStalled_3",
-        "group": "EngineStalled",
-        "text": "It stopped. Breathe... think."
-      },
       "ColdMild_1": {
         "id": "Whisper_ColdMild_1",
         "group": "ColdMild",
         "text": "Getting cold. Need some warmth."
-      },
-      "EngineStalled_2": {
-        "id": "Whisper_EngineStalled_2",
-        "group": "EngineStalled",
-        "text": "Come on. Don't leave me here."
       },
       "ReliefLoad_2": {
         "id": "Whisper_ReliefLoad_2",
@@ -3449,20 +3399,10 @@
         "group": "ReliefLoad",
         "text": "That load feels manageable now."
       },
-      "FuelEmpty_1": {
-        "id": "Whisper_FuelEmpty_1",
-        "group": "FuelEmpty",
-        "text": "Empty. I let it run empty."
-      },
       "HungerSevere_1": {
         "id": "Whisper_HungerSevere_1",
         "group": "HungerSevere",
         "text": "I really need something to eat."
-      },
-      "FuelEmpty_2": {
-        "id": "Whisper_FuelEmpty_2",
-        "group": "FuelEmpty",
-        "text": "Out of gas. Okay... think."
       },
       "ReliefSickness_3": {
         "id": "Whisper_ReliefSickness_3",
@@ -3479,40 +3419,20 @@
         "group": "ReliefColdSymptoms",
         "text": "Not feeling those cold symptoms now."
       },
-      "FuelEmpty_3": {
-        "id": "Whisper_FuelEmpty_3",
-        "group": "FuelEmpty",
-        "text": "Damn it. No gas left."
-      },
       "ReliefColdSymptoms_3": {
         "id": "Whisper_ReliefColdSymptoms_3",
         "group": "ReliefColdSymptoms",
         "text": "A break from that cold. Finally."
-      },
-      "HotwireDone_1": {
-        "id": "Whisper_HotwireDone_1",
-        "group": "HotwireDone",
-        "text": "That's the wiring. Please let it start."
       },
       "ReliefMood_2": {
         "id": "Whisper_ReliefMood_2",
         "group": "ReliefMood",
         "text": "My mood has lifted a little."
       },
-      "HotwireDone_2": {
-        "id": "Whisper_HotwireDone_2",
-        "group": "HotwireDone",
-        "text": "Got it wired. Now... will it start?"
-      },
       "ReliefMood_3": {
         "id": "Whisper_ReliefMood_3",
         "group": "ReliefMood",
         "text": "Things feel a little less bleak now."
-      },
-      "HotwireDone_3": {
-        "id": "Whisper_HotwireDone_3",
-        "group": "HotwireDone",
-        "text": "Okay. That's connected. Try the ignition."
       },
       "ReliefDiscomfort_2": {
         "id": "Whisper_ReliefDiscomfort_2",
@@ -3529,20 +3449,10 @@
         "group": "ReliefDiscomfort",
         "text": "I can settle into this now."
       },
-      "EngineStalled_1": {
-        "id": "Whisper_EngineStalled_1",
-        "group": "EngineStalled",
-        "text": "No... not now. Please."
-      },
       "ReliefAnger_1": {
         "id": "Whisper_ReliefAnger_1",
         "group": "ReliefAnger",
         "text": "Okay... I am not so angry now."
-      },
-      "EngineRecovered_3": {
-        "id": "Whisper_EngineRecovered_3",
-        "group": "EngineRecovered",
-        "text": "It's running. Okay. Breathe."
       },
       "CarAlarm_3": {
         "id": "Whisper_CarAlarm_3",
@@ -3554,11 +3464,6 @@
         "group": "ReliefAnger",
         "text": "Let it go. I can calm down."
       },
-      "HeadlightsFailed_1": {
-        "id": "Whisper_HeadlightsFailed_1",
-        "group": "HeadlightsFailed",
-        "text": "The lights aren't working. I can't see enough."
-      },
       "LootClothing_2": {
         "id": "Whisper_LootClothing_2",
         "group": "LootClothing",
@@ -3569,30 +3474,15 @@
         "group": "LootLight",
         "text": "Now I have a light for these dark places."
       },
-      "HeadlightsFailed_2": {
-        "id": "Whisper_HeadlightsFailed_2",
-        "group": "HeadlightsFailed",
-        "text": "No light. I can't drive blind."
-      },
       "LootWater_3": {
         "id": "Whisper_LootWater_3",
         "group": "LootWater",
         "text": "Finally. Something for this thirst."
       },
-      "HeadlightsFailed_3": {
-        "id": "Whisper_HeadlightsFailed_3",
-        "group": "HeadlightsFailed",
-        "text": "Damn it. The headlights won't light up."
-      },
       "LootStomach_3": {
         "id": "Whisper_LootStomach_3",
         "group": "LootStomach",
         "text": "Something for my stomach. Worth keeping."
-      },
-      "VehicleCrowdDriver_1": {
-        "id": "Whisper_VehicleCrowdDriver_1",
-        "group": "VehicleCrowdDriver",
-        "text": "They're getting around the car. Stay focused."
       },
       "LootPainMedicine_2": {
         "id": "Whisper_LootPainMedicine_2",
@@ -3604,30 +3494,15 @@
         "group": "LootPainMedicine",
         "text": "Painkillers. These should help."
       },
-      "VehicleCrowdDriver_2": {
-        "id": "Whisper_VehicleCrowdDriver_2",
-        "group": "VehicleCrowdDriver",
-        "text": "Keep your hands steady. They're on both sides."
-      },
       "LootBandage_2": {
         "id": "Whisper_LootBandage_2",
         "group": "LootBandage",
         "text": "A clean bandage. Just what I need."
       },
-      "VehicleCrowdDriver_3": {
-        "id": "Whisper_VehicleCrowdDriver_3",
-        "group": "VehicleCrowdDriver",
-        "text": "All around me... think. There's got to be a way."
-      },
       "LootFood_1": {
         "id": "Whisper_LootFood_1",
         "group": "LootFood",
         "text": "Finally. Something to eat."
-      },
-      "VehicleCrowdPassenger_1": {
-        "id": "Whisper_VehicleCrowdPassenger_1",
-        "group": "VehicleCrowdPassenger",
-        "text": "They're getting around us. Please, stay calm."
       },
       "LootWeapon_2": {
         "id": "Whisper_LootWeapon_2",
@@ -3639,30 +3514,15 @@
         "group": "AmmoCount",
         "text": "20 rounds in the magazine."
       },
-      "VehicleCrowdPassenger_2": {
-        "id": "Whisper_VehicleCrowdPassenger_2",
-        "group": "VehicleCrowdPassenger",
-        "text": "Both sides... I don't like this."
-      },
       "AmmoCount_10": {
         "id": "Whisper_AmmoCount_10",
         "group": "AmmoCount",
         "text": "10 rounds in the magazine."
       },
-      "VehicleCrowdPassenger_3": {
-        "id": "Whisper_VehicleCrowdPassenger_3",
-        "group": "VehicleCrowdPassenger",
-        "text": "I can see them all around the car."
-      },
       "AmmoCount_5": {
         "id": "Whisper_AmmoCount_5",
         "group": "AmmoCount",
         "text": "5 rounds in the magazine."
-      },
-      "VehicleSiegeDriver_1": {
-        "id": "Whisper_VehicleSiegeDriver_1",
-        "group": "VehicleSiegeDriver",
-        "text": "No, no! Keep them out!"
       },
       "AmmoCount_3": {
         "id": "Whisper_AmmoCount_3",
@@ -3674,30 +3534,15 @@
         "group": "AmmoCount",
         "text": "1 round in the magazine."
       },
-      "VehicleSiegeDriver_2": {
-        "id": "Whisper_VehicleSiegeDriver_2",
-        "group": "VehicleSiegeDriver",
-        "text": "Fuck! Please, don't let them get in!"
-      },
       "FoodSuspect_1": {
         "id": "Whisper_FoodSuspect_1",
         "group": "FoodSuspect",
         "text": "Feeling sick. Maybe it was that food."
       },
-      "VehicleSiegeDriver_3": {
-        "id": "Whisper_VehicleSiegeDriver_3",
-        "group": "VehicleSiegeDriver",
-        "text": "Hands steady... I can't lose it now!"
-      },
       "RottenMore_1": {
         "id": "Whisper_RottenMore_1",
         "group": "RottenMore",
         "text": "Ugh... that food was rotten."
-      },
-      "VehicleSiegePassenger_1": {
-        "id": "Whisper_VehicleSiegePassenger_1",
-        "group": "VehicleSiegePassenger",
-        "text": "They're right here! Please, get us away!"
       },
       "ExploreMore_2": {
         "id": "Whisper_ExploreMore_2",
@@ -3729,11 +3574,6 @@
         "group": "AmmoReserve",
         "text": "There is ammunition in the magazine."
       },
-      "VehicleImpactDriver_1": {
-        "id": "Whisper_VehicleImpactDriver_1",
-        "group": "VehicleImpactDriver",
-        "text": "Jesus... I felt that."
-      },
       "PanicEscape_3": {
         "id": "Whisper_PanicEscape_3",
         "group": "Panic",
@@ -3744,30 +3584,15 @@
         "group": "Panic",
         "text": "They are too close. I need some space!"
       },
-      "VehicleImpactDriver_2": {
-        "id": "Whisper_VehicleImpactDriver_2",
-        "group": "VehicleImpactDriver",
-        "text": "Keep your eyes up. Hands on the wheel."
-      },
       "Foraged_1": {
         "id": "Whisper_Foraged_1",
         "group": "Foraged",
         "text": "Found something worth keeping."
       },
-      "VehicleImpactDriver_3": {
-        "id": "Whisper_VehicleImpactDriver_3",
-        "group": "VehicleImpactDriver",
-        "text": "That hit... okay. Keep control."
-      },
       "ReliefSobriety_1": {
         "id": "Whisper_ReliefSobriety_1",
         "group": "ReliefSobriety",
         "text": "My head feels clearer now."
-      },
-      "VehicleImpactPassenger_1": {
-        "id": "Whisper_VehicleImpactPassenger_1",
-        "group": "VehicleImpactPassenger",
-        "text": "Oh God... that hit."
       },
       "Foraged_3": {
         "id": "Whisper_Foraged_3",
@@ -3779,20 +3604,10 @@
         "group": "ReliefBoredom",
         "text": "That gave me something to focus on."
       },
-      "VehicleImpactPassenger_2": {
-        "id": "Whisper_VehicleImpactPassenger_2",
-        "group": "VehicleImpactPassenger",
-        "text": "I felt that right through the seat."
-      },
       "ReliefWet_3": {
         "id": "Whisper_ReliefWet_3",
         "group": "ReliefWet",
         "text": "Finally dry again."
-      },
-      "VehicleImpactPassenger_3": {
-        "id": "Whisper_VehicleImpactPassenger_3",
-        "group": "VehicleImpactPassenger",
-        "text": "Please... keep your eyes on the road."
       },
       "ReliefPain_2": {
         "id": "Whisper_ReliefPain_2",
@@ -3814,30 +3629,15 @@
         "group": "GunJammed",
         "text": "Hold on. Weapon jammed."
       },
-      "VehicleKillDriver_2": {
-        "id": "Whisper_VehicleKillDriver_2",
-        "group": "VehicleKillDriver",
-        "text": "It's dead. Don't think about it right now."
-      },
       "GunJammed_2": {
         "id": "Whisper_GunJammed_2",
         "group": "GunJammed",
         "text": "Come on, clear. Clear!"
       },
-      "VehicleKillDriver_3": {
-        "id": "Whisper_VehicleKillDriver_3",
-        "group": "VehicleKillDriver",
-        "text": "I killed it... just keep control."
-      },
       "GunJammed_3": {
         "id": "Whisper_GunJammed_3",
         "group": "GunJammed",
         "text": "Damn it, the gun is jammed!"
-      },
-      "VehicleKillPassenger_1": {
-        "id": "Whisper_VehicleKillPassenger_1",
-        "group": "VehicleKillPassenger",
-        "text": "It's dead... I saw it."
       },
       "HasACold_1": {
         "id": "Whisper_HasACold_1",
@@ -3874,11 +3674,6 @@
         "group": "LootMagazine",
         "text": "Finally, the right magazine for this thing."
       },
-      "BatteryDead_3": {
-        "id": "Whisper_BatteryDead_3",
-        "group": "BatteryDead",
-        "text": "Dead battery. Damn it."
-      },
       "HeavyLoad_2": {
         "id": "Whisper_HeavyLoad_2",
         "group": "HeavyLoad",
@@ -3904,11 +3699,6 @@
         "group": "Holes",
         "text": "Another tear in my clothes."
       },
-      "SickFromFood_2": {
-        "id": "Whisper_SickFromFood_2",
-        "group": "SickFromFood",
-        "text": "That meal is turning my stomach."
-      },
       "Holes_2": {
         "id": "Whisper_Holes_2",
         "group": "Holes",
@@ -3933,11 +3723,6 @@
         "id": "Whisper_Hungry_1",
         "group": "Hungry",
         "text": "Could use a little food."
-      },
-      "FuelLow_1": {
-        "id": "Whisper_FuelLow_1",
-        "group": "FuelLow",
-        "text": "Fuel's getting low. Need a gas station."
       },
       "Hungry_2": {
         "id": "Whisper_Hungry_2",
@@ -3993,11 +3778,6 @@
         "id": "Whisper_DoorBlocked_2",
         "group": "DoorBlocked",
         "text": "Can't get this door open. It's blocked."
-      },
-      "VehicleDamage_1": {
-        "id": "Whisper_VehicleDamage_1",
-        "group": "VehicleDamage",
-        "text": "That did not sound healthy."
       },
       "Hypothermia_2": {
         "id": "Whisper_Hypothermia_2",
@@ -4068,11 +3848,6 @@
         "id": "Whisper_Drunk_1",
         "group": "Drunk",
         "text": "Okay. That went to my head."
-      },
-      "FuelLow_2": {
-        "id": "Whisper_FuelLow_2",
-        "group": "FuelLow",
-        "text": "Not much gas left. Better watch it."
       },
       "Thirst_1": {
         "id": "Whisper_Thirst_1",
@@ -4189,11 +3964,6 @@
         "group": "StartleCowardly",
         "text": "No... no, keep breathing."
       },
-      "OnDawn_3": {
-        "id": "Whisper_OnDawn_3",
-        "group": "OnDawn",
-        "text": "Made it through another night."
-      },
       "StartleDesensitized_1": {
         "id": "Whisper_StartleDesensitized_1",
         "group": "StartleDesensitized",
@@ -4233,11 +4003,6 @@
         "id": "Whisper_OutOfAmmo_1",
         "group": "OutOfAmmo",
         "text": "Empty. Need to reload."
-      },
-      "SickFromFood_1": {
-        "id": "Whisper_SickFromFood_1",
-        "group": "SickFromFood",
-        "text": "Should not have eaten that."
       },
       "OutOfAmmo_2": {
         "id": "Whisper_OutOfAmmo_2",
@@ -4805,7 +4570,7 @@
         "profile": "frightened",
         "id": "Expr_frightened_Bleeding_3",
         "source": "Bleeding_3",
-        "text": "Shit, I need to stop this bleeding."
+        "text": "Shit, I need to deal with this wound."
       },
       "Expr_frightened_CantSprint_1": {
         "group": "CantSprint",
@@ -4967,27 +4732,6 @@
         "id": "Expr_sad_PainGeneric_3",
         "source": "PainGeneric_3",
         "text": "Shit. It hurts."
-      },
-      "Expr_sad_SickFromFood_1": {
-        "group": "SickFromFood",
-        "profile": "sad",
-        "id": "Expr_sad_SickFromFood_1",
-        "source": "SickFromFood_1",
-        "text": "Should not have eaten that."
-      },
-      "Expr_sad_SickFromFood_2": {
-        "group": "SickFromFood",
-        "profile": "sad",
-        "id": "Expr_sad_SickFromFood_2",
-        "source": "SickFromFood_2",
-        "text": "That meal is turning my stomach."
-      },
-      "Expr_sad_SickFromFood_3": {
-        "group": "SickFromFood",
-        "profile": "sad",
-        "id": "Expr_sad_SickFromFood_3",
-        "source": "SickFromFood_3",
-        "text": "Oh, hell. I think it is coming back up."
       },
       "Expr_sad_Sick_1": {
         "group": "Sick",
@@ -5457,7 +5201,7 @@
         "groupFallback": true,
         "profile": "slurred",
         "id": "Expr_slurred_Bleeding_3",
-        "text": "Shit, I need to stop this bleeding.",
+        "text": "Shit, I need to deal with this wound.",
         "source": "Bleeding_3"
       },
       "Expr_congested_Bleeding_3": {
@@ -5465,7 +5209,7 @@
         "groupFallback": true,
         "profile": "congested",
         "id": "Expr_congested_Bleeding_3",
-        "text": "Shit, I need to stop this bleeding.",
+        "text": "Shit, I need to deal with this wound.",
         "source": "Bleeding_3"
       },
       "Expr_slurred_Bored_2": {
@@ -6339,14 +6083,6 @@
         "id": "Expr_stammer_Hyperthermia_2",
         "text": "Need shade. And water.",
         "source": "Hyperthermia_2"
-      },
-      "Expr_stammer_Hyperthermia_1": {
-        "group": "Hyperthermia",
-        "groupFallback": false,
-        "profile": "stammer",
-        "id": "Expr_stammer_Hyperthermia_1",
-        "text": "Getting too hot in this gear.",
-        "source": "Hyperthermia_1"
       },
       "Expr_stammer_Claustrophobic_3": {
         "group": "Claustrophobic",
@@ -7666,23 +7402,19 @@
   "peaklimits": {},
   "profanity": {
     "ids": {
-      "Whisper_HeadlightsFailed_3": true,
       "VehicleSiegeDriver_2": true,
       "DisinfectDone_1": true,
       "Expr_breathless_PainGeneric_1": true,
       "Whisper_PanicEscape_3": true,
       "Expr_breathless_PainGeneric_3": true,
-      "Whisper_VehicleSiegeDriver_2": true,
       "Expr_breathless_Pain_3": true,
       "Expr_breathless_PanicEscape_1": true,
       "RepeatedHit_3": true,
       "Whisper_Pain_3": true,
       "Expr_slurred_Pain_3": true,
       "Expr_congested_Pain_3": true,
-      "FoodRotten_3": true,
       "Expr_breathless_RepeatedHit_3": true,
       "Darkness_1": true,
-      "SickFromFood_3": true,
       "Whisper_WeaponBroken_1": true,
       "Whisper_WeaponBroken_2": true,
       "StartleNormal_3": true,
@@ -7697,7 +7429,6 @@
       "GunJammed_3": true,
       "Expr_breathless_PanicEscape_3": true,
       "StartleBrave_3": true,
-      "Whisper_EngineFailed_2": true,
       "KillDesperate_3": true,
       "StartleBrave_4": true,
       "ReloadPanic_3": true,
@@ -7710,20 +7441,16 @@
       "Expr_slurred_Bleeding_3": true,
       "Expr_congested_Bleeding_3": true,
       "StartleCowardly_3": true,
-      "VehicleDamage_3": true,
       "InjuryAcute_2": true,
       "StartleCowardly_4": true,
       "InjuryAcute_3": true,
-      "Whisper_VehicleSiegePassenger_3": true,
       "VehicleSiegePassenger_3": true,
       "StartleCowardly_6": true,
       "Expr_frightened_Pain_3": true,
-      "Whisper_FuelEmpty_3": true,
       "InjuryAcute_1": true,
       "CarAlarm_1": true,
       "Whisper_GunJammed_3": true,
       "StartleDesensitized_3": true,
-      "Kill_3": true,
       "Expr_frightened_GunJammed_3": true,
       "StartleDesensitized_4": true,
       "PanicEscape_3": true,
@@ -7732,9 +7459,7 @@
       "StartleDesensitized_6": true,
       "Whisper_RepeatedHit_3": true,
       "StartleDesensitized_7": true,
-      "Whisper_SickFromFood_3": true,
       "Expr_angry_Angry_3": true,
-      "Uncomfortable_3": true,
       "DryCoping_1": true,
       "Expr_angry_GunJammed_3": true,
       "Whisper_PanicEscape_1": true,
@@ -7754,7 +7479,6 @@
       "FuelEmpty_3": true,
       "Whisper_CantSprint_3": true,
       "Whisper_Bleeding_3": true,
-      "Whisper_BatteryDead_3": true,
       "Whisper_PainGeneric_3": true,
       "Expr_frightened_OutOfAmmo_3": true,
       "StartleNormal_2": true,
@@ -7765,7 +7489,6 @@
       "Expr_sad_PainGeneric_3": true,
       "WeaponBroken_1": true,
       "StartleNormal_8": true,
-      "Expr_sad_SickFromFood_3": true,
       "StartleNormal_6": true,
       "StartleDesensitized_1": true,
       "StartleDesensitized_8": true,
@@ -7777,7 +7500,6 @@
       "ExhaustedCoping_1": true,
       "PainGeneric_3": true,
       "BatteryDead_3": true,
-      "Holes_3": true,
       "OutOfAmmo_3": true,
       "Whisper_StartleNormal_2": true,
       "Whisper_StartleBrave_1": true,
@@ -7786,7 +7508,11 @@
       "Whisper_CarAlarm_1": true,
       "Pain_3": true,
       "Whisper_StartleDesensitized_2": true,
-      "KillAngry_3": true
+      "KillAngry_3": true,
+      "Alt_PanicEscape_3": true,
+      "Alt_PanicGrounding_3": true,
+      "Alt_OutOfAmmo_2": true,
+      "Alt_MortalFear_2": true
     }
   },
   "voices": [],
@@ -8433,7 +8159,7 @@
           "id": "Bleeding_2"
         },
         {
-          "text": "Shit, I need to stop this bleeding.",
+          "text": "Shit, I need to deal with this wound.",
           "id": "Bleeding_3"
         }
       ],
@@ -9235,6 +8961,15 @@
     }
   },
   "lines": {
+    "GeneratorStarted_1": "It's running. Good.",
+    "GeneratorRepaired_1": "That should keep it running a little longer.",
+    "CampfireLit_1": "There. We've got a fire.",
+    "SawLogsDone_1": "There. A few more planks.",
+    "ClothingPatched_1": "That patch should hold.",
+    "ClothingSewn_1": "That should do.",
+    "SmokeFinished_1": "I needed that.",
+    "BookReading_1": "Just a few more pages.",
+    "MealPrepared_1": "That's coming together.",
     "ChopTree_1": "That should give us some wood.",
     "ChopTree_2": "One more swing. Come on.",
     "ChopTree_3": "Finally. Give me a second.",
@@ -9247,9 +8982,7 @@
     "Endurance_1": "Slow down. Let me catch my breath.",
     "Endurance_2": "My legs need a minute.",
     "Endurance_3": "Cannot keep running. Need to stop.",
-    "Explore_1": "Have not checked this place yet.",
     "Explore_2": "Could be something useful in here.",
-    "Explore_3": "Watch the corners. We do not know this place.",
     "FoodEaten_1": "Better than an empty stomach.",
     "FoodEaten_2": "Needed that more than I thought.",
     "FoodEaten_3": "Good. Might have some strength now.",
@@ -9257,13 +8990,8 @@
     "FoodRaw_2": "That tasted wrong. Really wrong.",
     "FoodRaw_3": "Hope that does not come back up.",
     "FoodRotten_1": "That food has gone bad.",
-    "FoodRotten_2": "No. That smell is not right.",
-    "FoodRotten_3": "Spit it out. Damn it.",
     "Foraged_1": "Found something worth keeping.",
-    "Foraged_2": "Good find. Into the bag.",
     "Foraged_3": "There we go. The search paid off.",
-    "FoundLoot_1": "We can make use of this.",
-    "FoundLoot_2": "Still something left in here.",
     "FoundLoot_3": "That is coming with me.",
     "GunJammed_1": "Hold on. Weapon jammed.",
     "GunJammed_2": "Come on, clear. Clear!",
@@ -9271,27 +8999,21 @@
     "HasACold_1": "Nose will not stop running.",
     "HasACold_2": "My throat feels like sandpaper.",
     "HasACold_3": "This cold is wearing me down.",
-    "HeavyLoad_1": "Bag is getting heavy.",
     "HeavyLoad_2": "Need to leave some of this behind.",
     "HeavyLoad_3": "Cannot carry all this much farther.",
     "Holes_1": "Another tear in my clothes.",
     "Holes_2": "This needs patching before it gets worse.",
-    "Holes_3": "Damn thing is coming apart.",
     "Hungry_1": "Could use a little food.",
     "Hungry_2": "Need to find a proper meal.",
     "Hungry_3": "Stomach is empty. I am shaking.",
-    "Hyperthermia_1": "Getting too hot in this gear.",
     "Hyperthermia_2": "Need shade. And water.",
     "Hyperthermia_3": "Have to cool down before I drop.",
-    "Hypothermia_1": "Cold is getting through my coat.",
     "Hypothermia_2": "Hands are going numb.",
     "Hypothermia_3": "Need warmth. Cannot stop shaking.",
-    "Injured_1": "That hurt. Give me a moment.",
     "Injured_2": "Need to check this wound.",
     "Injured_3": "I am hurt bad. Need help here.",
     "Kill_1": "That one is down.",
     "Kill_2": "Stay down. Please stay down.",
-    "Kill_3": "Bastard. Nearly had me.",
     "LevelUp_1": "Getting the hang of this.",
     "LevelUp_2": "That went better than last time.",
     "LevelUp_3": "Practice is finally paying off.",
@@ -9303,7 +9025,6 @@
     "MultiHit_3": "Too many. Need to move!",
     "OnDawn_1": "Sky is starting to lighten.",
     "OnDawn_2": "Morning. Still here.",
-    "OnDawn_3": "Made it through another night.",
     "OnDusk_1": "Light is fading.",
     "OnDusk_2": "Need somewhere safe before dark.",
     "OnDusk_3": "Night is coming. Time to get inside.",
@@ -9311,26 +9032,18 @@
     "OutOfAmmo_2": "No rounds left in this thing.",
     "OutOfAmmo_3": "Shit, I am out of ammunition!",
     "Pain_1": "Easy. That spot hurts.",
-    "Pain_2": "Every step makes it worse.",
     "Pain_3": "Ah, damn it! That hurts!",
     "Panic_1": "Easy. Keep breathing.",
     "Panic_2": "Stay focused. Find a way out.",
     "Panic_3": "Move! I cannot stay here!",
-    "PanicCallback_1": "Still thinking about that close call.",
-    "PanicCallback_2": "Thought I was done back there.",
-    "PanicCallback_3": "Hands are still shaking from that.",
     "Sick_1": "Stomach does not feel right.",
     "Sick_2": "Need to sit down before I throw up.",
     "Sick_3": "Something is seriously wrong with me.",
-    "SickFromFood_1": "Should not have eaten that.",
-    "SickFromFood_2": "That meal is turning my stomach.",
-    "SickFromFood_3": "Oh, hell. I think it is coming back up.",
     "Stress_1": "Need a moment to clear my head.",
     "Stress_2": "Every little noise is getting to me.",
     "Stress_3": "Cannot settle down. Just cannot.",
     "Thirst_1": "Could use a drink of water.",
     "Thirst_2": "Mouth is getting dry.",
-    "Thirst_3": "Need water. Starting to feel dizzy.",
     "Tired_1": "Could do with some rest.",
     "Tired_2": "Need a safe place to sleep.",
     "Tired_3": "Can barely keep my eyes open.",
@@ -9339,19 +9052,13 @@
     "Unhappy_3": "Need a reason to keep getting up.",
     "VehicleDamage_1": "That did not sound healthy.",
     "VehicleDamage_2": "Need to check what that hit broke.",
-    "VehicleDamage_3": "Damn it. The vehicle took a beating.",
     "Wet_1": "Clothes are getting damp.",
     "Wet_2": "I am soaked right through.",
     "Wet_3": "Need dry clothes before I freeze.",
     "Windchill_1": "Wind is cutting right through me.",
     "Windchill_2": "Need to get out of this wind.",
     "Windchill_3": "Cannot feel my fingers anymore.",
-    "NoxiousSmell_1": "Something is rotting nearby.",
-    "NoxiousSmell_2": "That stink is making me sick.",
     "NoxiousSmell_3": "Christ, I need some clean air.",
-    "Uncomfortable_1": "Something keeps digging into me.",
-    "Uncomfortable_2": "I need to adjust this gear.",
-    "Uncomfortable_3": "Cannot get comfortable in this damn thing.",
     "CantSprint_1": "My legs will not pick up the pace.",
     "CantSprint_2": "Walking is all I can manage.",
     "CantSprint_3": "Damn it, I cannot run like this.",
@@ -9362,11 +9069,8 @@
     "Agoraphobic_2": "I need a wall at my back.",
     "Agoraphobic_3": "Get me somewhere covered. Now.",
     "AnimalTracks_1": "Tracks. Something came through here.",
-    "AnimalTracks_2": "These prints look fresh.",
-    "AnimalTracks_3": "Keep quiet. It could be close.",
     "Bleeding_1": "Got a cut. Need to wrap it.",
-    "Bleeding_2": "This bandage is soaking through.",
-    "Bleeding_3": "Shit, I need to stop this bleeding.",
+    "Bleeding_3": "Shit, I need to deal with this wound.",
     "Bored_1": "Nothing to do but wait.",
     "Bored_2": "I should find something useful to do.",
     "Bored_3": "This waiting is getting to me.",
@@ -9795,7 +9499,6 @@
     "Whisper_MortalFear_2": "No, no... I don't wanna die!",
     "Whisper_MortalFear_3": "I can't breathe. I have to get out of here.",
     "Whisper_HumanDanger_1": "They're trying to hurt me. Keep moving.",
-    "Whisper_SickFromFood_3": "Oh, hell. I think it is coming back up.",
     "Whisper_HumanDanger_2": "I don't want to die over this.",
     "Whisper_Stress_1": "Need a moment to clear my head.",
     "Whisper_HumanDanger_3": "I can't let them get to me.",
@@ -9815,7 +9518,6 @@
     "Whisper_LostPerson_2": "I don't like not knowing where they are.",
     "Whisper_LostPerson_3": "I lost sight of them. Damn it.",
     "Whisper_FoundPerson_1": "There they are. Okay.",
-    "Whisper_VehicleDamage_2": "Need to check what that hit broke.",
     "Whisper_FoundPerson_2": "I can see them again.",
     "Whisper_FoundPerson_3": "Found them. Now what am I doing?",
     "Whisper_Wet_1": "Clothes are getting damp.",
@@ -9852,8 +9554,6 @@
     "Whisper_Darkness_3": "I need some light. I can't keep stumbling around like this.",
     "Whisper_TraitIlliterate_1": "I can't make sense of these words.",
     "Whisper_TraitHunger_1": "Hungry again. How am I supposed to keep going?",
-    "Whisper_TraitDriver_2": "Eyes on the road. Nice and steady.",
-    "Whisper_TraitDriver_1": "Rushing will only make this worse.",
     "Whisper_TraitHunger_2": "My stomach's growling. I need something to eat.",
     "Whisper_TraitReluctant_2": "There wasn't another way. Was there?",
     "Whisper_TraitThirst_1": "My mouth is so dry.",
@@ -9877,13 +9577,11 @@
     "Whisper_TraitNausea_2": "I feel sick. I need a minute.",
     "Whisper_ReliefBoredom_1": "At least I am not bored anymore.",
     "Whisper_Agoraphobic_1": "Too much open ground here.",
-    "Whisper_VehicleKillPassenger_2": "That one's gone. I wish I hadn't looked.",
     "Whisper_Agoraphobic_2": "I need a wall at my back.",
     "Whisper_TraitFull_2": "I'm full. Better keep some for later.",
     "Whisper_Agoraphobic_3": "Get me somewhere covered. Now.",
     "Whisper_TraitSight_1": "I can't make it out. I need some light.",
     "Whisper_AnimalTracks_1": "Tracks. Something came through here.",
-    "Whisper_VehicleKillPassenger_3": "It's dead. I need a second...",
     "Whisper_TraitSight_2": "I'd like to see where I'm stepping.",
     "Whisper_ReliefSobriety_2": "Not feeling drunk anymore. Take it easy.",
     "Whisper_TraitVigilant_1": "I need to watch my back too.",
@@ -9892,7 +9590,7 @@
     "Whisper_TraitVigilant_2": "I need to keep looking around.",
     "Whisper_TraitWound_1": "This wound just won't heal.",
     "Whisper_TraitRest_1": "I don't feel rested at all.",
-    "Whisper_Bleeding_3": "Shit, I need to stop this bleeding.",
+    "Whisper_Bleeding_3": "Shit, I need to deal with this wound.",
     "Whisper_TraitRest_2": "I slept, but I can barely keep my eyes open.",
     "Whisper_ThirstCritical_3": "So thirsty... I need water soon.",
     "Whisper_TraitFull_1": "That's enough for now. I'll save the rest.",
@@ -9925,7 +9623,6 @@
     "Whisper_WeaponBroken_2": "Damn it, this thing's done!",
     "Whisper_ExploreMore_1": "Better take a look around.",
     "Whisper_WeaponBroken_3": "It's broken. Back up, find something else.",
-    "Whisper_VehicleKillDriver_1": "That one's dead... keep your eyes up.",
     "Whisper_JamCleared_1": "Jam's cleared. Check the chamber.",
     "Whisper_ReliefPain_3": "No pain right now. Keep taking it easy.",
     "Whisper_TracksMore_1": "There are tracks here.",
@@ -9945,25 +9642,17 @@
     "Whisper_ThirstCritical_2": "I need water badly. I cannot put this off.",
     "Whisper_ReliefPain_1": "It is not hurting right now. Easy does it.",
     "Whisper_PanicGrounding_2": "Steady. Slow breaths. One at a time.",
-    "Whisper_FuelLow_3": "Running low on fuel. Need to plan a stop.",
     "Whisper_ReliefStress_1": "Okay... I feel a little calmer now.",
-    "Whisper_BatteryDead_1": "Battery's dead. That's not starting.",
     "Whisper_AmmoCount_2": "2 rounds in the magazine.",
     "Whisper_ReliefWet_1": "Dry at last. That feels better.",
-    "Whisper_BatteryDead_2": "No charge. Need another battery.",
     "Whisper_ChamberEmpty_1": "Need to chamber a round.",
     "Whisper_ReliefLoad_1": "That is a weight off my shoulders.",
-    "Whisper_VehicleSiegePassenger_3": "Fuck... I can't take this! Please, do something!",
-    "Whisper_EngineFailed_1": "Come on... it won't start.",
     "Whisper_ReliefSickness_1": "I feel less sick now. Hope it lasts.",
     "Whisper_AmmoCount_6": "6 rounds in the magazine.",
-    "Whisper_EngineFailed_2": "Damn engine won't turn over for me.",
     "Whisper_ReliefColdSymptoms_1": "Those cold symptoms have eased off.",
-    "Whisper_EngineFailed_3": "Still not starting. Need to check it.",
     "Whisper_AmmoCount_8": "8 rounds in the magazine.",
     "Whisper_ReliefMood_1": "I feel a little less miserable now.",
     "Whisper_AmmoCount_9": "9 rounds in the magazine.",
-    "Whisper_VehicleSiegePassenger_2": "Oh God! Don't let them get in!",
     "Whisper_ReliefDiscomfort_1": "More comfortable now. Finally.",
     "Whisper_TracksMore_2": "Something left tracks here.",
     "Whisper_BandageDone_3": "That's covered. Still need to watch it.",
@@ -10034,100 +9723,66 @@
     "Whisper_ReliefRest_2": "Not so tired anymore.",
     "Whisper_RepeatedHit_1": "Come on, go down already!",
     "Whisper_ReliefRest_3": "That tired feeling has eased off.",
-    "Whisper_EngineRecovered_1": "Oh, thank God. Keep running.",
     "Whisper_RepeatedHit_2": "Why will you not stay down?",
     "Whisper_CarAlarm_2": "No, no... shut up!",
     "Whisper_Discomfort_1": "I cannot get comfortable.",
-    "Whisper_EngineRecovered_2": "There we go... I needed that.",
     "Whisper_ReliefStress_2": "Not so wound up now.",
     "Whisper_Discomfort_2": "Something feels off. Need a moment.",
     "Whisper_ReliefStress_3": "I can settle down a little.",
     "Whisper_Full_1": "That is enough food for now.",
     "Whisper_ReliefWet_2": "Not soaking wet anymore. Good.",
-    "Whisper_EngineStalled_3": "It stopped. Breathe... think.",
     "Whisper_ColdMild_1": "Getting cold. Need some warmth.",
-    "Whisper_EngineStalled_2": "Come on. Don't leave me here.",
     "Whisper_ReliefLoad_2": "Much easier without all that weight.",
     "Whisper_HeatMild_1": "Getting hot. Need to cool down.",
     "Whisper_ReliefLoad_3": "That load feels manageable now.",
-    "Whisper_FuelEmpty_1": "Empty. I let it run empty.",
     "Whisper_HungerSevere_1": "I really need something to eat.",
-    "Whisper_FuelEmpty_2": "Out of gas. Okay... think.",
     "Whisper_ReliefSickness_3": "Feeling less sick. Take it easy.",
     "Whisper_PainGeneric_1": "Damn... that hurts.",
     "Whisper_ReliefColdSymptoms_2": "Not feeling those cold symptoms now.",
-    "Whisper_FuelEmpty_3": "Damn it. No gas left.",
     "Whisper_ReliefColdSymptoms_3": "A break from that cold. Finally.",
-    "Whisper_HotwireDone_1": "That's the wiring. Please let it start.",
     "Whisper_ReliefMood_2": "My mood has lifted a little.",
-    "Whisper_HotwireDone_2": "Got it wired. Now... will it start?",
     "Whisper_ReliefMood_3": "Things feel a little less bleak now.",
-    "Whisper_HotwireDone_3": "Okay. That's connected. Try the ignition.",
     "Whisper_ReliefDiscomfort_2": "That uncomfortable feeling has passed.",
     "Whisper_CarAlarm_1": "Shit. They'll hear that.",
     "Whisper_ReliefDiscomfort_3": "I can settle into this now.",
-    "Whisper_EngineStalled_1": "No... not now. Please.",
     "Whisper_ReliefAnger_1": "Okay... I am not so angry now.",
-    "Whisper_EngineRecovered_3": "It's running. Okay. Breathe.",
     "Whisper_CarAlarm_3": "Oh God. That noise... I need to move.",
     "Whisper_ReliefAnger_2": "Let it go. I can calm down.",
-    "Whisper_HeadlightsFailed_1": "The lights aren't working. I can't see enough.",
     "Whisper_LootClothing_2": "This should keep me warmer.",
     "Whisper_LootLight_3": "Now I have a light for these dark places.",
-    "Whisper_HeadlightsFailed_2": "No light. I can't drive blind.",
     "Whisper_LootWater_3": "Finally. Something for this thirst.",
-    "Whisper_HeadlightsFailed_3": "Damn it. The headlights won't light up.",
     "Whisper_LootStomach_3": "Something for my stomach. Worth keeping.",
-    "Whisper_VehicleCrowdDriver_1": "They're getting around the car. Stay focused.",
     "Whisper_LootPainMedicine_2": "Good. Something for this pain.",
     "Whisper_LootPainMedicine_1": "Painkillers. These should help.",
-    "Whisper_VehicleCrowdDriver_2": "Keep your hands steady. They're on both sides.",
     "Whisper_LootBandage_2": "A clean bandage. Just what I need.",
-    "Whisper_VehicleCrowdDriver_3": "All around me... think. There's got to be a way.",
     "Whisper_LootFood_1": "Finally. Something to eat.",
-    "Whisper_VehicleCrowdPassenger_1": "They're getting around us. Please, stay calm.",
     "Whisper_LootWeapon_2": "Good. Something to defend myself with.",
     "Whisper_AmmoCount_20": "20 rounds in the magazine.",
-    "Whisper_VehicleCrowdPassenger_2": "Both sides... I don't like this.",
     "Whisper_AmmoCount_10": "10 rounds in the magazine.",
-    "Whisper_VehicleCrowdPassenger_3": "I can see them all around the car.",
     "Whisper_AmmoCount_5": "5 rounds in the magazine.",
-    "Whisper_VehicleSiegeDriver_1": "No, no! Keep them out!",
     "Whisper_AmmoCount_3": "3 rounds in the magazine.",
     "Whisper_AmmoCount_1": "1 round in the magazine.",
-    "Whisper_VehicleSiegeDriver_2": "Fuck! Please, don't let them get in!",
     "Whisper_FoodSuspect_1": "Feeling sick. Maybe it was that food.",
-    "Whisper_VehicleSiegeDriver_3": "Hands steady... I can't lose it now!",
     "Whisper_RottenMore_1": "Ugh... that food was rotten.",
-    "Whisper_VehicleSiegePassenger_1": "They're right here! Please, get us away!",
     "Whisper_ExploreMore_2": "Let me see what is in here.",
     "Whisper_BoredMore_1": "Need something to occupy my mind.",
     "Whisper_FoodRaw_3": "Hope that does not come back up.",
     "Whisper_AmmoReserve_3": "Magazine is not empty.",
     "Whisper_FoodRotten_1": "That food has gone bad.",
     "Whisper_AmmoReserve_2": "There is ammunition in the magazine.",
-    "Whisper_VehicleImpactDriver_1": "Jesus... I felt that.",
     "Whisper_PanicEscape_3": "Shit... I need to get away from them!",
     "Whisper_PanicEscape_2": "They are too close. I need some space!",
-    "Whisper_VehicleImpactDriver_2": "Keep your eyes up. Hands on the wheel.",
     "Whisper_Foraged_1": "Found something worth keeping.",
-    "Whisper_VehicleImpactDriver_3": "That hit... okay. Keep control.",
     "Whisper_ReliefSobriety_1": "My head feels clearer now.",
-    "Whisper_VehicleImpactPassenger_1": "Oh God... that hit.",
     "Whisper_Foraged_3": "There we go. The search paid off.",
     "Whisper_ReliefBoredom_2": "That gave me something to focus on.",
-    "Whisper_VehicleImpactPassenger_2": "I felt that right through the seat.",
     "Whisper_ReliefWet_3": "Finally dry again.",
-    "Whisper_VehicleImpactPassenger_3": "Please... keep your eyes on the road.",
     "Whisper_ReliefPain_2": "The pain has eased off for now.",
     "Whisper_FoundLoot_3": "That is coming with me.",
     "Whisper_ReliefHeat_3": "The heat is not bothering me now.",
     "Whisper_GunJammed_1": "Hold on. Weapon jammed.",
-    "Whisper_VehicleKillDriver_2": "It's dead. Don't think about it right now.",
     "Whisper_GunJammed_2": "Come on, clear. Clear!",
-    "Whisper_VehicleKillDriver_3": "I killed it... just keep control.",
     "Whisper_GunJammed_3": "Damn it, the gun is jammed!",
-    "Whisper_VehicleKillPassenger_1": "It's dead... I saw it.",
     "Whisper_HasACold_1": "Nose will not stop running.",
     "Whisper_BandageDone_1": "Bandage is on. That should hold for now.",
     "Whisper_HasACold_2": "My throat feels like sandpaper.",
@@ -10135,19 +9790,16 @@
     "Whisper_HasACold_3": "This cold is wearing me down.",
     "Whisper_ThreatCalm_1": "Keep your distance. Watch them.",
     "Whisper_LootMagazine_3": "Finally, the right magazine for this thing.",
-    "Whisper_BatteryDead_3": "Dead battery. Damn it.",
     "Whisper_HeavyLoad_2": "Need to leave some of this behind.",
     "Whisper_BandageDone_2": "Wrapped up. Keep it clean.",
     "Whisper_HeavyLoad_3": "Cannot carry all this much farther.",
     "Whisper_Panic_2": "Stay focused. Find a way out.",
     "Whisper_Holes_1": "Another tear in my clothes.",
-    "Whisper_SickFromFood_2": "That meal is turning my stomach.",
     "Whisper_Holes_2": "This needs patching before it gets worse.",
     "Whisper_LootCanOpener_1": "A can opener. Now I can open those cans.",
     "Whisper_DoorBlocked_3": "Blocked off. Need another way through.",
     "Whisper_DoorLocked_1": "Locked. Need another way in.",
     "Whisper_Hungry_1": "Could use a little food.",
-    "Whisper_FuelLow_1": "Fuel's getting low. Need a gas station.",
     "Whisper_Hungry_2": "Need to find a proper meal.",
     "Whisper_InjuryAftermath_2": "I can't go through that again.",
     "Whisper_WeaponReady_3": "Ready to fire. Make it count.",
@@ -10159,7 +9811,6 @@
     "Whisper_Hyperthermia_3": "Have to cool down before I drop.",
     "Whisper_Windchill_1": "Wind is cutting right through me.",
     "Whisper_DoorBlocked_2": "Can't get this door open. It's blocked.",
-    "Whisper_VehicleDamage_1": "That did not sound healthy.",
     "Whisper_Hypothermia_2": "Hands are going numb.",
     "Whisper_Unhappy_2": "Miss having something to look forward to.",
     "Whisper_Hypothermia_3": "Need warmth. Cannot stop shaking.",
@@ -10174,7 +9825,6 @@
     "Whisper_DisinfectDone_3": "That's cleaned out. One thing at a time.",
     "Whisper_Kill_2": "Stay down. Please stay down.",
     "Whisper_Drunk_1": "Okay. That went to my head.",
-    "Whisper_FuelLow_2": "Not much gas left. Better watch it.",
     "Whisper_Thirst_1": "Could use a drink of water.",
     "Whisper_LevelUp_1": "Getting the hang of this.",
     "Whisper_NicotineNeed_1": "I need a smoke. My nerves are shot.",
@@ -10198,7 +9848,6 @@
     "Whisper_StartleCowardly_1": "Oh God... not now.",
     "Whisper_OnDawn_2": "Morning. Still here.",
     "Whisper_StartleCowardly_2": "No... no, keep breathing.",
-    "Whisper_OnDawn_3": "Made it through another night.",
     "Whisper_StartleDesensitized_1": "Shit.",
     "Whisper_OnDusk_1": "Light is fading.",
     "Whisper_StartleDesensitized_2": "Well... fuck.",
@@ -10207,7 +9856,6 @@
     "Whisper_OnDusk_3": "Night is coming. Time to get inside.",
     "Whisper_LootMagazine_2": "Good, a magazine that fits my gun.",
     "Whisper_OutOfAmmo_1": "Empty. Need to reload.",
-    "Whisper_SickFromFood_1": "Should not have eaten that.",
     "Whisper_OutOfAmmo_2": "No rounds left in this thing.",
     "Whisper_Sick_3": "Something is seriously wrong with me.",
     "Whisper_OutOfAmmo_3": "Shit, I am out of ammunition!",
@@ -10280,7 +9928,7 @@
     "Expr_frightened_Agoraphobic_2": "I need a wall at my back.",
     "Expr_frightened_Agoraphobic_3": "Get me somewhere covered. Now.",
     "Expr_frightened_Bleeding_1": "Got a cut. Need to wrap it.",
-    "Expr_frightened_Bleeding_3": "Shit, I need to stop this bleeding.",
+    "Expr_frightened_Bleeding_3": "Shit, I need to deal with this wound.",
     "Expr_frightened_CantSprint_1": "My legs will not pick up the pace.",
     "Expr_frightened_CantSprint_2": "Walking is all I can manage.",
     "Expr_frightened_CantSprint_3": "Damn it, I cannot run like this.",
@@ -10304,9 +9952,6 @@
     "Expr_sad_PainGeneric_1": "Damn... that hurts.",
     "Expr_sad_PainGeneric_2": "Ah... that is sore.",
     "Expr_sad_PainGeneric_3": "Shit. It hurts.",
-    "Expr_sad_SickFromFood_1": "Should not have eaten that.",
-    "Expr_sad_SickFromFood_2": "That meal is turning my stomach.",
-    "Expr_sad_SickFromFood_3": "Oh, hell. I think it is coming back up.",
     "Expr_sad_Sick_1": "Stomach does not feel right.",
     "Expr_sad_Sick_2": "Need to sit down before I throw up.",
     "Expr_sad_Sick_3": "Something is seriously wrong with me.",
@@ -10372,8 +10017,8 @@
     "Expr_congested_AnimalTracks_1": "Tracks. Something came through here.",
     "Expr_slurred_Bleeding_1": "Got a cut. Need to wrap it.",
     "Expr_congested_Bleeding_1": "Got a cut. Need to wrap it.",
-    "Expr_slurred_Bleeding_3": "Shit, I need to stop this bleeding.",
-    "Expr_congested_Bleeding_3": "Shit, I need to stop this bleeding.",
+    "Expr_slurred_Bleeding_3": "Shit, I need to deal with this wound.",
+    "Expr_congested_Bleeding_3": "Shit, I need to deal with this wound.",
     "Expr_slurred_Bored_2": "I should find something useful to do.",
     "Expr_congested_Bored_2": "I should find something useful to do.",
     "Expr_slurred_ChopTree_1": "That should give us some wood.",
@@ -10483,7 +10128,6 @@
     "Expr_stammer_Panic_1": "Easy. Keep breathing.",
     "Expr_stammer_Hyperthermia_3": "Have to cool down before I drop.",
     "Expr_stammer_Hyperthermia_2": "Need shade. And water.",
-    "Expr_stammer_Hyperthermia_1": "Getting too hot in this gear.",
     "Expr_stammer_Claustrophobic_3": "I need to get out of this room.",
     "Expr_stammer_Claustrophobic_2": "Feels like these walls are closing in.",
     "Expr_stammer_Claustrophobic_1": "Keep that doorway clear.",
@@ -10834,7 +10478,16 @@
     "Alt_NativePain_1": "Short pain reaction",
     "Alt_NativePainMoodle_1": "Suppressed pain reaction",
     "Alt_NativeEffort_1": "Short effort grunt",
-    "Alt_NativeWhisperCall_1": "Psst!"
+    "Alt_NativeWhisperCall_1": "Psst!",
+    "Alt_InjuryAcute_2": "That hurt. I need to move.",
+    "Alt_InjuryAcute_3": "Ah! I need a second.",
+    "Alt_PainGeneric_1": "It hurts every time I move.",
+    "Alt_PainGeneric_3": "Easy. I can still move.",
+    "Alt_CriticalWound_1": "I need to deal with this wound.",
+    "Alt_PanicEscape_3": "Fuck! I need to get out of here!",
+    "Alt_PanicGrounding_3": "Shit. Breathe. I can do this.",
+    "Alt_OutOfAmmo_2": "Fuck! Nothing left!",
+    "Alt_MortalFear_2": "Fuck, I do not want to die here!"
   },
   "contract": 1,
   "needTiers": 1,

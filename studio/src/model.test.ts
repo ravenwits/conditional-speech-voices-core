@@ -25,3 +25,9 @@ it('filters acting independently of delivery and situation',()=>{
  expect(filterRows(rows,{...emptyFilters,delivery:'normal',acting:'breathless'})).toEqual([rows[1]]);
  expect(filterRows(rows,{...emptyFilters,delivery:'whisper',acting:'breathless'})).toEqual([]);
 });
+
+ it('filters profanity independently and combines it with review status', () => {
+ const explicit = {...rows[0], profanity:true};
+ expect(filterRows([explicit, ...rows], {...emptyFilters, profanity:'yes'})).toEqual([explicit]);
+ expect(filterRows([explicit, ...rows], {...emptyFilters, profanity:'yes', state:'approved'})).toEqual([]);
+ });

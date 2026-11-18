@@ -1,6 +1,7 @@
 """Authoring limits, not claims about the game engine."""
 import re
 MAX_CAPTION = 240
+MAX_SPEECH_SCRIPT = 10_000
 MAX_SECONDS = 20
 
 def steam_profile(value):

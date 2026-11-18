@@ -1,4 +1,4 @@
-return {version=1,slots={
+local requirements={version=1,slots={
     "AfterHumanShaken_1",
     "AfterHumanShaken_2",
     "AfterHumanShaken_3",
@@ -1541,3 +1541,11 @@ return {version=1,slots={
     "WhisperMegaphonePsst",
     "WhisperPsst",
 }}
+
+requirements.retired=require "CSV/VoiceRetired"
+local slots={}
+for _,slot in ipairs(requirements.slots)do
+    if not requirements.retired[slot] then slots[#slots+1]=slot end
+end
+requirements.slots=slots
+return requirements

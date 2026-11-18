@@ -36,6 +36,7 @@ def export(check=False):
     contract=json.loads((TOOLS/'voice-contract-v1.json').read_text(encoding='utf-8'))
     if set(data['VoiceRequirements']['slots'])!=set(contract['slots']):
         raise ValueError('Core and authoring contract differ. Refresh the contract first.')
+    retired=data['VoiceRequirements']['retired']
     template=json.loads((TOOLS/'voice-template-v1.json').read_text(encoding='utf-8'))
     required=set(contract['slots'])
     for extension in contract['extensions'].values(): required.update(extension['slots'])
@@ -87,9 +88,12 @@ def export(check=False):
         optional.add(slot)
     if not optional <= rows.keys() or optional & required:
         raise ValueError('Invalid optional recording slots')
-    for id in sorted(required | optional):
+    active=required | optional
+    active.difference_update(retired)
+    for id in sorted(active):
         row=rows[id]; group=row['group']
         row.pop('id',None);row['slot']=id
+        if id in optional: row['optional']=True
         row['nativeEvents']=sorted(row.get('nativeEvents',[]))
         source=rows.get(row['source'],row)
         if row is not source:
@@ -158,7 +162,10 @@ def export(check=False):
     for name,pool in data['VoicePresentation']['coveragePools'].items():
         pools['context / '+name]=pool
     from build_voice_pack import lua as encode_lua
-    coverage=dict(version=1,pools={k:sorted(v) for k,v in sorted(pools.items())})
+    coverage=dict(version=1,pools={
+        key: eligible for key,pool in sorted(pools.items())
+        if (eligible := sorted(set(pool) & active))
+    })
     coverage_path=CORE/'42/media/lua/shared/CSV/VoiceCoverage.lua'
     coverage_text='return '+encode_lua(coverage)+'\n'
     if check:
@@ -168,7 +175,8 @@ def export(check=False):
             for p in (CORE/'42/media/lua').rglob('*.lua') if p.name!='BuildIdentity.lua'}
     for name in ['voice-template-v1.json','voice-contract-v1.json','export_studio_schema.py']:
         p=TOOLS/name;inputs[p.relative_to(CORE).as_posix()]=source_digest(p)
-    return dict(version=1,contract=contract['version'],slots={s:rows[s] for s in sorted(required | optional)},
+    return dict(version=1,contract=contract['version'],slots={s:rows[s] for s in sorted(active)},
+                retiredSlots=dict(sorted(retired.items())),
                 groups=groups,sources=source_files,inputs=inputs,coverage=coverage)
 
 def main():

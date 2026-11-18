@@ -9,6 +9,7 @@ import struct
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from unittest.mock import patch
 
@@ -30,7 +31,7 @@ class Projects(unittest.TestCase):
         self.manifest = self.root / 'trial.json'
         initialize(self.manifest, 'sample', 'TR', trial=True)
 
-    def supply(self, slot='Explore_1'):
+    def supply(self, slot='Explore_2'):
         config = p.read(self.manifest)
         asset = config['assets'][p.slots(config)[slot]['sound']]
         path = p.contained(self.root, asset['source'])
@@ -38,7 +39,7 @@ class Projects(unittest.TestCase):
         path.write_bytes(b'test recording bytes' * 100)
         return path
 
-    def approve(self, slot='Explore_1'):
+    def approve(self, slot='Explore_2'):
         p.edit(self.manifest, slot, 'Buraya daha bakmadÄ±m.', 'A cautious observation.', 'approved')
 
     def test_presentation_separates_delivery_from_acting(self):
@@ -51,12 +52,10 @@ class Projects(unittest.TestCase):
 
     def test_core_acting_tags_reach_studio_without_changing_delivery(self):
         for slot, acting in {'EngineRecovered_3':'relieved', 'PanicEscape_2':'breathless',
-                             'ThreatTense_1':'uneasy', 'GunJammed_1':'tense',
-                             'Whisper_EngineRecovered_3':'relieved'}.items():
+                             'ThreatTense_1':'uneasy', 'GunJammed_1':'tense'}.items():
             self.assertEqual(studio_schema.entry(slot)['acting'], acting)
             self.assertTrue(p.guidance(slot).isascii())
             self.assertTrue(p.guidance(slot).strip())
-        self.assertEqual(studio_schema.entry('Whisper_EngineRecovered_3')['delivery'], 'whisper')
         self.assertEqual(studio_schema.entry('Expr_angry_GunJammed_1')['acting'], 'angry')
 
     def test_single_alternative_pack_passes_actual_core_registry(self):
@@ -87,34 +86,34 @@ class Projects(unittest.TestCase):
             p.package(self.manifest,self.root/'bad','unused',TOOLS.parents[1])
 
     def test_bulk_review_is_scoped_and_atomic_and_keeps_files(self):
-        first=self.supply();second=self.supply('Explore_2')
+        first=self.supply();second=self.supply('ExploreMore_1')
         checksums=[p.digest(first),p.digest(second)]
-        p.review_many(self.manifest,['Explore_1'],'approved')
+        p.review_many(self.manifest,['Explore_2'],'approved')
         config=p.read(self.manifest)
-        self.assertEqual(p.status(config,'Explore_1',self.root),'approved')
-        self.assertEqual(p.status(config,'Explore_2',self.root),'pending')
+        self.assertEqual(p.status(config,'Explore_2',self.root),'approved')
+        self.assertEqual(p.status(config,'ExploreMore_1',self.root),'pending')
         before=p.digest(self.manifest)
-        for selection in (['Explore_1','Explore_3'],['Unknown'],['Explore_1','Explore_1']):
+        for selection in (['Explore_2','ExploreMore_2'],['Unknown'],['Explore_2','Explore_2']):
             with self.assertRaises(ValueError):p.review_many(self.manifest,selection,'redo')
             self.assertEqual(p.digest(self.manifest),before)
-        p.review_many(self.manifest,['Explore_1','Explore_2'],'redo')
+        p.review_many(self.manifest,['Explore_2','ExploreMore_1'],'redo')
         self.assertEqual([p.digest(first),p.digest(second)],checksums)
-        self.assertEqual(p.status(p.read(self.manifest),'Explore_1',self.root),'redo')
+        self.assertEqual(p.status(p.read(self.manifest),'Explore_2',self.root),'redo')
 
     def test_bulk_undo_preserves_unrelated_changes_and_rejects_changed_takes(self):
-        first=self.supply();self.supply('Explore_2')
+        first=self.supply();self.supply('ExploreMore_1')
         checksum=p.digest(first)
-        p.review_many(self.manifest,['Explore_1'],'approved')
-        p.edit(self.manifest,'Explore_2','BaÅŸka bir replik.','','redo')
+        p.review_many(self.manifest,['Explore_2'],'approved')
+        p.edit(self.manifest,'ExploreMore_1','BaÅŸka bir replik.','','redo')
         self.assertTrue(p.rows(self.manifest)['canUndoReview'])
         p.undo_review(self.manifest)
         config=p.read(self.manifest)
-        self.assertEqual(p.status(config,'Explore_1',self.root),'pending')
-        self.assertEqual(p.status(config,'Explore_2',self.root),'redo')
+        self.assertEqual(p.status(config,'Explore_2',self.root),'pending')
+        self.assertEqual(p.status(config,'ExploreMore_1',self.root),'redo')
         self.assertFalse(p.rows(self.manifest)['canUndoReview'])
         self.assertEqual(p.digest(first),checksum)
-        p.review_many(self.manifest,['Explore_1'],'approved')
-        p.edit(self.manifest,'Explore_1','Yeni replik.','','pending')
+        p.review_many(self.manifest,['Explore_2'],'approved')
+        p.edit(self.manifest,'Explore_2','Yeni replik.','','pending')
         before=p.digest(self.manifest)
         with self.assertRaisesRegex(ValueError,'newer work'):p.undo_review(self.manifest)
         self.assertEqual(p.digest(self.manifest),before)
@@ -122,10 +121,10 @@ class Projects(unittest.TestCase):
     def test_unicode_caption_round_trip_preserves_slot(self):
         self.supply()
         text='GÃ¶z gÃ¶zÃ¼ gÃ¶rmÃ¼yor. Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© æ—¥æœ¬èªž à¨ªà©°à¨œà¨¾à¨¬à©€ ðŸ«¥'
-        p.edit(self.manifest,'Explore_1',text,'','pending')
-        row=next(r for r in p.rows(self.manifest)['rows'] if r['slot']=='Explore_1')
+        p.edit(self.manifest,'Explore_2',text,'','pending')
+        row=next(r for r in p.rows(self.manifest)['rows'] if r['slot']=='Explore_2')
         self.assertEqual(row['text'],text)
-        self.assertIn('Explore_1',p.slots(p.read(self.manifest)))
+        self.assertIn('Explore_2',p.slots(p.read(self.manifest)))
 
     def test_launcher_keeps_existing_project_and_checks_prerequisites(self):
         from launch_studio import workspace,prerequisites
@@ -150,9 +149,9 @@ class Projects(unittest.TestCase):
     def test_caption_and_profile_limits(self):
         from recording_limits import steam_profile, MAX_CAPTION
         self.supply()
-        p.edit(self.manifest,'Explore_1','x'*MAX_CAPTION,'','pending')
+        p.edit(self.manifest,'Explore_2','x'*MAX_CAPTION,'','pending')
         before=p.digest(self.manifest)
-        with self.assertRaises(ValueError):p.edit(self.manifest,'Explore_1','x'*(MAX_CAPTION+1),'','pending')
+        with self.assertRaises(ValueError):p.edit(self.manifest,'Explore_2','x'*(MAX_CAPTION+1),'','pending')
         self.assertEqual(p.digest(self.manifest),before)
         for value in ('','https://steamcommunity.com/id/ravenwits','https://steamcommunity.com/profiles/76561198000000000/'):
             self.assertEqual(steam_profile(value),value)
@@ -171,30 +170,30 @@ class Projects(unittest.TestCase):
         p.refresh(self.manifest, True)
         config = p.read(self.manifest)
         self.assertFalse(config.get('trial'))
-        self.assertEqual(config['bank']['lines']['Explore_1'], 'Buraya daha bakmadÄ±m.')
+        self.assertEqual(config['bank']['lines']['Explore_2'], 'Buraya daha bakmadÄ±m.')
         self.assertEqual(p.digest(path), checksum)
-        self.assertEqual(p.status(config, 'Explore_1', self.root), 'approved')
+        self.assertEqual(p.status(config, 'Explore_2', self.root), 'approved')
         self.assertTrue(self.manifest.with_suffix('.before-update.json').is_file())
         self.assertEqual(p.refresh(self.manifest), dict(added=[], removed=[], changed=[]))
 
     def test_changed_reference_requires_new_review_but_keeps_take(self):
         self.supply(); self.approve(); p.refresh(self.manifest, True)
         config = p.read(self.manifest)
-        config['authoring']['references']['Explore_1'] = 'Old meaning'
+        config['authoring']['references']['Explore_2'] = 'Old meaning'
         p.write(self.manifest, config)
         diff = p.refresh(self.manifest, True)
-        self.assertIn('Explore_1', diff['changed'])
-        self.assertEqual(p.status(p.read(self.manifest), 'Explore_1', self.root), 'pending')
+        self.assertIn('Explore_2', diff['changed'])
+        self.assertEqual(p.status(p.read(self.manifest), 'Explore_2', self.root), 'pending')
 
     def test_external_audio_change_invalidates_approval(self):
         path = self.supply(); self.approve()
         path.write_bytes(b'replaced recording')
-        self.assertEqual(p.status(p.read(self.manifest), 'Explore_1', self.root), 'pending')
+        self.assertEqual(p.status(p.read(self.manifest), 'Explore_2', self.root), 'pending')
 
     def test_jobs_skip_existing_unreviewed_and_approved_takes(self):
         self.supply()
         self.assertEqual(p.jobs(self.manifest)['recordings'], 17)
-        p.edit(self.manifest, 'Explore_1', 'A new line.', 'Speak gently.', 'redo')
+        p.edit(self.manifest, 'Explore_2', 'A new line.', 'Speak gently.', 'redo')
         queue = p.jobs(self.manifest, .1)
         self.assertEqual(queue['recordings'], 18)
         self.assertGreater(queue['estimatedUnits'], 0)
@@ -217,13 +216,13 @@ class Projects(unittest.TestCase):
 
     def test_batch_import_matches_slots_and_resumes_without_overwriting(self):
         folder = self.root/'takes'; folder.mkdir()
-        (folder/'Explore_1.wav').write_bytes(b'first')
-        (folder/'sample_Explore_2.mp3').write_bytes(b'second')
+        (folder/'Explore_2.wav').write_bytes(b'first')
+        (folder/'sample_ExploreMore_1.mp3').write_bytes(b'second')
         (folder/'unknown.mp3').write_bytes(b'unknown')
-        self.supply('Explore_1')
+        self.supply('Explore_2')
         with patch('voice_project.import_audio', side_effect=lambda manifest,slot,source,ffmpeg:self.supply(slot)) as importer:
             result=p.import_folder(self.manifest,folder,'ffmpeg')
-            self.assertEqual(result['imported'],['Explore_2'])
+            self.assertEqual(result['imported'],['ExploreMore_1'])
             self.assertEqual(result['ignored'],['unknown.mp3'])
             self.assertEqual(p.import_folder(self.manifest,folder,'ffmpeg')['imported'],[])
             self.assertEqual(importer.call_count,1)
@@ -238,7 +237,7 @@ class Projects(unittest.TestCase):
 
     def test_language_template_and_reuse_have_no_voice_identity_leak(self):
         config = p.read(self.manifest)
-        self.assertIn('Buraya', config['bank']['lines']['Explore_1'])
+        self.assertEqual(config['bank']['lines']['Explore_2'], 'Burada işe yarar bir şey olabilir.')
         target = self.root / 'another.json'
         initialize(target, 'another', 'TR', True, True, self.manifest)
         other = p.read(target)
@@ -272,6 +271,190 @@ class Projects(unittest.TestCase):
         self.assertEqual(second['remaining'], 14)
         entries = p.read(self.manifest.with_suffix('.work.json'))['entries']
         self.assertEqual(len({e['id'] for e in entries}), 4)
+
+    def test_elevenlabs_preview_is_local_until_accepted(self):
+        old = self.supply()
+        before = old.read_bytes()
+        audio_file = self.root / 'preview.mp3'
+        subprocess.run(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=330:duration=0.2',
+                        str(audio_file)], check=True)
+        env_file = self.manifest.parent / '.env.local'
+        env_file.write_text('KEEP_THIS=value\n', encoding='utf-8')
+        secret = 'test-elevenlabs-key-123'
+        mock_voice = 'own-generated-voice'
+        provider_calls = []
+        caption = 'Buraya bir bakalım.'
+        script = '[low voice] Buraya bir [speaks with a dry rasp] bakalım. [exhales]'
+
+        def provider(key, path, payload=None):
+            self.assertEqual(key, secret)
+            provider_calls.append(path)
+            if path.startswith('/v2/voices?'):
+                return {'voices': [{'voice_id': mock_voice, 'category': 'generated', 'name': 'My voice',
+                                    'labels': {'language': 'tr-TR'},
+                                    'verified_languages': [{'language': 'en'}]}]}
+            if path == '/v1/models':
+                return [{'model_id': 'eleven_v4', 'model_rates': {'character_cost_multiplier': 1.5}}]
+            if path.startswith('/v1/shared-voices?'):
+                self.assertIn('language=tr', path)
+                return {'voices': [
+                    {'voice_id': 'public-tr', 'public_owner_id': 'owner-id', 'name': 'Turkish voice', 'language': 'tr'},
+                    {'voice_id': 'primary-en', 'public_owner_id': 'owner-id', 'name': 'English voice', 'language': 'en',
+                     'verified_languages': [{'language': 'tr'}]},
+                ], 'has_more': True}
+            if path == '/v1/voices/add/owner-id/public-tr':
+                self.assertEqual(payload, {'new_name': 'Turkish voice'})
+                return {'voice_id': mock_voice}
+            if path == '/v1/user/subscription':
+                return {'character_count': 120, 'character_limit': 500}
+            self.assertIn('/v1/text-to-speech/' + mock_voice, path)
+            self.assertEqual(payload['model_id'], 'eleven_v4')
+            self.assertEqual(payload['language_code'], 'tr')
+            self.assertEqual(payload['text'], script)
+            return audio_file.read_bytes(), 17, 'provider-test-id'
+
+        server, _ = make_server(self.manifest, 'ffmpeg', TOOLS.parents[1])
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+
+        def call(path, data=None, auth=True, raw=False):
+            headers = {'X-Voice-Request': 'local-editor'}
+            if auth:
+                headers['X-Voice-Token'] = token
+            if data is not None:
+                headers['X-Revision'] = p.digest(self.manifest)
+            connection = http.client.HTTPConnection('127.0.0.1', server.server_port, timeout=8)
+            try:
+                connection.request('GET' if data is None else 'POST', path,
+                                   None if data is None else json.dumps(data), headers)
+                response = connection.getresponse()
+                body = response.read()
+                self.assertNotIn(secret.encode(), body)
+                return response.status, body if raw else json.loads(body)
+            finally:
+                connection.close()
+
+        token = call('/session', auth=False)[1]['token']
+        project_key = {'project': 'current'}
+        slot = {**project_key, 'slot': 'Explore_2'}
+        with patch('studio_elevenlabs.provider_request', side_effect=provider):
+            self.assertEqual(call('/elevenlabs/credits', auth=False)[0], 403)
+            status, response = call('/elevenlabs/connect', {**project_key, 'key': secret})
+            self.assertEqual(status, 200)
+            self.assertEqual(response['result']['voices'][0]['id'], mock_voice)
+            self.assertEqual(response['result']['voices'][0]['languages'], ['EN', 'TR'])
+            from studio_elevenlabs import StudioSpeech
+            self.assertEqual(StudioSpeech(env_file).key, secret)
+            self.assertIn('KEEP_THIS=value', env_file.read_text())
+            self.assertEqual(call('/.env.local')[0], 404)
+            self.assertEqual(call('/elevenlabs/credits')[1]['remaining'], 380)
+            status, library = call('/elevenlabs/library')
+            self.assertEqual(status, 200)
+            self.assertEqual([voice['id'] for voice in library['voices']], ['public-tr'])
+            self.assertEqual(library['next'], '1')
+            self.assertEqual(call('/elevenlabs/settings', {**project_key, 'voice': 'public-tr',
+                                                          'owner': 'owner-id', 'name': 'Turkish voice'})[1]['result']['voice'], mock_voice)
+            self.assertEqual(call('/elevenlabs/generate', {**slot, 'project': 'other'})[0], 409)
+            self.assertEqual(call('/elevenlabs/generate', {**slot, 'tags': ['laughs']})[0], 400)
+            self.assertFalse(any(path.startswith('/v1/text-to-speech/') for path in provider_calls))
+            status, description = call('/elevenlabs/describe', slot)
+            self.assertEqual(status, 200)
+            description = description['result']
+            self.assertEqual(description['estimatedCredits'], (3 * description['characterCount'] + 1) // 2)
+            edit = {'slot': slot['slot'], 'direction': '', 'state': 'approved'}
+            for invalid in ('[broken', '[[whispers]] test', '[ ] test', '［whispers］ test'):
+                self.assertEqual(call('/save', {**edit, 'text': invalid})[0], 400)
+            status, result = call('/save', {**edit, 'text': script})
+            self.assertEqual(status, 200, result)
+            self.assertEqual(result['result']['row']['text'], caption)
+            self.assertEqual(result['result']['row']['speechScript'], script)
+            self.assertEqual(call('/elevenlabs/describe', slot)[1]['result']['prompt'], script)
+            identifier = call('/elevenlabs/generate', slot)[1]['result']['id']
+            for _ in range(30):
+                if call('/elevenlabs/preview?id=' + identifier)[1].get('ready'):
+                    break
+                time.sleep(0.02)
+            self.assertEqual(call('/audio/elevenlabs?id=' + identifier, raw=True)[1], audio_file.read_bytes())
+            self.assertEqual(old.read_bytes(), before)
+            self.assertEqual(call('/elevenlabs/accept', {**slot, 'id': identifier, 'slot': 'ExploreMore_1'})[0], 400)
+            self.assertEqual(call('/elevenlabs/accept', {**slot, 'id': identifier})[0], 200)
+            self.assertEqual(call('/elevenlabs/accept', {**slot, 'id': identifier})[0], 400)
+            self.assertEqual(p.status(p.read(self.manifest), 'Explore_2', self.root), 'pending')
+            self.assertEqual(p.read(self.manifest)['bank']['lines']['Explore_2'], caption)
+            backup, = (self.root / 'elevenlabs-backups' / 'Explore_2').glob('*.mp3')
+            self.assertEqual(backup.read_bytes(), before)
+            _, history = call('/elevenlabs/history')
+            self.assertEqual(history[0]['requestId'], 'provider-test-id')
+            self.assertEqual(history[0]['cost'], 17)
+            self.assertEqual(history[0]['status'], 'generated')
+            self.assertEqual(StudioSpeech(env_file).history(self.manifest), history)
+            other = self.root / 'elevenlabs-backups' / 'ExploreMore_1' / ('a' * 32 + '.mp3')
+            other.parent.mkdir(parents=True)
+            other.write_bytes(before)
+            p.review_many(self.manifest, ['Explore_2'], 'approved')
+            self.assertFalse(backup.exists())
+            self.assertTrue(other.is_file())
+            active = old.read_bytes()
+            p.import_audio(self.manifest, 'Explore_2', audio_file, 'ffmpeg', keep_previous=True)
+            backup, = (self.root / 'elevenlabs-backups' / 'Explore_2').glob('*.mp3')
+            self.assertEqual(backup.read_bytes(), active)
+            self.approve()
+            self.assertFalse(backup.exists())
+            self.assertNotEqual(old.read_bytes(), before)
+            self.assertNotIn(secret.encode(), self.manifest.read_bytes())
+            self.assertEqual(sum('/v1/text-to-speech/' in path for path in provider_calls), 1)
+
+    def test_elevenlabs_prompt_obeys_core_delivery_and_type(self):
+        from studio_elevenlabs import prompt
+        config = {'bank': {'language': 'TR', 'lines': {
+            'Whisper_CriticalFading_2': 'Nefes alamıyorum.',
+            'InjuryAcute_1': 'Ah!',
+            'Pain_1': 'Canım acıyor.',
+            'KillCount_1': 'Otuz bir oldu.',
+            'NativeBreath_1': 'Breathing',
+        }}}
+        self.assertEqual(prompt(config, 'Whisper_CriticalFading_2')['text'], '[whispers, very weak and fading] Nefes alamıyorum.')
+        self.assertEqual(prompt(config, 'InjuryAcute_1')['text'], '[in sudden pain] Ah!')
+        self.assertIn('dry with a faint smile', prompt(config, 'KillCount_1')['text'])
+        self.assertEqual(prompt(config, 'Pain_1')['text'], '[restrained pain] Canım acıyor.')
+        self.assertIn('pain', p.core_guidance('Pain_1', 'TR'))
+        self.assertIn('otuz bir', p.core_guidance('KillCount_1', 'TR'))
+        self.assertIn('after a failed attempt', p.core_guidance('EngineRecovered_1', 'EN'))
+        self.assertEqual(studio_schema.entry('Whisper_CarAlarm_1')['delivery'], 'whisper')
+        with self.assertRaisesRegex(ValueError, 'nonverbal'):
+            prompt(config, 'NativeBreath_1')
+        config['authoring'] = {'elevenLabsScripts': {'InjuryAcute_1': 'Ah! [sharp breath]'}}
+        self.assertEqual(prompt(config, 'InjuryAcute_1')['text'], 'Ah! [sharp breath]')
+        config['authoring']['elevenLabsScripts']['InjuryAcute_1'] = 'Ah! [in sudden pain]'
+        self.assertEqual(prompt(config, 'InjuryAcute_1')['text'], 'Ah! [in sudden pain]')
+        config['authoring']['elevenLabsScripts'].clear()
+        self.assertEqual(prompt(config, 'InjuryAcute_1')['text'], '[in sudden pain] Ah!')
+        config['bank']['lines']['InjuryAcute_1'] = 'Ah! [in sudden pain]'
+        self.assertEqual(p.recording_text(config, 'InjuryAcute_1'), ('Ah!', 'Ah! [in sudden pain]'))
+        self.assertEqual(prompt(config, 'InjuryAcute_1')['text'], 'Ah! [in sudden pain]')
+        config['bank']['lines']['InjuryAcute_1'] = '［laughs］ Ah!'
+        with self.assertRaisesRegex(ValueError, 'audio tags'):
+            prompt(config, 'InjuryAcute_1')
+
+    def test_studio_and_elevenlabs_use_the_same_core_direction(self):
+        from studio_elevenlabs import prompt
+        config = p.read(self.manifest)
+        config['authoring']['recordingGuidance'] = {'Explore_2': 'Invented direction from a legacy project.'}
+        p.write(self.manifest, config)
+        rows = {row['slot']: row for row in p.rows(self.manifest)['rows']}
+        slot = 'Explore_2'
+        jobs = {job['slot']: job for job in p.jobs(self.manifest)['jobs']}
+        self.assertEqual(rows[slot]['guidance'], jobs[slot]['direction'])
+        self.assertNotEqual(rows[slot]['direction'], rows[slot]['guidance'])
+        for row in rows.values():
+            with self.subTest(slot=row['slot']):
+                self.assertTrue(row['guidance'])
+                self.assertLessEqual(len(row['elevenLabsTags']), 1)
+                if row['category'] == 'Dialogue' and row['text']:
+                    self.assertEqual(prompt(config, row['slot'])['text'], ' '.join([*row['elevenLabsTags'], row['text']]))
+                elif row['category'] != 'Dialogue':
+                    self.assertEqual(row['elevenLabsTags'], [])
 
     def test_editor_does_not_retry_response_after_client_disconnect(self):
         server, _ = make_server(self.manifest, 'ffmpeg', TOOLS.parents[1])
@@ -377,6 +560,9 @@ class Projects(unittest.TestCase):
         self.assertIn('TT', json.loads(request('GET', '/project', headers)[1])['languageFlags'])
         self.assertEqual(request('GET', '/studio/flag/EN', {})[1][:8], b'\x89PNG\r\n\x1a\n')
         headers['X-Revision'] = p.digest(self.manifest)
+        project_choices = json.loads(request('GET', '/projects', headers)[1])
+        self.assertEqual(project_choices[0]['language'], p.read(self.manifest)['bank']['language'])
+        headers['X-Revision'] = 'stale-project-revision'
         self.assertEqual(request('POST','/open',headers,dict(key='current'))[0],200)
 
     def test_core_catalogue_refreshes_after_template_replacement(self):
@@ -434,7 +620,7 @@ class Projects(unittest.TestCase):
         config=p.read(self.manifest);config['bank']['data']['clips'].pop('sample_Thirst_1');p.write(self.manifest,config)
         view=p.rows(self.manifest)
         self.assertIn('slots differ',view['schemaError']);self.assertEqual(view['rows'],[])
-        with self.assertRaises(ValueError):p.edit(self.manifest,'Explore_1','Test','', 'pending')
+        with self.assertRaises(ValueError):p.edit(self.manifest,'Explore_2','Test','', 'pending')
         p.refresh(self.manifest,True)
         self.assertIsNone(p.rows(self.manifest)['schemaError'])
 
@@ -459,22 +645,22 @@ class Projects(unittest.TestCase):
         with self.assertRaises(ValueError): validate(config, self.root)
 
     def test_recording_guidance_is_specific_or_empty_and_user_notes_survive_refresh(self):
-        self.assertEqual(p.guidance('Explore_1'),'')
+        self.assertEqual(p.guidance('Explore_2'),'')
         self.assertNotEqual(p.guidance('Thirst_1'),p.guidance('NeedThirst_3'))
         self.assertIn('quiet',p.guidance('Whisper_Thirst_1'))
         self.assertIn('Shaken after killing',p.guidance('AfterHumanShaken_1'))
         self.assertIn('quiet',p.guidance('Whisper_AfterHumanShaken_1'))
         self.assertIn('Shaken after killing',p.guidance('Whisper_AfterHumanShaken_1'))
         config=p.read(self.manifest)
-        config['authoring']['directions']['Explore_2']='Old generated note'
-        config['authoring']['referenceDirections']['Explore_2']='Old generated note'
+        config['authoring']['directions']['ExploreMore_1']='Old generated note'
+        config['authoring']['referenceDirections']['ExploreMore_1']='Old generated note'
         p.write(self.manifest,config)
-        self.assertEqual(p.recording_note(config,'Explore_2'),'')
-        p.edit(self.manifest,'Explore_1','My words.','Quietly, with a pause.','pending')
+        self.assertEqual(p.recording_note(config,'ExploreMore_1'),'')
+        p.edit(self.manifest,'Explore_2','My words.','Quietly, with a pause.','pending')
         p.refresh(self.manifest,True)
-        row=next(row for row in p.rows(self.manifest)['rows'] if row['slot']=='Explore_1')
+        row=next(row for row in p.rows(self.manifest)['rows'] if row['slot']=='Explore_2')
         self.assertEqual(row['direction'],'Quietly, with a pause.')
-        self.assertEqual(p.recording_note(p.read(self.manifest),'Explore_2'),'')
+        self.assertEqual(p.recording_note(p.read(self.manifest),'ExploreMore_1'),'')
 
     def test_update_skips_dirty_official_checkout(self):
         import launch_studio
@@ -491,7 +677,7 @@ class Projects(unittest.TestCase):
 
     def test_first_core_sync_keeps_valid_project_unchanged(self):
         before=p.read(self.manifest)
-        before.setdefault('authoring',{})['reviews']={'Explore_1':{'status':'approved','fingerprint':'existing'}}
+        before.setdefault('authoring',{})['reviews']={'Explore_2':{'status':'approved','fingerprint':'existing'}}
         p.write(self.manifest,before)
         p.sync_core(self.manifest)
         after=p.read(self.manifest)
@@ -501,16 +687,54 @@ class Projects(unittest.TestCase):
     def test_automatic_core_sync_preserves_trial_and_caption(self):
         config=p.read(self.manifest)
         config.setdefault('authoring',{})['coreInputs']='previous-core'
-        p.set_caption(config['bank'],'Explore_1','My own words.')
+        p.set_caption(config['bank'],'Explore_2','My own words.')
         p.write(self.manifest,config)
         p.sync_core(self.manifest)
         changed=p.read(self.manifest)
-        self.assertEqual(changed['bank']['lines']['Explore_1'],'My own words.')
+        self.assertEqual(changed['bank']['lines']['Explore_2'],'My own words.')
         self.assertEqual(len(p.slots(changed)),18)
         self.assertTrue(self.manifest.with_suffix('.before-update.json').exists())
         before=p.digest(self.manifest)
         p.sync_core(self.manifest)
         self.assertEqual(p.digest(self.manifest),before)
+
+    def test_core_sync_retires_unplayable_slots_and_keeps_recordings(self):
+        self.manifest = self.root / 'full.json'
+        initialize(self.manifest, 'sample', 'TR')
+        normal = 'EngineRecovered_1'
+        retired = 'Whisper_EngineRecovered_1'
+        self.supply(normal)
+        p.review_many(self.manifest, [normal], 'approved')
+        config = p.read(self.manifest)
+        clip = copy.deepcopy(p.slots(config)[normal])
+        old_sound = clip['sound']
+        clip['sound'] = 'CSV_sample_' + retired
+        asset = config['assets'][clip['sound']] = copy.deepcopy(config['assets'][old_sound])
+        asset['source'] = 'audio/' + retired + '.mp3'
+        audio = self.root / asset['source']
+        audio.write_bytes(b'legacy whisper')
+        config['bank']['data']['clips']['sample_' + retired] = clip
+        config['bank']['lines'][retired] = 'Eski fısıltı.'
+        config['bank']['voices'][0].update(preview=retired, previewLines=[retired, normal], previewLast=retired)
+        config['authoring']['coreInputs'] = 'previous-core'
+        p.write(self.manifest, config)
+
+        p.sync_core(self.manifest)
+        updated = p.read(self.manifest)
+        studio_schema.validate(updated)
+        self.assertEqual(p.status(updated, normal, self.root), 'approved')
+        self.assertNotIn(retired, p.slots(updated))
+        self.assertNotIn(retired, updated['bank']['lines'])
+        self.assertEqual(updated['bank']['voices'][0]['previewLines'], [normal])
+        self.assertTrue(self.manifest.with_suffix('.before-update.json').is_file())
+        self.assertEqual(audio.read_bytes(), b'legacy whisper')
+
+        schema = studio_schema.load()
+        self.assertEqual(schema['retiredSlots'][retired], 'requires_vehicle_seat')
+        self.assertIn('Whisper_CarAlarm_1', schema['slots'])
+        for pool in p.coverage(updated, self.root)['pools'].values():
+            self.assertTrue(pool)
+            self.assertTrue(set(pool).issubset(schema['slots']))
 
     @unittest.skipUnless(os.environ.get('VOICE_TEST_FFMPEG'), 'Set VOICE_TEST_FFMPEG for real media tests')
     def test_audio_edits_use_original_preserve_duration_and_reject_clipping(self):
@@ -520,10 +744,12 @@ class Projects(unittest.TestCase):
         ffmpeg=os.environ['VOICE_TEST_FFMPEG']
         fixture=self.root/'tone.wav'
         subprocess.run([ffmpeg,'-v','error','-f','lavfi','-i','sine=frequency=440:duration=1',str(fixture)],check=True)
-        p.import_audio(self.manifest,'Explore_1',fixture,ffmpeg)
+        p.import_audio(self.manifest,'Explore_2',fixture,ffmpeg)
         def take():
             config=p.read(self.manifest)
-            return p.contained(self.root,config['assets'][p.slots(config)['Explore_1']['sound']]['source'])
+            return p.contained(self.root,config['assets'][p.slots(config)['Explore_2']['sound']]['source'])
+        def audio_edit():
+            return next(row for row in p.rows(self.manifest)['rows'] if row['slot'] == 'Explore_2')['audioEdit']
         def measurements():
             raw=subprocess.run([ffmpeg,'-v','error','-i',str(take()),'-f','f32le','-ar','44100','-ac','1','pipe:1'],capture_output=True,check=True).stdout
             samples=array('f');samples.frombytes(raw)
@@ -533,44 +759,44 @@ class Projects(unittest.TestCase):
             return rms,len(samples)/44100,frequency
         original_hash=p.digest(take());rms,duration,freq=measurements()
         self.approve()
-        process(self.manifest,'Explore_1',ffmpeg,3,0)
+        process(self.manifest,'Explore_2',ffmpeg,3,0)
         self.assertAlmostEqual(20*math.log10(measurements()[0]/rms),3,delta=.3)
-        self.assertEqual(p.status(p.read(self.manifest),'Explore_1',self.root),'pending')
-        process(self.manifest,'Explore_1',ffmpeg,6,0)
+        self.assertEqual(p.status(p.read(self.manifest),'Explore_2',self.root),'pending')
+        process(self.manifest,'Explore_2',ffmpeg,6,0)
         self.assertAlmostEqual(20*math.log10(measurements()[0]/rms),6,delta=.3) # not cumulative +9
-        process(self.manifest,'Explore_1',ffmpeg,0,3)
+        process(self.manifest,'Explore_2',ffmpeg,0,3)
         _,edited_duration,edited_freq=measurements()
         self.assertAlmostEqual(edited_duration,duration,delta=.03)
         self.assertAlmostEqual(edited_freq/freq,2**(3/12),delta=.03)
         for speed in (.25,2):
-            process(self.manifest,'Explore_1',ffmpeg,speed=speed)
+            process(self.manifest,'Explore_2',ffmpeg,speed=speed)
             _,changed_duration,changed_freq=measurements()
             self.assertAlmostEqual(changed_duration,duration/speed,delta=.1)
             self.assertAlmostEqual(changed_freq/freq,1,delta=.03)
-            self.assertEqual(p.rows(self.manifest)['rows'][0]['audioEdit']['speed'],speed)
-        process(self.manifest,'Explore_1',ffmpeg,trim_start=.1,trim_end=.2)
+            self.assertEqual(audio_edit()['speed'], speed)
+        process(self.manifest,'Explore_2',ffmpeg,trim_start=.1,trim_end=.2)
         self.assertAlmostEqual(measurements()[1],duration-.3,delta=.04)
-        self.assertEqual(p.rows(self.manifest)['rows'][0]['audioEdit']['trimStart'],.1)
-        self.assertEqual(p.rows(self.manifest)['rows'][0]['audioEdit']['trimEnd'],.2)
+        self.assertEqual(audio_edit()['trimStart'],.1)
+        self.assertEqual(audio_edit()['trimEnd'],.2)
         from audio_processing import original_duration
-        original_seconds=original_duration(self.manifest,'Explore_1',ffmpeg)
+        original_seconds=original_duration(self.manifest,'Explore_2',ffmpeg)
         self.assertAlmostEqual(original_seconds,duration,delta=.04)
         before=p.digest(self.manifest)
-        with self.assertRaisesRegex(ValueError,'within the original'): process(self.manifest,'Explore_1',ffmpeg,trim_start=original_seconds)
-        with self.assertRaises(ValueError): process(self.manifest,'Explore_1',ffmpeg,trim_start=19,trim_end=19)
+        with self.assertRaisesRegex(ValueError,'within the original'): process(self.manifest,'Explore_2',ffmpeg,trim_start=original_seconds)
+        with self.assertRaises(ValueError): process(self.manifest,'Explore_2',ffmpeg,trim_start=19,trim_end=19)
         self.assertEqual(p.digest(self.manifest),before)
         before=p.digest(self.manifest)
         for speed in (True,float('nan'),0.24,2.01):
-            with self.assertRaises(ValueError):process(self.manifest,'Explore_1',ffmpeg,speed=speed)
+            with self.assertRaises(ValueError):process(self.manifest,'Explore_2',ffmpeg,speed=speed)
             self.assertEqual(p.digest(self.manifest),before)
-        process(self.manifest,'Explore_1',ffmpeg,restore=True)
+        process(self.manifest,'Explore_2',ffmpeg,restore=True)
         self.assertEqual(p.digest(take()),original_hash)
         loud=self.root/'loud.wav'
         subprocess.run([ffmpeg,'-v','error','-f','lavfi','-i','sine=frequency=440:duration=1','-af','volume=4',str(loud)],check=True)
-        p.import_audio(self.manifest,'Explore_1',loud,ffmpeg)
-        self.assertFalse(p.rows(self.manifest)['rows'][0]['audioEdit'])
+        p.import_audio(self.manifest,'Explore_2',loud,ffmpeg)
+        self.assertFalse(audio_edit())
         before=p.digest(self.manifest);audio_before=p.digest(take())
-        with self.assertRaisesRegex(ValueError,'headroom'):process(self.manifest,'Explore_1',ffmpeg,12,0)
+        with self.assertRaisesRegex(ValueError,'headroom'):process(self.manifest,'Explore_2',ffmpeg,12,0)
         self.assertEqual(p.digest(self.manifest),before);self.assertEqual(p.digest(take()),audio_before)
 
     @unittest.skipUnless(os.environ.get('VOICE_TEST_FFMPEG'), 'Set VOICE_TEST_FFMPEG for real media tests')
@@ -578,10 +804,10 @@ class Projects(unittest.TestCase):
         from audio_processing import process
         ffmpeg=os.environ['VOICE_TEST_FFMPEG'];fixture=self.root/'long.wav'
         subprocess.run([ffmpeg,'-v','error','-f','lavfi','-i','sine=frequency=440:duration=6',str(fixture)],check=True)
-        p.import_audio(self.manifest,'Explore_1',fixture,ffmpeg)
-        config=p.read(self.manifest);take=p.contained(self.root,config['assets'][p.slots(config)['Explore_1']['sound']]['source'])
+        p.import_audio(self.manifest,'Explore_2',fixture,ffmpeg)
+        config=p.read(self.manifest);take=p.contained(self.root,config['assets'][p.slots(config)['Explore_2']['sound']]['source'])
         before=p.digest(self.manifest);audio_before=p.digest(take)
-        with self.assertRaisesRegex(ValueError,'at most 20 seconds'):process(self.manifest,'Explore_1',ffmpeg,speed=.25)
+        with self.assertRaisesRegex(ValueError,'at most 20 seconds'):process(self.manifest,'Explore_2',ffmpeg,speed=.25)
         self.assertEqual(p.digest(self.manifest),before);self.assertEqual(p.digest(take),audio_before)
 
     @unittest.skipUnless(os.environ.get('VOICE_TEST_FFMPEG'), 'Set VOICE_TEST_FFMPEG for real media tests')
@@ -592,8 +818,8 @@ class Projects(unittest.TestCase):
         browser_take = self.root/'microphone'
         subprocess.run([ffmpeg, '-v', 'error', '-i', str(fixture), '-c:a', 'libopus',
                         '-f', 'webm', str(browser_take)], check=True)
-        p.import_audio(self.manifest, 'Explore_1', browser_take, ffmpeg)
-        take = self.root/'audio/sample_Explore_1.mp3'
+        p.import_audio(self.manifest, 'Explore_2', browser_take, ffmpeg)
+        take = self.root/'audio/sample_Explore_2.mp3'
         self.assertTrue(take.is_file())
         measure(self.manifest,ffmpeg,allow_missing=True)
         partial=p.read(self.manifest.with_suffix('.loudness.json'))
@@ -602,7 +828,7 @@ class Projects(unittest.TestCase):
         self.assertNotIn('Infinity',self.manifest.read_text(encoding='utf-8'))
         bad = self.root/'invalid.wav'; bad.write_bytes(b'not audio')
         checksum = p.digest(take)
-        with self.assertRaises(subprocess.CalledProcessError): p.import_audio(self.manifest,'Explore_1',bad,ffmpeg)
+        with self.assertRaises(subprocess.CalledProcessError): p.import_audio(self.manifest,'Explore_2',bad,ffmpeg)
         self.assertEqual(p.digest(take),checksum)
         worker = self.root/'record.py'
         worker.write_text('import shutil,sys\nshutil.copyfile(sys.argv[1],sys.argv[-1])\n')
@@ -612,7 +838,7 @@ class Projects(unittest.TestCase):
         self.assertEqual(second['remaining'],15)
         p.refresh(self.manifest,True)
         config = p.read(self.manifest)
-        for asset in config['assets'].values(): asset['source']='audio/sample_Explore_1.mp3'
+        for asset in config['assets'].values(): asset['source']='audio/sample_Explore_2.mp3'
         for slot in p.slots(config):
             config['authoring']['reviews'][slot] = dict(status='approved', fingerprint=p.fingerprint(config,slot,self.root))
         p.write(self.manifest,config)

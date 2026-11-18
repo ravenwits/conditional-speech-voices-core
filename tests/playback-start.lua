@@ -11,7 +11,7 @@ package.loaded['CSV/Core']=V
 package.loaded['CSV/Trace']={step=function()end}
 package.loaded['CSV/Activity']={block=function()end}
 package.loaded['CSV/Profanity']={allowed=function()return true end}
-package.loaded['CSV/NativeVoice']={supported=function()return false end,ready=function()return false end,painActive=function()return false end}
+package.loaded['CSV/NativeVoice']={supported=function()return false end,ready=function()return false end,effortActive=function()return false end,painActive=function()return false end}
 package.loaded['CSV/ProductionReport']={observe=function()end}
 package.loaded['CSV/LootRules']={groups={}}
 package.loaded['CSV/VehicleCombatRules']={groups={}}

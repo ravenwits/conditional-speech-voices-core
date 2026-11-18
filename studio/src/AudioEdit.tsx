@@ -180,15 +180,7 @@ export function AudioEdit({
             </div>
           ))}
         </div>
-        <div className="button-row audio-edit-actions">
-          <Button
-            disabled={busy || !dirty}
-            onClick={() =>
-              void onSave(gain, pitch, false, speed, trimStart, trimEnd)
-            }
-          >
-            Apply
-          </Button>
+        <div className="flex flex-wrap justify-end gap-2 border-t pt-3">
           <Button
             variant="outline"
             disabled={
@@ -203,6 +195,14 @@ export function AudioEdit({
           >
             <RotateCcw />
             Restore
+          </Button>
+          <Button
+            disabled={busy || !dirty}
+            onClick={() =>
+              void onSave(gain, pitch, false, speed, trimStart, trimEnd)
+            }
+          >
+            Apply
           </Button>
         </div>
       </div>

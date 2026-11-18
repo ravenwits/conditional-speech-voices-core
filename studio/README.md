@@ -4,6 +4,14 @@ Studio is a local editor for voice packs. It uses the recording slots supplied b
 
 To use the compiled app, read the [creator guide](CREATOR-GUIDE.md). Python and FFmpeg are prerequisites. Node is needed only to develop the interface.
 
+## ElevenLabs previews
+
+Open **Studio menu** and choose **ElevenLabs settings**. Connect a key with voice list, user/subscription read, and text-to-speech permissions. Studio saves the verified key in a Git-ignored `.env.local` file. In a source checkout it uses the repository root. A distributed copy uses the local projects directory, and an explicit project uses its own folder. Studio also accepts `ELEVENLABS_API_KEY` from its environment. Search the combined voice picker for account and public voices in the project language. Voices you own appear first. Add to My Voices and use links the public voice to your account and the current project.
+
+For a dialogue recording, open **Generate with ElevenLabs**. Review the text and Core audio tags, then generate one preview. Listen, compare with the current take, and choose **Use this take**. Studio keeps the previous take under `elevenlabs-backups/<slot>/` until you approve the replacement. The replacement starts in **Needs listening**. The same applies when you import a file over an existing take.
+
+The header ring shows the percentage used. Open it to see the plan total and remaining credits. The balance refreshes after generation. Generation history records the estimated credits, the provider’s charge and its request ID when available. The history lives under each project’s local directory. Account overage billing and API-key limits are managed by ElevenLabs.
+
 ## Source layout
 
 `studio/src` contains the React interface and its Coss UI components. `studio/public` contains Cal Sans and third-party notices. Code labels use the operating system's monospace font.

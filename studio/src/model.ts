@@ -2,10 +2,14 @@ export type State = "missing" | "pending" | "approved" | "redo";
 export type Row = {
   slot: string;
   text: string;
+  speechScript?: string | null;
   reference: string;
   direction: string;
   guidance?: string;
+  elevenLabsTags?: string[];
   optional?: boolean;
+  profanity?: boolean;
+  profanityLocked?: boolean;
   traits?: string[];
   category: string;
   family: string;
@@ -22,13 +26,15 @@ export type Row = {
   };
 };
 export type Project = {
-  buildCoverage?: { required: number; covered: number; missing: string[]; missingSlots?: Record<string, string[]> };
+  buildCoverage?: { required: number; covered: number; missing: string[]; missingSlots?: Record<string, string[]>; pools?: Record<string, string[]> };
   languageFlags?: string[];
+  characterBase?: string;
+  elevenLabs?: { configured: boolean; voice: string; languageCode?: string };
   canUndoReview?: boolean;
   name: string;
   author: string;
   steamProfile?: string;
-  limits?: { caption: number; seconds: number; audioBytes?: number };
+  limits?: { caption: number; speechScript?: number; seconds: number; audioBytes?: number };
   description: string;
   voice: string;
   language: string;
@@ -98,6 +104,7 @@ export function coverageLabel(key: string): string {
 }
 
 export type Filters = {
+  profanity?: string;
   search: string;
   family: string;
   trait: string;
@@ -121,6 +128,7 @@ export function filterRows(rows: Row[], f: Filters, requiredSlots?: ReadonlySet<
   const query = f.search.trim().toLocaleLowerCase();
   return rows.filter(
     (r) =>
+      (!f.profanity || r.profanity === true) &&
       (!f.family || r.family === f.family) &&
       (!f.trait || r.traits?.includes(f.trait)) &&
       (!f.group || r.context === f.group) &&

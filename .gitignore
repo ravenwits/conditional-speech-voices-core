@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 .env
 .env.*
+.elevenlabs-requests.jsonl
 *.log
 *.mp3
 *.wav

@@ -20,6 +20,7 @@ function O.snapshot(kind,obj,p)
   return {open=call(window,'isOpen'),destroyed=call(window,'isDestroyed')}
  end
  if kind=='window' then return {open=call(obj,'IsOpen'),locked=call(obj,'isLocked')==true or call(obj,'isPermaLocked')==true,blocked=call(obj,'isBarricaded')==true,destroyed=call(obj,'isDestroyed')} end
+ if kind=='routine' then return {} end
  if kind=='trait' then return require('CSV/TraitReactions').snapshot(p) end
  if kind=='darkness' then return require('CSV/Darkness').snapshot(p) end
  if kind=='vehicle_combat' then return {occupied=call(p,'getVehicle')==obj} end
@@ -64,6 +65,10 @@ end
 function O.valid(e)
  if e.consumed or e.cancelled then return false end
  local p=e.player;if not eligible(p) then return false end
+ if e.kind=='routine' and e.actionObject then
+  local q=ISTimedActionQueue and ISTimedActionQueue.queues and ISTimedActionQueue.queues[p]
+  return q and q.current==e.actionObject
+ end
  if e.kind:match('^vehicle_') then return require('CSV/Vehicles').valid(e) end
  if e.kind=='gun' then return call(p,'getPrimaryHandItem')==e.obj end
  if e.kind=='start' or e.kind=='fuel' then return call(p,'getVehicle')==e.obj and call(e.obj,'isDriver',p)==true end

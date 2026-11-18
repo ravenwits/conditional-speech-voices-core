@@ -1,4 +1,5 @@
 local alternates=require 'CSV/VoiceAlternates'
+local retired=require 'CSV/VoiceRetired'
 local pack=require 'CSV/Pack'
 local V = {data=require 'CSV/Data',version=require('CSV/Release').version}
 V.pack=pack
@@ -44,7 +45,7 @@ end
 function V.clip(voice,id)
     local bank=voice and pack.voiceBanks[voice]
     if not bank then return nil end
-    if type(id)~='string' or #id>60 then return nil end
+    if type(id)~='string' or #id>60 or retired[id] then return nil end
     local data=bank.data
     return data.clips[voice..'_'..id]
 end

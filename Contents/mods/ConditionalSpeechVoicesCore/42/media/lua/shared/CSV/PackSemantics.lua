@@ -11,4 +11,13 @@ S.extras["WindowLocked_1"]={id="WindowLocked_1",group="WindowLocked"}
 S.extras["WindowBarricaded_1"]={id="WindowBarricaded_1",group="WindowBarricaded"}
 S.extras["CarWindowOpened_1"]={id="CarWindowOpened_1",group="CarWindowOpened"}
 S.extras["CarWindowBroken_1"]={id="CarWindowBroken_1",group="CarWindowBroken"}
+S.extras.SawLogsDone_1={id="SawLogsDone_1",group="SawLogsDone"}
+S.extras.ClothingPatched_1={id="ClothingPatched_1",group="ClothingPatched"}
+S.extras.ClothingSewn_1={id="ClothingSewn_1",group="ClothingSewn"}
+S.extras.SmokeFinished_1={id="SmokeFinished_1",group="SmokeFinished"}
+S.extras.BookReading_1={id="BookReading_1",group="BookReading"}
+S.extras.MealPrepared_1={id="MealPrepared_1",group="MealPrepared"}
+S.extras.GeneratorStarted_1={id="GeneratorStarted_1",group="GeneratorStarted"}
+S.extras.GeneratorRepaired_1={id="GeneratorRepaired_1",group="GeneratorRepaired"}
+S.extras.CampfireLit_1={id="CampfireLit_1",group="CampfireLit"}
 return S

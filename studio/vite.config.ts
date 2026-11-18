@@ -11,7 +11,7 @@ const devHost = "127.0.0.1";
 const devPort = 5173;
 const devAddress = `${devHost}:${devPort}`;
 const apiOrigin = process.env.STUDIO_API_ORIGIN || "http://127.0.0.1:46487";
-const apiRoutes = "^/(?:session|project|projects|recording-list|schema|duration|audio|import|save|review|undo-review|metadata|update|jobs|process|create|remove-project|open|open-pack|browse-pack-folders|measure|package)(?:[?]|$)|^/studio/(?:flag|cover)/";
+const apiRoutes = "^/(?:session|project|projects|recording-list|schema|duration|audio|import|save|profanity|review|undo-review|metadata|update|jobs|process|create|remove-project|open|open-pack|browse-pack-folders|measure|package)(?:[?]|$)|^/studio/(?:flag|cover)/|^/(?:elevenlabs/|audio/elevenlabs[?])";
 
 const workbenchProxy: ProxyOptions = {
   target: apiOrigin,

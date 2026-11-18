@@ -12,7 +12,7 @@ from build_voice_pack import CONTRACT
 
 
 TRIAL_GROUPS = {
-    'Dialogue': ('Explore_1', 'Explore_2', 'Explore_3', 'FoodEaten_1'),
+    'Dialogue': ('Explore_2', 'ExploreMore_1', 'ExploreMore_2', 'FoodEaten_1'),
     'Whisper': ('Whisper_Thirst_1', 'Whisper_Thirst_2', 'NativeWhisperCall_1'),
     'Shout': ('NativeCall_1', 'NativeCall_2', 'NativeCall_3'),
     'Breath': ('NativeBreath_1', 'NativeBreath_2'),
@@ -65,7 +65,7 @@ def initialize(output, voice, language, female=False, trial=False, texts=None):
     bank.update(id='csv.' + voice, language=language, revision='1.0.0', contract=1)
     bank['voices'] = [dict(id=voice, name=voice.title(), prefix='VoiceCSV' + voice.title().replace('_', '') + 'P',
                           base='VoiceFemale' if female else 'VoiceMale', preview='NativeCall_1',
-                          previewLines=['Explore_2', 'Explore_3', 'FoodEaten_1', 'Panic_3', 'Thirst_1', 'Injured_3'],
+                          previewLines=['Explore_2', 'ExploreMore_1', 'FoodEaten_1', 'Panic_3', 'Thirst_1', 'Injured_3'],
                           previewLast='Injured_3')]
     assets = {}
     required = set(CONTRACT['slots'])

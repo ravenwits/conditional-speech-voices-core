@@ -88,6 +88,19 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
     if require('CSV/OutcomeRules').groups[group] then
         local rules=require('CSV/OutcomeRules')
         if V.extended(voice) and rules.classify(f.outcome)==group then
+            if group=='SawLogsDone' or group=='BookReading' then
+                local take=C.extraLine(player,voice,group)
+                if take then return take end
+                if group=='BookReading' and f.outcome.skillBook then
+                    return C.extraLine(player,voice,'TraitStudy')
+                end
+                if group=='SawLogsDone' then
+                    for _,line in ipairs(V.bank(voice).data.groups.ChopTree or {}) do
+                        if line.id=='ChopTree_1' and V.clip(voice,line.id) then return line end
+                    end
+                end
+                return nil
+            end
             local preferred
             if group=='WindowLocked' or group=='WindowBarricaded' then
                 local specific=C.extraLine(player,voice,group)

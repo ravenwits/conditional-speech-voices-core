@@ -4,6 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   Check,
+  Copy,
+  Info,
+  Save,
   ChevronUp,
   ListFilter,
   ChevronLeft,
@@ -16,11 +19,18 @@ import {
   Terminal,
   Mic,
   LoaderCircle,
+  Menu,
+  AudioLines,
+  FolderOpen,
+  Plus,
+  Sparkles,
 } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { PopoverPopup, PopoverRoot, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { CaptionEditor, validateCaptionTags } from "./CaptionEditor";
 import { Label } from "@/components/ui/label";
 import { Form } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +47,7 @@ import {
   CollapsiblePanel,
 } from "@/components/ui/collapsible";
 import { AudioEdit } from "./AudioEdit";
+import { balancePercent, ElevenLabsBalance, ElevenLabsHistory, ElevenLabsPreview, ElevenLabsSettings, useElevenLabsBalance } from "./ElevenLabs";
 import { action, request, setRevision, RequestError } from "./api";
 import {
   emptyFilters,
@@ -70,7 +81,9 @@ const languageOptions = Object.entries(languageNames)
 export default function App() {
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [commandsOpen, setCommandsOpen] = useState(false);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [operation, setOperation] = useState("");
+  const [creditsRefresh, setCreditsRefresh] = useState(0);
   const [projectLoading, setProjectLoading] = useState("Opening project…");
   const playerControl = useRef<{ toggle: () => void }>(null);
   const { confirm, dialog } = useConfirm();
@@ -82,7 +95,7 @@ export default function App() {
     [filters, setFilters] = useState(emptyFilters),
     [page, setPage] = useState(0);
   const [modal, setModal] = useState<
-      "project" | "prepare" | "import" | "create" | "open-pack" | "microphone" | null
+      "project" | "prepare" | "import" | "create" | "open-pack" | "microphone" | "elevenlabs" | "generate" | "generation-history" | null
     >(null),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("Opening project…"),
@@ -110,12 +123,19 @@ export default function App() {
     });
   const [metadataDirty, setMetadataDirty] = useState(false);
   const [playerEpoch, setPlayerEpoch] = useState(0);
+  const [audioTransfer, setAudioTransfer] = useState("");
+  const [loadedTake, setLoadedTake] = useState<{ slot: string; blob: Blob }>();
   const importRef = useRef<HTMLInputElement>(null),
     batchRef = useRef<HTMLInputElement>(null),
     listRef = useRef<HTMLDivElement>(null);
   const selectedRow = project?.rows.find((r) => r.slot === selected);
-  const textDirty = !!selectedRow && text !== selectedRow.text;
+  const textDirty = !!selectedRow && text !== (selectedRow.speechScript ?? selectedRow.text);
+  const dialogue = selectedRow?.category === "Dialogue";
+  const captionIssue = dialogue ? validateCaptionTags(text, selectedRow.elevenLabsTags) : undefined;
   const dirty = textDirty || audioDirty;
+  const elevenLabsConnected = !!project?.elevenLabs?.configured;
+  const elevenLabsEnabled = elevenLabsConnected && !!project?.elevenLabs?.voice;
+  const elevenLabsBalance = useElevenLabsBalance(elevenLabsConnected, creditsRefresh);
   const missingBySlot = useMemo(() => {
     const bySlot = new Map<string, string[]>();
     for (const [group, slots] of Object.entries(
@@ -230,7 +250,7 @@ export default function App() {
       return;
     stop();
     setSelected(row.slot);
-    setText(row.text);
+    setText(row.speechScript ?? row.text);
     const groupIndex = grouped.findIndex(
       (group) => group.context === row.context,
     );
@@ -240,6 +260,7 @@ export default function App() {
     setEditReset((v) => v + 1);
   }
   async function load(prefer?: string) {
+    setLoadedTake(undefined);
     setAudioDirty(false);
     setEditReset((v) => v + 1);
     const p = await request<Project>("/project");
@@ -260,7 +281,7 @@ export default function App() {
       p.rows.find((r) => r.slot === (prefer || selected)) || p.rows[0];
     if (row) {
       setSelected(row.slot);
-      setText(row.text);
+      setText(row.speechScript ?? row.text);
     } else {
       setSelected("");
       setText("");
@@ -275,6 +296,18 @@ export default function App() {
     setMetadataDirty(false);
     return p;
   }
+  async function loadReplacement(slot?: string) {
+    const updated = await load(slot || selectedRow?.slot);
+    if (slot && updated.rows.some((row) => row.slot === slot && row.state !== "missing")) {
+      try {
+        const blob = await request<Blob>("/audio?slot=" + encodeURIComponent(slot));
+        if (blob instanceof Blob) setLoadedTake({ slot, blob });
+      } catch {
+        toastManager.add({ type: "error", title: "Take saved", description: "Playback did not load. Press Play to retry." });
+      }
+    }
+  }
+
   async function work(task: () => Promise<void>, loadingMessage = "") {
     if (busy) return;
     setBusy(true);
@@ -339,6 +372,12 @@ export default function App() {
       ?.querySelector("[data-slot=scroll-area-viewport]")
       ?.scrollTo?.(0, 0);
   }, [currentPage, filters]);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView?.({ block: "nearest" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selected, currentPage, expanded]);
   async function changeFilters(next: typeof filters, preferredSlot?: string) {
     if (busy) return;
     if (
@@ -357,7 +396,7 @@ export default function App() {
     setPage(Math.max(0, Math.floor(groupIndex / PAGE)));
     stop();
     setSelected(row?.slot || "");
-    setText(row?.text || "");
+    setText(row?.speechScript ?? row?.text ?? "");
 
     setAudioDirty(false);
     setEditReset((v) => v + 1);
@@ -367,7 +406,7 @@ export default function App() {
     if (dirty || filtered.some((r) => r.slot === selected)) return;
     const row = filtered[0];
     setSelected(row?.slot || "");
-    setText(row?.text || "");
+    setText(row?.speechScript ?? row?.text ?? "");
   }, [filtered, selected, dirty]);
   function updateFilter(key: keyof typeof filters, value: string) {
     void changeFilters({
@@ -377,29 +416,71 @@ export default function App() {
     });
   }
   async function save(state: Exclude<State, "missing">, next = false) {
-    if (!selectedRow) return;
+    if (!selectedRow || captionIssue?.error) return;
     await work(async () => {
-      await action("/save", {
+      const result = await action("/save", {
         slot: selectedRow.slot,
         text,
         direction: selectedRow.direction,
         state,
       });
+      const saved = result?.row as Pick<typeof selectedRow, "slot" | "text" | "speechScript" | "direction" | "state"> | undefined;
       const index = navigationRows.findIndex(
         (r) => r.slot === selectedRow.slot,
       );
-      const nextSlot =
-        next && index >= 0 ? navigationRows[index + 1]?.slot : undefined;
+      const updatedRows = (project?.rows ?? []).map((row) =>
+        row.slot === selectedRow.slot ? { ...row, ...(saved ?? { state, text }) } : row);
+      const approvedSlots = new Set(updatedRows.filter((row) => row.state === "approved").map((row) => row.slot));
+      const missingAfterSave = project?.buildCoverage?.pools
+        ? new Set(Object.values(project.buildCoverage.pools).filter((slots) => !slots.some((slot) => approvedSlots.has(slot))).flat())
+        : requiredSlots;
+      const groupsAfterSave = groupRows(filterRows(updatedRows, filters, missingAfterSave));
+      const matchesAfterSave = groupsAfterSave.flatMap((group) => group.variations);
+      const advance = next || !matchesAfterSave.some((row) => row.slot === selectedRow.slot);
+      const nextRow = advance && index >= 0
+        ? navigationRows.slice(index + 1).find((row) => matchesAfterSave.some((match) => match.slot === row.slot))
+          ?? matchesAfterSave.find((row) => row.slot !== selectedRow.slot)
+        : undefined;
+      const nextSlot = nextRow?.slot;
       stop();
-      await load(nextSlot || selectedRow.slot);
+      if (!saved || saved.slot !== selectedRow.slot) {
+        await load(nextSlot || selectedRow.slot);
+      } else {
+        setProject((current) => {
+          if (!current) return current;
+          const rows = current.rows.map((row) =>
+            row.slot === saved.slot ? { ...row, ...saved } : row,
+          );
+          const coverage = { ...current.coverage };
+          coverage[selectedRow.state]--;
+          coverage[saved.state]++;
+          const pools = current.buildCoverage?.pools;
+          let buildCoverage = current.buildCoverage;
+          if (pools) {
+            const approved = new Set(rows.filter((row) => row.state === "approved").map((row) => row.slot));
+            const missingSlots = Object.fromEntries(
+              Object.entries(pools).filter(([, slots]) => !slots.some((slot) => approved.has(slot))),
+            );
+            const missing = Object.keys(missingSlots);
+            const required = Object.keys(pools).length;
+            buildCoverage = { pools, required, covered: required - missing.length, missing, missingSlots };
+          }
+          return { ...current, rows, coverage, buildCoverage };
+        });
+        setSelected(nextSlot || saved.slot);
+        const currentRow = nextRow ?? saved;
+        setText(currentRow.speechScript ?? currentRow.text);
+        setAudioDirty(false);
+        setEditReset((value) => value + 1);
+      }
       if (nextSlot) {
-        const gi = grouped.findIndex((g) =>
+        const gi = groupsAfterSave.findIndex((g) =>
           g.variations.some((r) => r.slot === nextSlot),
         );
         setPage(Math.max(0, Math.floor(gi / PAGE)));
       }
       setMessage(
-        next ? "Approved. Next recording selected." : "Changes saved.",
+        next ? (nextSlot ? "Approved. Next recording selected." : "Approved. No matching recordings remain.") : "Changes saved.",
       );
     });
   }
@@ -471,6 +552,7 @@ export default function App() {
         selectedFiles.push({ row, file });
       }
       let count = 0;
+      if (selectedFiles.some(({ row }) => row.slot === selectedRow?.slot)) setAudioTransfer("Importing audio…");
       try {
         for (const { row, file } of selectedFiles) {
           setMessage(
@@ -479,14 +561,17 @@ export default function App() {
           await request("/import", file, { "X-Slot": row.slot });
           count++;
         }
+        setAudioTransfer(count && selectedFiles.some(({ row }) => row.slot === selectedRow?.slot) ? "Loading the imported take…" : "");
+        await loadReplacement(selectedFiles.some(({ row }) => row.slot === selectedRow?.slot) ? selectedRow?.slot : undefined);
       } catch (e) {
         await load();
         setMessage(
           `${count} imported before the batch stopped. Existing imports are kept.`,
         );
         throw e;
+      } finally {
+        setAudioTransfer("");
       }
-      await load(selectedRow?.slot);
       imported = count > 0;
       setMessage(
         `${count} imported${skipped ? `, ${skipped} skipped (unmatched or already recorded)` : ""}. Listen before approving.`,
@@ -552,7 +637,7 @@ export default function App() {
     )
       return;
     if (selectedRow) {
-      setText(selectedRow.text);
+      setText(selectedRow.speechScript ?? selectedRow.text);
     }
     if (project)
       setMetadata({
@@ -657,11 +742,11 @@ export default function App() {
       : project.coverage.approved === project.rows.length);
   const hasAudio = !!selectedRow && selectedRow.state !== "missing";
   const takeCommands = {
-    approve: { value: "Approve", key: "Ctrl+Enter", disabled: busy || audioDirty || !hasAudio, run: () => void save("approved") },
+    approve: { value: "Approve", key: "Ctrl+Enter", disabled: busy || audioDirty || !hasAudio || selectedRow?.state === "approved", run: () => void save("approved") },
     import: { value: "Import audio", key: "Alt+I", disabled: busy || !selectedRow, run: () => importRef.current?.click() },
     record: { value: "Record audio", key: "Alt+R", disabled: busy || !selectedRow, run: () => { stop(); setModal("microphone"); } },
     listen: { value: "Needs listening", key: "Alt+L", disabled: busy || audioDirty || !hasAudio || selectedRow?.state === "pending", run: () => void save("pending") },
-    retake: { value: "Needs a retake", key: "Alt+T", disabled: busy || audioDirty || !hasAudio, run: () => void save("redo") },
+    retake: { value: "Needs a retake", key: "Alt+T", disabled: busy || audioDirty || !hasAudio || selectedRow?.state === "redo", run: () => void save("redo") },
   };
   const commands = [
     {
@@ -726,7 +811,7 @@ export default function App() {
   ];
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && !modal) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && !modal && !headerMenuOpen) {
         e.preventDefault();
         setCommandsOpen((v) => !v);
         return;
@@ -734,7 +819,7 @@ export default function App() {
       const el = e.target as HTMLElement;
       if (
         modal ||
-        commandsOpen ||
+        commandsOpen || headerMenuOpen ||
         el.closest(
           "input,textarea,select,[contenteditable=true],[role=dialog],[role=alertdialog],[role=combobox]",
         )
@@ -783,78 +868,117 @@ export default function App() {
           className="app-shell flex h-dvh flex-col overflow-hidden max-[600px]:h-auto max-[600px]:min-h-dvh max-[600px]:overflow-visible"
           aria-busy={busy}
         >
-          <header className="app-header flex shrink-0 items-center justify-between gap-5 border-b px-6 py-2.5 max-[800px]:gap-3 max-[800px]:px-4 max-[800px]:py-3 max-[600px]:items-start">
-            <div className="identity">
-              <div className="border-r pr-3" aria-label="Conditional Speech Voices - Studio">
-                <strong className="wordmark">
-                  CONDITIONAL SPEECH{" "}
-                  <span className="flex gap-1.5">
-                    <span className="wordmark-title">VOICES</span>
-                    <span className="font-thin text-secondary text-2xl self-center">
-                      STUDIO
-                    </span>
-                  </span>
-                </strong>
-              </div>
-              <ProjectPicker
-                items={projects}
-                current={project?.projectKey || "current"}
-                language={project?.language || ""}
-                languageFlags={project?.languageFlags ?? []}
-                trial={!!project?.trial}
-                disabled={busy || !project}
-                onSelect={async (key) => {
-                  await switchProject(key);
-                }}
-                onDelete={async ({ key, name }) => {
-                  if (
-                    !(await confirm(
-                      `Permanently delete "${name}" and all its project files and recordings? This cannot be undone.`,
-                      "Delete project?",
-                      "Delete project",
-                      true,
-                    ))
-                  )
-                    return;
-                  await work(async () => {
-                    if (key === project?.projectKey) stop();
-                    await action("/remove-project", { key });
-                    await load();
-                    setProjects(await request("/projects"));
-                  });
-                }}
-                onDetails={async (key) => {
-                  if (key === project?.projectKey) await openModal("project");
-                  else if (await switchProject(key)) {
-                    setMetadataDirty(false);
-                    setModal("project");
-                  }
-                }}
-                onOpen={() => {
-                  setPackFolder("");
-                  void openModal("open-pack");
-                }}
-                onCreate={() => void openModal("create")}
-              />
+          <header className="app-header flex shrink-0 items-center justify-between gap-5 border-b px-6 py-1.5 max-[800px]:gap-3 max-[800px]:px-4 max-[400px]:gap-2 max-[400px]:px-3">
+            <div className="flex min-w-0 items-center gap-3 self-stretch max-[400px]:gap-2" aria-label="Conditional Speech Voices - Studio">
+              <strong className="flex flex-col gap-0.5 whitespace-nowrap text-[10px] leading-none font-semibold tracking-wider max-[400px]:text-[8px]">
+                CONDITIONAL SPEECH
+                <span className="text-[24px] leading-none font-bold tracking-tight text-primary max-[600px]:text-[18px]">VOICES</span>
+              </strong>
+              <span aria-hidden="true" className="h-[70%] w-px shrink-0 bg-border" />
+              <span className="text-xl leading-none font-thin text-muted-foreground max-[600px]:text-sm">STUDIO</span>
             </div>
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                variant="ghost"
-                disabled={
-                  busy ||
-                  !project ||
-                  project.coverage.missing === project.rows.length
-                }
-                onClick={() => void perform("/measure")}
-              >
-                {operation === "/measure" ? "Checking…" : "Check audio levels"}
-              </Button>
-              <Button
-                disabled={busy || !project}
-                onClick={() => openModal("prepare")}
-              >
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 max-[600px]:gap-1 max-[400px]:max-w-[50%]">
+              {elevenLabsConnected && <ElevenLabsBalance balance={elevenLabsBalance} />}
+              <Button size="sm" disabled={busy || !project} onClick={() => openModal("prepare")}>
                 Build voice pack
               </Button>
+              <PopoverRoot open={headerMenuOpen} onOpenChange={setHeaderMenuOpen}>
+                <PopoverTrigger render={<Button size="icon" variant="ghost" aria-label="Studio menu" disabled={busy} />}>
+                  <Menu aria-hidden="true" />
+                </PopoverTrigger>
+                <PopoverPopup aria-label="Studio menu" className="w-72 max-w-[calc(100vw-1.5rem)]">
+                  <div className="mb-2 rounded-md border bg-card">
+                    <ProjectPicker
+                      items={projects}
+                      current={project?.projectKey || "current"}
+                      language={project?.language || ""}
+                      languageFlags={project?.languageFlags ?? []}
+                      languageLabel={project ? (languageNames as Record<string, string>)[project.language] || project.language : ""}
+                      voice={project?.voice}
+                      characterBase={project?.characterBase}
+                      trial={!!project?.trial}
+                      disabled={busy || !project}
+                      onSelect={async (key) => {
+                        setHeaderMenuOpen(false);
+                        await switchProject(key);
+                      }}
+                      onSettings={() => {
+                        setHeaderMenuOpen(false);
+                        void openModal("project");
+                      }}
+                      onDelete={async ({ key, name }) => {
+                        setHeaderMenuOpen(false);
+                        if (
+                          !(await confirm(
+                            `Permanently delete "${name}" and all its project files and recordings? This cannot be undone.`,
+                            "Delete project?",
+                            "Delete project",
+                            true,
+                          ))
+                        )
+                          return;
+                        await work(async () => {
+                          if (key === project?.projectKey) stop();
+                          await action("/remove-project", { key });
+                          await load();
+                          setProjects(await request("/projects"));
+                        });
+                      }}
+                    />
+                  </div>
+                  {project?.elevenLabs && (elevenLabsConnected ? (
+                    <section className="mb-2 space-y-2 rounded-md border bg-card p-3" aria-label="ElevenLabs usage">
+                      <p className="text-sm font-semibold">ElevenLabs</p>
+                      {elevenLabsBalance ? (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <Progress value={balancePercent(elevenLabsBalance)} aria-label="ElevenLabs credits used" />
+                            <span className="shrink-0 text-xs tabular-nums">{Math.round(balancePercent(elevenLabsBalance))}%</span>
+                          </div>
+                          <dl className="grid grid-cols-2 gap-1 text-xs tabular-nums">
+                            <dt className="text-muted-foreground">Used</dt><dd className="text-right">{elevenLabsBalance.used.toLocaleString("en-US")}</dd>
+                            <dt className="text-muted-foreground">Remaining</dt><dd className="text-right">{elevenLabsBalance.remaining.toLocaleString("en-US")}</dd>
+                          </dl>
+                        </>
+                      ) : <p className="text-xs text-muted-foreground">{elevenLabsBalance === null ? "Balance unavailable" : "Checking credits…"}</p>}
+                      <div className="flex flex-wrap items-center justify-between gap-x-2">
+                        <Button size="xs" variant="link" className="px-0" onClick={() => {
+                          setHeaderMenuOpen(false); stop(); setModal("elevenlabs");
+                        }} aria-label="ElevenLabs settings">Settings</Button>
+                        <Button size="xs" variant="link" className="px-0" onClick={() => {
+                          setHeaderMenuOpen(false); stop(); setModal("generation-history");
+                        }}>Generation history</Button>
+                      </div>
+                    </section>
+                  ) : (
+                    <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => {
+                      setHeaderMenuOpen(false); stop(); setModal("elevenlabs");
+                    }}>
+                      <AudioLines aria-hidden="true" /> ElevenLabs settings
+                    </Button>
+                  ))}
+                  {project && !elevenLabsConnected && (
+                    <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => {
+                      setHeaderMenuOpen(false); stop(); setModal("generation-history");
+                    }}>Generation history</Button>
+                  )}
+                  <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => {
+                    setHeaderMenuOpen(false); setPackFolder(""); void openModal("open-pack");
+                  }}><FolderOpen aria-hidden="true" /> Open project</Button>
+                  <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => {
+                    setHeaderMenuOpen(false); void openModal("create");
+                  }}><Plus aria-hidden="true" /> New project</Button>
+                  <Button size="sm" variant="ghost" className="w-full justify-start"
+                    disabled={!project || project.coverage.missing === project.rows.length}
+                    onClick={() => { setHeaderMenuOpen(false); void perform("/measure"); }}>
+                    <Headphones aria-hidden="true" /> Check audio levels
+                  </Button>
+                  <Button size="sm" variant="ghost" className="w-full justify-start" disabled={!project}
+                    onClick={() => { setHeaderMenuOpen(false); void openModal("import"); }}>
+                    <Upload aria-hidden="true" /> Batch import
+                  </Button>
+                </PopoverPopup>
+              </PopoverRoot>
             </div>
           </header>
           {operation === "/measure" && (
@@ -872,20 +996,8 @@ export default function App() {
               className="flex min-h-0 flex-col border-r bg-card max-[600px]:shrink-0 max-[600px]:border-r-0 max-[600px]:border-b"
               aria-label="Recording library"
             >
-              <div className="border-b px-3.5 pt-3.75 pb-2.5 max-[600px]:px-3 max-[600px]:pt-2.5 max-[600px]:pb-2">
-                <div className="mb-3 flex items-center justify-between">
-                  <strong className="text-[15px]">Recordings</strong>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8! min-h-8!"
-                    disabled={busy}
-                    onClick={() => void openModal("import")}
-                  >
-                    <Upload />
-                    Batch import
-                  </Button>
-                </div>
+              <div className="border-b px-3.5 pt-2.5 pb-2.5 max-[600px]:px-3 max-[600px]:pt-2.5 max-[600px]:pb-2">
+                <h2 className="mb-3 text-[15px] font-bold">Recordings</h2>
                 <div className="search-box">
                   <Search size={15} />
                   <Input
@@ -899,7 +1011,7 @@ export default function App() {
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                     <Choice
                       name="Recording status"
-                      triggerClassName="text-[11px]"
+                      triggerClassName="text-[11px]! [&>span]:text-[11px]!"
                       value={filters.state}
                       onChange={(v) => updateFilter("state", v)}
                       items={[
@@ -929,7 +1041,7 @@ export default function App() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8! min-h-8! w-8 gap-px p-0 text-[11px] [&_svg]:w-3.25!"
+                          className="h-8! min-h-8! w-8 gap-px p-0 text-[11px] filter-trigger [&_svg]:w-3.25!"
                         />
                       }
                     >
@@ -937,7 +1049,7 @@ export default function App() {
                       {filterCount > 0 && (
                         <span
                           aria-hidden="true"
-                          className="pointer-events-none absolute right-0 top-0 size-2 rounded-full bg-primary"
+                          className="pointer-events-none absolute -right-0.5 -top-0.5 z-10 size-2 rounded-full bg-primary"
                         >
                           <span className="absolute inset-0 rounded-full bg-primary/70 motion-safe:animate-ping" />
                         </span>
@@ -1039,6 +1151,10 @@ export default function App() {
                           ]}
                         />
                       )}
+                      <Label className="grid min-w-0 grid-cols-[auto_1fr] items-center gap-2 profanity-control">
+                        <Checkbox checked={Boolean(filters.profanity)} onCheckedChange={(checked) => updateFilter("profanity", checked ? "yes" : "")} />
+                        Profanity only
+                      </Label>
                     </div>
                   </CollapsiblePanel>
                 </Collapsible>
@@ -1253,6 +1369,21 @@ export default function App() {
                           : "variation-field without-acting"
                       }
                     >
+                      <Label className="profanity-control detail-profanity flex items-center gap-2">
+                        <Checkbox
+                          checked={Boolean(selectedRow.profanity)}
+                          disabled={busy || selectedRow.profanityLocked}
+                          onCheckedChange={(enabled) => void work(async () => {
+                            const { slot } = selectedRow;
+                            await action("/profanity", { slot, enabled });
+                            setProject((current) => current && ({
+                              ...current,
+                              rows: current.rows.map((row) => row.slot === slot ? { ...row, profanity: enabled } : row),
+                            }));
+                          })}
+                        />
+                        {selectedRow.profanityLocked ? "Contains profanity (Core)" : "Contains profanity"}
+                      </Label>
                       <Label>Delivery</Label>
                       <Choice
                         name="Delivery"
@@ -1298,63 +1429,104 @@ export default function App() {
                         </>
                       )}
                       <Label>Variation</Label>
-                      <Choice
-                        name="Variation"
-                        value={selectedRow.slot}
-                        disabled={busy}
-                        onChange={(v) => {
-                          const r = variations.find((r) => r.slot === v);
-                          if (r) void choose(r);
-                        }}
-                        items={variations.map((r, i) => ({
-                          value: r.slot,
-                          label: `${i + 1}. ${r.slot}${r.optional ? " (optional)" : ""}`,
-                        }))}
-                      />
+                      <div className="flex min-w-0 items-center gap-1 [&>*:first-child]:min-w-0 [&>*:first-child]:flex-1">
+                        <Choice
+                          name="Variation"
+                          value={selectedRow.slot}
+                          disabled={busy}
+                          onChange={(v) => {
+                            const r = variations.find((r) => r.slot === v);
+                            if (r) void choose(r);
+                          }}
+                          items={variations.map((r, i) => ({
+                            value: r.slot,
+                            label: `${i + 1}. ${r.slot}${r.optional ? " (optional)" : ""}`,
+                          }))}
+                        />
+                        <ActionTip text="Copy slot ID">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="shrink-0"
+                            aria-label="Copy slot ID"
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(selectedRow.slot);
+                                toastManager.add({ title: "Slot ID copied" });
+                              } catch {
+                                toastManager.add({ title: "Could not copy slot ID", type: "error" });
+                              }
+                            }}
+                          >
+                            <Copy />
+                          </Button>
+                        </ActionTip>
+                      </div>
                     </div>
 
                   </div>
-                  <div className="caption-editor">
-                    <Textarea
+                  {filters.state === "required" && (
+                    <Alert
+                      variant="info"
+                      className="mt-4 text-xs"
+                      aria-label="Required groups for this take"
+                    >
+                      <Info aria-hidden="true" />
+                      <AlertTitle>
+                        Approving this take covers
+                      </AlertTitle>
+                      <AlertDescription className="flex-row flex-wrap gap-2">
+                        {Array.from(
+                          new Set(
+                            (missingBySlot.get(selectedRow.slot) ?? []).map(
+                              coverageLabel,
+                            ),
+                          ),
+                        ).map((group) => (
+                          <Badge key={group} variant="outline">
+                            {group}
+                          </Badge>
+                        ))}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <div className="caption-editor flex items-center justify-start gap-2 max-[600px]:flex-col max-[600px]:items-start">
+                    <CaptionEditor
                       unstyled
+                      highlight={dialogue}
+                      aria-invalid={captionIssue?.error || undefined}
+                      aria-describedby={captionIssue ? "caption-tag-feedback" : undefined}
                       aria-label="Spoken text / caption"
                       dir="auto"
-                      className="caption-title"
+                      data-editing={textDirty || undefined}
                       value={text}
-                      maxLength={project?.limits?.caption || 240}
+                      maxLength={selectedRow.category === "Dialogue" ? (project?.limits?.speechScript ?? 10_000) : (project?.limits?.caption ?? 240)}
+                      aria-description={selectedRow.category === "Dialogue" ? "Use square brackets anywhere to add an audio tag. Tags stay out of the in-game caption." : undefined}
                       onChange={(e) => setText(e.target.value)}
                       disabled={busy}
                     />
                     {textDirty && (
-                      <Button
-                        variant="outline"
-                        disabled={busy || audioDirty}
-                        onClick={() => void save("pending")}
-                      >
-                        Save text
-                      </Button>
+                      <div className="flex shrink-0 self-stretch max-[600px]:self-start">
+                        <Button variant="ghost" disabled={busy} className="h-auto! rounded-none hover:bg-destructive hover:text-white" onClick={() => setText(selectedRow.speechScript ?? selectedRow.text)}>
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          disabled={busy || audioDirty || captionIssue?.error}
+                          className="h-auto! shrink-0 self-stretch rounded-none hover:bg-primary hover:text-primary-foreground max-[600px]:self-start"
+                          onClick={() => void save(selectedRow.state === "redo" ? "redo" : "pending")}
+                        >
+                          <Save aria-hidden="true" />
+                          Save
+                        </Button>
+                      </div>
                     )}
                   </div>
-                  {filters.state === "required" && (
-                    <div
-                      className="mb-3 flex flex-wrap items-center gap-2 text-xs"
-                      aria-label="Required groups for this take"
-                    >
-                      <span className="text-muted-foreground">
-                        Approving this take covers
-                      </span>
-                      {Array.from(
-                        new Set(
-                          (missingBySlot.get(selectedRow.slot) ?? []).map(
-                            coverageLabel,
-                          ),
-                        ),
-                      ).map((group) => (
-                        <Badge key={group} variant="outline">
-                          {group}
-                        </Badge>
-                      ))}
-                    </div>
+                  {captionIssue && (
+                    <p id="caption-tag-feedback" role="status" className="-mt-5 mb-5 text-xs text-muted-foreground aria-invalid:text-destructive-foreground" aria-invalid={captionIssue.error}>
+                      {captionIssue.message}
+                    </p>
                   )}
                   <section
                     className="recording-guidance"
@@ -1362,12 +1534,23 @@ export default function App() {
                   >
                     <span className="field-caption">Recording guidance</span>
                     <p>
-                      {selectedRow.guidance ||
-                        selectedRow.direction ||
-                        "Use a natural, conversational delivery. Keep the meaning of this line."}
+                      {selectedRow.guidance || "Use a natural, conversational delivery. Keep the meaning of this line."}
                     </p>
+                    {!!selectedRow.elevenLabsTags?.length && (
+                      <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs" aria-label="Recommended tags">
+                        <span className="text-muted-foreground">Recommended tags</span>
+                        {selectedRow.elevenLabsTags.map((tag) => <span key={tag} className="font-mono font-semibold text-primary">{tag}</span>)}
+                      </div>
+                    )}
                   </section>
-                  <div className="recording-player-card">
+                  <div className="recording-player-card" aria-busy={!!audioTransfer}>
+                    {audioTransfer ? (
+                      <div role="status" className="flex min-h-28 flex-col items-center justify-center gap-3 px-4 py-3 text-sm text-muted-foreground">
+                        <LoaderCircle aria-hidden="true" className="size-5 text-primary motion-safe:animate-spin" />
+                        {audioTransfer}
+                        <div aria-hidden="true" className="h-1 w-full rounded-full bg-muted motion-safe:animate-pulse" />
+                      </div>
+                    ) : <>
                     <AudioPlayer
                       key={selectedRow.slot + project?.revision + playerEpoch}
                       navigation={
@@ -1404,6 +1587,7 @@ export default function App() {
                       }
                       controlRef={playerControl}
                       slot={selectedRow.slot}
+                      initialAudio={loadedTake?.slot === selectedRow.slot ? loadedTake.blob : undefined}
                       missing={selectedRow.state === "missing"}
                       disabled={busy}
                       onError={(description) =>
@@ -1448,9 +1632,10 @@ export default function App() {
                         }}
                       />
                     )}
+                    </>}
                   </div>
                   <div
-                    className="mt-4 grid grid-cols-2 gap-2 max-[480px]:grid-cols-1"
+                    className={`mt-4 grid gap-2 max-[640px]:grid-cols-1 ${elevenLabsEnabled ? "grid-cols-3" : "grid-cols-2"}`}
                     aria-label="Add a take"
                   >
                     <ActionTip text={takeCommands.import.key}>
@@ -1463,6 +1648,13 @@ export default function App() {
                         <Mic /> Record audio
                       </Button>
                     </ActionTip>
+                    {elevenLabsEnabled && (
+                      <Button size="lg" variant="outline" disabled={busy || dirty || selectedRow.category !== "Dialogue"}
+                        title={dirty ? "Save or cancel your edits before generating." : selectedRow.category !== "Dialogue" ? "Use recording or import for nonverbal takes." : undefined}
+                        onClick={() => { stop(); setModal("generate"); }}>
+                        <Sparkles aria-hidden="true" /> Generate
+                      </Button>
+                    )}
                   </div>
                   <div className="review-actions" aria-label="Review this take">
                     <ActionTip text={takeCommands.listen.key}>
@@ -1701,8 +1893,7 @@ export default function App() {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <strong className="text-destructive-foreground">
-                      {project.buildCoverage.missing.length} required groups
-                      missing
+                      {project.buildCoverage.missing.length} required groups without an approved take
                     </strong>
                     {project.buildCoverage.missingSlots && (
                       <Button
@@ -2145,6 +2336,47 @@ export default function App() {
           </Modal>
           {dialog}
         </div>
+        {modal === "elevenlabs" && project?.elevenLabs && (
+          <ElevenLabsSettings project={project.projectKey ?? "current"} configured={project.elevenLabs.configured}
+            language={project.language} languageCode={project.elevenLabs.languageCode ?? project.language}
+            flags={project.languageFlags ?? []} savedVoice={project.elevenLabs.voice} onClose={() => setModal(null)}
+            onConfigured={() => {
+              setProject((current) => current?.elevenLabs ? { ...current, elevenLabs: { ...current.elevenLabs, configured: true } } : current);
+              setCreditsRefresh((value) => value + 1);
+            }}
+            onSave={(voice) => {
+              setProject((current) => current ? { ...current, elevenLabs: { ...current.elevenLabs, configured: true, voice } } : current);
+              setCreditsRefresh((value) => value + 1);
+              setModal(null);
+            }} />
+        )}
+        {modal === "generate" && project && selectedRow && (
+          <ElevenLabsPreview key={project.projectKey + ":" + selectedRow.slot} project={project.projectKey ?? "current"}
+            slot={selectedRow.slot} existing={selectedRow.state !== "missing"} onClose={() => setModal(null)}
+            onGenerated={() => setCreditsRefresh((value) => value + 1)}
+            onAccept={async (id) => {
+              setBusy(true);
+              setAudioTransfer("Saving the generated take…");
+              try {
+                await request("/elevenlabs/accept", { project: project.projectKey ?? "current", slot: selectedRow.slot, id }, {}, true, true);
+                setModal(null);
+                setAudioTransfer("Loading the generated take…");
+                try {
+                  await loadReplacement(selectedRow.slot);
+                  toastManager.add({ title: "Take saved", description: "Listen before approving.", type: "success" });
+                } catch {
+                  toastManager.add({ title: "Take saved", description: "Studio could not refresh the library. Reopen the project to load the new take.", type: "error" });
+                }
+              } finally {
+                setAudioTransfer("");
+                setBusy(false);
+              }
+            }} />
+        )}
+        {modal === "generation-history" && <ElevenLabsHistory recordings={project?.rows ?? []} onClose={() => setModal(null)}
+          onOpen={async (slot) => {
+            if (await changeFilters(emptyFilters, slot)) setModal(null);
+          }} />}
         <CommandDialog open={commandsOpen} onOpenChange={setCommandsOpen}>
           <CommandDialogPopup aria-label="Studio commands">
             <Command items={commands.filter((c) => !c.disabled)}>

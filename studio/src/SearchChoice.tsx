@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, FolderOpen, Settings, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -46,37 +46,40 @@ export function SearchChoice({
   );
 }
 
-export type ProjectChoice = { key: string; name: string };
+export type ProjectChoice = { key: string; name: string; language?: string };
 export function ProjectPicker({
   items,
   current,
   language,
   languageFlags,
+  languageLabel,
+  voice,
+  characterBase,
   trial,
   disabled,
   onSelect,
-  onDetails,
+  onSettings,
   onDelete,
-  onCreate,
-  onOpen,
 }: {
   items: ProjectChoice[];
   current: string;
   language: string;
   languageFlags: readonly string[];
+  languageLabel: string;
+  voice?: string;
+  characterBase?: string;
   trial: boolean;
   disabled: boolean;
   onSelect: (key: string) => Promise<void>;
-  onDetails: (key: string) => Promise<void>;
+  onSettings: () => void;
   onDelete: (item: ProjectChoice) => Promise<void>;
-  onCreate: () => void;
-  onOpen?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const selected = items.find((i) => i.key === current);
+  const ordered = selected ? [selected, ...items.filter((item) => item !== selected)] : items;
   return (
     <Combobox
-      items={items}
+      items={ordered}
       value={selected || null}
       itemToStringLabel={(i) => i.name}
       open={open}
@@ -93,17 +96,27 @@ export function ProjectPicker({
         render={
           <Button
             variant="ghost"
-            className="project-trigger"
+            className="h-auto! w-full min-w-0 items-start gap-2 px-3 py-2.5 text-left"
             aria-label="Choose project"
           />
         }
       >
-        {languageFlags.includes(language) && (
-          <img className="size-4 shrink-0 object-contain" src={`/studio/flag/${encodeURIComponent(language)}`} alt="" />
-        )}
-        {selected?.name || "Opening project"}
-        {trial && <span className="subtle">Trial</span>}
-        <ChevronDown />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-semibold">{selected?.name || "Opening project"}</span>
+          <span className="mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-0.5 text-xs font-normal">
+            {voice && <><span className="text-muted-foreground">Voice ID</span><span className="truncate font-mono">{voice}</span></>}
+            {characterBase && <><span className="text-muted-foreground">Base</span><span className="truncate">{characterBase}</span></>}
+            <span className="text-muted-foreground">Language</span>
+            <span className="flex min-w-0 items-center gap-1.5 truncate">
+              {languageFlags.includes(language) && (
+                <img className="size-4 shrink-0 object-contain" src={`/studio/flag/${encodeURIComponent(language)}`} alt="" />
+              )}
+              <span className="truncate">{languageLabel}</span>
+            </span>
+          </span>
+          {trial && <span className="text-xs text-muted-foreground">Listening sample</span>}
+        </span>
+        <ChevronDown aria-hidden="true" className="shrink-0" />
       </ComboboxTrigger>
       <ComboboxPopup className="project-popup">
         <ComboboxInput
@@ -116,59 +129,49 @@ export function ProjectPicker({
         <ComboboxList>
           {(i: ProjectChoice) => (
             <ComboboxRow key={i.key} className="project-option">
-              <ComboboxItem value={i}>
-                <span>{i.name}</span>
+              <ComboboxItem value={i} hideIndicator className="min-w-0 pe-1">
+                {i.language && languageFlags.includes(i.language) && (
+                  <img className="size-4 shrink-0 object-contain" src={`/studio/flag/${encodeURIComponent(i.language)}`} alt="" />
+                )}
+                <span className="min-w-0 truncate">{i.name}</span>
+                {i.key !== current && i.key === "current" && (
+                  <span className="active-project" title="The startup project also holds local packs and cannot be deleted here.">Startup</span>
+                )}
                 {i.key === current && (
-                  <span className="active-project">Current</span>
+                  <span className="ml-auto shrink-0 text-[11px] text-primary">current</span>
                 )}
               </ComboboxItem>
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label={"Details for " + i.name}
-                onClick={() => {
-                  setOpen(false);
-                  void onDetails(i.key);
-                }}
-              >
-                <Settings />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                disabled={i.key === "current" || i.key.startsWith("saved:")}
-                title={i.key === "current" || i.key.startsWith("saved:") ? "Saved project is protected" : "Remove project"}
-                aria-label={"Remove " + i.name}
-                onClick={() => {
-                  setOpen(false);
-                  void onDelete(i);
-                }}
-              >
-                <Trash2 />
-              </Button>
+              {i.key === current ? (
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label={"Settings for " + i.name}
+                  title="Project settings"
+                  onClick={() => {
+                    setOpen(false);
+                    onSettings();
+                  }}
+                >
+                  <Settings aria-hidden="true" />
+                </Button>
+              ) : (
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  disabled={i.key === "current" || i.key.startsWith("saved:")}
+                  title={i.key === "current" ? "The startup project also holds local packs." : i.key.startsWith("saved:") ? "This project is outside Studio’s managed projects folder." : "Remove project"}
+                  aria-label={"Remove " + i.name}
+                  onClick={() => {
+                    setOpen(false);
+                    void onDelete(i);
+                  }}
+                >
+                  <Trash2 aria-hidden="true" />
+                </Button>
+              )}
             </ComboboxRow>
           )}
         </ComboboxList>
-        {onOpen && (
-          <Button variant="ghost" className="w-full" onClick={() => {
-            setOpen(false);
-            onOpen();
-          }}>
-            <FolderOpen />
-            Open project
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          className="w-full border-t-0 project-create"
-          onClick={() => {
-            setOpen(false);
-            onCreate();
-          }}
-        >
-          <Plus />
-          New project
-        </Button>
       </ComboboxPopup>
     </Combobox>
   );

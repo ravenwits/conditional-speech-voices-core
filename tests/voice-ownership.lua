@@ -1,11 +1,11 @@
 local base='Contents/mods/ConditionalSpeechVoicesCore/42/media/lua/'
 package.path=base..'shared/?.lua;'..base..'client/?.lua;'..package.path
-local pain,callout=false,false
+local pain,callout,effort=false,false,false
 local interrupted=0
 local client={active={}}
 local V={client=client,voice=function(p)return p.voice end}
 package.loaded['CSV/Core']=V
-package.loaded['CSV/NativeVoice']={painActive=function()return pain end}
+package.loaded['CSV/NativeVoice']={painActive=function()return pain end,effortActive=function()return effort end}
 package.loaded['CSV/Callout']={busy=function()return callout end,interrupt=function()interrupted=interrupted+1 end}
 local owner=require 'CSV/VoiceOwnership'
 local foreign={voice='other'}
@@ -27,6 +27,18 @@ for _,voice in ipairs({'bob','kate','alp','mujde','third-party-voice'})do
     assert(#cancelled==0,'checking a queue candidate must not cancel speech')
     assert(owner.claimSpeech(actor,{priority=3,group='Panic'}))
     assert(#cancelled==1 and #client.active==1 and client.active[1]==other)
+    effort=true
+    local urgent={player=actor,priority=3}
+    client.active={normal,preview,urgent,other};cancelled={}
+    owner.nativeUpdate(actor,false)
+    assert(#cancelled==1 and cancelled[1].entry==normal and cancelled[1].reason=='native_melee_effort')
+    assert(#client.active==3,'melee must leave urgent, preview and other actors alone')
+    client.active={}
+    local maySpeak,why=owner.check(actor,{priority=1})
+    assert(not maySpeak and why=='native_melee_effort')
+    assert(owner.check(actor,{priority=3}))
+    effort=false
+    assert(owner.check(actor,{priority=1}))
     callout=true
     local allowed,reason=owner.check(actor,{priority=4,group='Injured'})
     assert(not allowed and reason=='native_callout')
