@@ -30,6 +30,8 @@ end
 function M.allowed(line,f)
  local variant=alternates[line.id]
  local id=M.source(variant and variant.source or line.id)
+ if id=='DisinfectDone_1' then return f.outcome~=nil and f.outcome.selfTreatment==true end
+ if id=='Bleeding_1' then return f.bleedingCut==true end
  if id:match('^CriticalFading_') then return type(f.health)=='number' and f.health>0 and f.health<=25 end
  if id:match('^CriticalWound_') then return type(f.health)=='number' and f.health>0 and f.health<=25 and ((f.bleeding or 0)>0 or f.acute==true) end
  if not require('CSV/KillSpeech').allowed(id,f) then return false end

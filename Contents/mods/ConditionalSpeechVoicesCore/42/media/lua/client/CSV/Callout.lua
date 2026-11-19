@@ -26,6 +26,7 @@ function M.call(player)
     local voice = V.voice(player)
     local bank = V.bank(voice)
     local pool = bank.native.replacements[sneaking and 'WhisperHey' or 'ShoutHey']
+    if sneaking and (not pool or #pool == 0) then return false end
     local previous = recent[player]
     if previous and player:getEmitter():isPlaying(player:getDescriptor():getVoicePrefix()..'CSV'..previous) then M.metrics.blocked=M.metrics.blocked+1;return true end
     local candidates, fallback = {}, {}
@@ -104,6 +105,9 @@ function M.observe(player)
     local pending=emitter.hasSoundsToStart and emitter:hasSoundsToStart()
     if active and not pending and not entry.started then
         entry.started=getTimestampMs();entry.state='engine_active';M.metrics.active=M.metrics.active+1
+    elseif active and entry.started and getTimestampMs()-entry.started>=require('CSV/VoiceContract').maxClipMs then
+        emitter:stopSoundLocal(entry.handle)
+        entry.state='duration_limit';playing[player]=nil
     elseif not active and getTimestampMs()-entry.at>=250 then
         entry.state=entry.started and 'engine_finished' or 'ended_before_start';playing[player]=nil
     end

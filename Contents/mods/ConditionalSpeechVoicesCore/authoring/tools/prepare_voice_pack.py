@@ -121,7 +121,7 @@ def measure(manifest, ffmpeg, allow_missing=False):
             continue
         result = subprocess.run([ffmpeg, '-v', 'error', '-i', str(path), '-f', 's16le',
                                  '-ac', '1', '-ar', '16000', 'pipe:1'], capture_output=True, check=True, timeout=90)
-        duration = round(len(result.stdout) / 32)
+        duration = math.ceil(len(result.stdout) / 32)
         if duration <= 0:
             raise ValueError('Empty decoded recording ' + sound)
         result = subprocess.run([ffmpeg, '-hide_banner', '-nostats', '-i', str(path), '-af',

@@ -13,10 +13,15 @@ function X.choose(V,C,player,voice,group,f)
  local replacement=X.replacements[group]
  if replacement then
   local fresh=C.extraLine(player,voice,replacement)
-  local index=({Bored=2,Explore=2,AnimalTracks=1,FoodRotten=1})[group]
-  if index then
-   local old=V.data.groups[group][index];local h=C.history[player] or {}
-   if V.clip(voice,old.id) and (not fresh or (h[old.id] or 0)<=(h[fresh.id] or 0)) then return {id=old.id,text=old.text,group=group},true end
+  local slot=({Bored='Bored_2',Explore='Explore_2',AnimalTracks='AnimalTracks_1',FoodRotten='FoodRotten_1'})[group]
+  local history=C.history[player] or {}
+  for _,old in ipairs(V.bank(voice).data.groups[group] or {})do
+   if old.id==slot and V.clip(voice,slot) and (not fresh or (history[slot] or 0)<=(history[fresh.id] or 0)) then
+    return {id=slot,text=old.text,group=group},true
+   end
+  end
+  if group=='AnimalTracks' and not fresh and f.sneaking~=true then
+   return require('CSV/TraitSpeechRules').preferredRecording(V,player,voice,'AnimalTracks_1',f,C.history[player] or {},C.preferences()),true
   end
   return fresh,true
  end

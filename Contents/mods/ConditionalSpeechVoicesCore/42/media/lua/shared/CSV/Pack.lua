@@ -22,9 +22,16 @@ local function provider(mod,module)
  local valid,err=pcall(R.register,mod,definition)
  if not valid then R.rejected[mod]=tostring(err):sub(1,240);print('[CSV] Rejected provider '..mod..': '..R.rejected[mod])end
 end
+-- Official packs can ship separate banks so each voice keeps its own captions.
+local function official(mod,module,id,language)
+ if type(getActivatedMods)=='function' and not getActivatedMods():contains(mod) then return nil end
+ local ok,paths=pcall(require,module..'/VoiceBanks')
+ if not ok then return loadBank(mod,module..'/Manifest',id,language) end
+ for _,path in ipairs(paths)do provider(mod..'/'..path,path)end
+end
 -- Legacy packs remain loadable while subscribers receive updates separately.
-local en=loadBank('Conditional-Speech-Voices-English','CSV_EN/Manifest','csv.en','EN')
-local tr=loadBank('Conditional-Speech-Voices-Turkish','CSV_TR/Manifest','csv.tr','TR')
+local en=official('Conditional-Speech-Voices-English','CSV_EN','csv.en','EN')
+local tr=official('Conditional-Speech-Voices-Turkish','CSV_TR','csv.tr','TR')
 for _,entry in ipairs({
  {'Conditional-Speech-Voices-English',en},
  {'Conditional-Speech-Voices-Turkish',tr},

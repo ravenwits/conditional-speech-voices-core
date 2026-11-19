@@ -19,6 +19,7 @@ local Evidence=require 'CSV/ThreatEvidence'
 local Delivery=require 'CSV/Delivery'
 local Semantic=require 'CSV/SemanticSpeech'
 local alternates=require 'CSV/VoiceAlternates'
+local TraitSpeech=require 'CSV/TraitSpeechRules'
 local function alternate(V,voice,line,f,history,prefs)
     local id='Alt_'..line.id
     local entry=alternates[id]
@@ -73,7 +74,37 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
         local dedicated=C.extraLine(player,voice,group)
         if dedicated then dedicated.critical=true;dedicated.dedicatedCritical=true;return dedicated end
         local line=(V.bank(voice).data.groups.Injured or {})[3]
-        if line then return {id=line.id,text=line.text,group='Injured',critical=true} end
+        if line and (wound or f.wounds~=0) then return {id=line.id,text=line.text,group='Injured',critical=true} end
+    end
+    if group=='Injured' and f.wounds==0 and (f.bites or 0)==0 then return nil end
+    if group=='Bleeding' and (f.bleeding or 0)==0 then return nil end
+    if (group=='Bleeding' or group=='Injured') and f.sneaking==false and type(f.health)=='number' and f.health>25 then
+        local biteCount,biteRegion=f.bites,f.biteRegion
+        if group=='Bleeding' then biteCount,biteRegion=f.bleedingBites,f.bleedingBiteRegion end
+        if (biteCount or 0)>0 then
+            local bite
+            if biteRegion then
+                local id='Bite'..biteRegion..'_1'
+                bite=C.extraLine(player,voice,'BiteWound',function(candidate)return candidate==id end)
+            end
+            bite=bite or C.extraLine(player,voice,'BiteWound',function(id)return id=='BiteUnspecified_1' end)
+            if bite then return bite end
+        end
+        local slot,bankGroup
+        if group=='Injured' and f.woundRegion then
+            slot='Injured'..f.woundRegion..'_1';bankGroup='WoundSite'
+        elseif group=='Bleeding' then
+            bankGroup='BleedingSite'
+            if f.bleedRegion then slot='Bleeding'..f.bleedRegion..'_1' end
+        end
+        if slot then
+            local line=C.extraLine(player,voice,bankGroup,function(id)return id==slot end)
+            if line then return line end
+        end
+        if group=='Bleeding' and not f.bleedingCut and (intensity or 0)<4 then
+            local line=C.extraLine(player,voice,bankGroup,function(id)return id=='BleedingUnspecified_1' end)
+            if line then return line end
+        end
     end
     local traitGroup=require('CSV/Traits').context(group,f)
     if traitGroup then
@@ -83,21 +114,32 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
     if group=='Psychology' then
         local pool=require('CSV/PsychologyRules').pool(f.psychology,f)
         if pool=='Kill' then return require('CSV/KillSpeech').choose(C,V,player,voice,f,f.psychology.experience)end
-        return pool and C.extraLine(player,voice,pool,function(id)return require('CSV/PsychologyRules').allowed(id,f)end) or nil
+        local line=pool and C.extraLine(player,voice,pool,function(id)
+            return require('CSV/PsychologyRules').allowed(id,f) and Semantic.allowed({id=id},f)
+        end)
+        if not line and pool=='TraitReluctant' then
+            local fallback=require('CSV/PsychologyRules').humanAftermath(f.psychology,f)
+            return C.extraLine(player,voice,fallback)
+        end
+        return line
     end
     if require('CSV/OutcomeRules').groups[group] then
         local rules=require('CSV/OutcomeRules')
         if V.extended(voice) and rules.classify(f.outcome)==group then
-            if group=='SawLogsDone' or group=='BookReading' then
+            if TraitSpeech.specialistRoutines[group] then
+                if f.sneaking==true then return nil end
+                return TraitSpeech.preferredRecording(V,player,voice,group..'_1',f,C.history[player] or {},C.preferences())
+            end
+            if rules.routines[group] and not V.clip(voice,group..'_1') then
+                -- A pack may record a specialist's version of a verified activity on its own.
+                local specialist=TraitSpeech.preferredRecording(V,player,voice,group..'_1',f,C.history[player] or {},C.preferences())
+                if specialist and f.sneaking~=true then return specialist end
+            end
+            if group=='BookReading' then
                 local take=C.extraLine(player,voice,group)
                 if take then return take end
-                if group=='BookReading' and f.outcome.skillBook then
+                if f.outcome.skillBook then
                     return C.extraLine(player,voice,'TraitStudy')
-                end
-                if group=='SawLogsDone' then
-                    for _,line in ipairs(V.bank(voice).data.groups.ChopTree or {}) do
-                        if line.id=='ChopTree_1' and V.clip(voice,line.id) then return line end
-                    end
                 end
                 return nil
             end
@@ -113,7 +155,7 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
             elseif group=='EngineStalled' and require('CSV/Concealment').active(f) then
                 preferred='EngineStalled_2'
             end
-            return C.extraLine(player,voice,group,nil,
+            return C.extraLine(player,voice,group,function(id)return Semantic.allowed({id=id},f)end,
                 preferred and function(id)return id==preferred and 0 or tonumber(id:match('_(%d+)$')) or 4 end)
         end
         return nil
@@ -145,7 +187,9 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
         if f.acute then return C.extraLine(player,voice,'InjuryAcute') or (V.bank(voice).data.groups.Pain or {})[3] end
         return nil
     elseif group:match('^Relief') then
-        return C.extraLine(player,voice,group)
+        local line=C.extraLine(player,voice,group)
+        if line or f.sneaking==true then return line end
+        return TraitSpeech.preferredRecording(V,player,voice,group..'_1',f,C.history[player] or {},C.preferences())
     elseif (group=='Panic' or group=='PanicCallback') and f.fire then
         if not Delivery.fireEmergency(f) then return nil end
         local cry=C.extraLine(player,voice,'Fire',nil,function(id)return id=='Fire_2' and 0 or tonumber(id:match('_(%d+)$')) or 4 end)
@@ -177,7 +221,7 @@ function C.chooseBaseLine(player,voice,group,intensity,maximum,facts)
     for i,line in ipairs(list) do if line.id==preferred.id then preferredIndex=i end end
     local best,score
     for i,line in ipairs(list) do
-        if require('CSV/Profanity').allowed(line.id,C.preferences(),voice) and V.clip(voice,line.id) then
+        if require('CSV/Profanity').allowed(line.id,C.preferences(),voice) and V.clip(voice,line.id) and Semantic.allowed(line,f) then
             local stamp=recent[line.id]
             local used=stamp and now-stamp<120000
             local rank=used and (1000000+stamp) or math.abs(i-preferredIndex)
@@ -196,7 +240,7 @@ function C.chooseLine(player,voice,group,intensity,maximum,facts)
     -- Base bank group entries do not carry a group field.
     if line and not line.group then line={id=line.id,text=line.text,group=group}end
     local expressions=require('CSV/Expressions')
-    if line and (line.group=='GunJammed' or line.group=='OutOfAmmo') and
+    if line and (line.group=='GunJammed' or line.group=='OutOfAmmo') and not require('CSV/Traits').prefersControlledSpeech(f) and
         ((f.directAttack or 0)>0 or (f.attacking or 0)>0) then
         local frightened=expressions.pick(V,voice,line,f,'frightened',player)
         if frightened~=line then return V.localize(voice,frightened) end
@@ -207,9 +251,13 @@ local function plan(player,voice,group,intensity,maximum,facts,prefs)
     local s={};for key,value in pairs(facts or State.capture(player))do s[key]=value end
     s.threatKind=Evidence.kind(s)
     local line=C.chooseLine(player,voice,group,intensity,maximum,s)
-    local contextualWhisper,whisper
-    if s.sneaking==true and prefs and prefs.whisper then
-        contextualWhisper=require('CSV/Whispers').pick(V,voice,line)
+    local contextualWhisper,whisper,preferredWhisper
+    if s.sneaking==true and prefs and prefs.whisper and group~='MultiHit' then
+        preferredWhisper=TraitSpeech.controlledTake(V,C,player,voice,line,s,'whisper')
+        if not preferredWhisper and line then
+            preferredWhisper=TraitSpeech.preferredRecording(V,player,voice,'Whisper_'..line.id,s,C.history[player] or {},C.preferences())
+        end
+        contextualWhisper=preferredWhisper or require('CSV/Whispers').pick(V,voice,line)
         if (group=='Threat' or group=='Panic' or group=='PanicCallback') and not (line and line.group and line.group:match('^Trait')) then whisper=C.extraLine(player,voice,'ThreatWhisper')end
     end
     s.whisperAvailable=whisper~=nil;s.contextWhisperAvailable=contextualWhisper~=nil
@@ -217,13 +265,20 @@ local function plan(player,voice,group,intensity,maximum,facts,prefs)
     if group~='Threat' and decision.reason=='observed_calm_warning' and not require('CSV/Traits').context(group,s) then
         line=C.extraLine(player,voice,s.recentDistress and 'ThreatTense' or 'ThreatCalm') or (V.bank(voice).data.groups.Panic or {})[2]
     end
-    if decision.reason=='recorded_whisper' then line=whisper
-    elseif decision.reason=='recorded_context_whisper' then line=contextualWhisper end
+    if decision.reason=='recorded_whisper' then line=preferredWhisper or whisper
+    elseif decision.reason=='recorded_context_whisper' then line=contextualWhisper
+    elseif decision.mode=='spoken' then line=TraitSpeech.controlledTake(V,C,player,voice,line,s,'normal') or line end
     line=V.localize(voice,line)
     if line and not require('CSV/Profanity').allowed(line.id,C.preferences(),voice) then return nil,{mode='silent',reason='profanity_disabled'}end
     if line and not Semantic.allowed(line,s) then return nil,{mode='silent',reason='unproven_final_content'}end
-    if line and decision.mode=='spoken' then
-        line=alternate(V,voice,line,s,C.history[player] or {},C.preferences())
+    if line and decision.mode~='silent' then
+        local history=C.history[player] or {}
+        local prefs=C.preferences()
+        local source=line.id
+        if group=='AnimalTracks' and source:match('^TracksMore_') then source='AnimalTracks_1' end
+        local specialist=TraitSpeech.preferredRecording(V,player,voice,source,s,history,prefs)
+        if specialist then line=specialist
+        elseif decision.mode=='spoken' then line=alternate(V,voice,line,s,history,prefs) end
     end
     if line and not (group=='Injured' and require('CSV/CriticalHealth').pending(player)) and not (group=='AcutePain' and s.acute==true and type(s.injuryEvent)=='number') and Semantic.recent(C.history[player] or {},line,V.now()) then return line,{mode='silent',reason='semantic_repeat'}end
     return line,decision

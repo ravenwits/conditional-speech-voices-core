@@ -6,9 +6,9 @@ local function add(ids,reason)
 end
 
 -- Rules.pool excludes these indexed choices. Dedicated paths still use the
--- retained severity tiers, pickup, tree, wet, critical and kill fallbacks.
+-- retained severity tiers, pickup, wet, critical and kill fallbacks.
 add({
- 'AnimalTracks_2','AnimalTracks_3','Bleeding_2','Explore_1','Explore_3',
+ 'ChopTree_1','ChopTree_2','ChopTree_3','AnimalTracks_2','AnimalTracks_3','Bleeding_2','Explore_1','Explore_3',
  'FoodRotten_2','FoodRotten_3','Foraged_2','FoundLoot_1','FoundLoot_2',
  'HeavyLoad_1','Holes_3','Hyperthermia_1','Hypothermia_1','Injured_1',
  'NoxiousSmell_1','NoxiousSmell_2','OnDawn_3','Pain_2','Thirst_3','VehicleDamage_3',
@@ -32,10 +32,11 @@ local seated={
 local semantics=require 'CSV/PackSemantics'
 for source,entry in pairs(semantics.whispers)do
  if seated[entry.group] then retired[entry.id]='requires_vehicle_seat'
+ elseif entry.group=='MultiHit' or entry.group=='RepeatedHit' then retired[entry.id]='during_melee'
  elseif retired[source] then retired[entry.id]='source_unreachable' end
 end
 for id,entry in pairs(semantics.expressions)do
- if retired[entry.source] and (not entry.groupFallback or entry.group=='SickFromFood') then
+ if retired[entry.source] and (not entry.groupFallback or entry.group=='SickFromFood' or entry.group=='ChopTree') then
   retired[id]='source_unreachable'
  end
 end

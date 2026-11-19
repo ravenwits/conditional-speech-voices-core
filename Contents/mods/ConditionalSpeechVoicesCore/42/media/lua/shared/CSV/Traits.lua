@@ -1,4 +1,4 @@
-local T={}
+local T={controlledSpeechTraits={brave='Brave',desensitized='Desensitized'}}
 local names={brave='BRAVE',cowardly='COWARDLY',desensitized='DESENSITIZED',agoraphobic='AGORAPHOBIC',claustrophobic='CLAUSTROPHOBIC',hemophobic='HEMOPHOBIC',smoker='SMOKER'}
 for key,value in pairs({allThumbs='ALL_THUMBS',clumsy='CLUMSY',conspicuous='CONSPICUOUS',disorganized='DISORGANIZED',hearty='HEARTY_APPETITE',highThirst='HIGH_THIRST',illiterate='ILLITERATE',outOfShape='OUT_OF_SHAPE',illness='PRONE_TO_ILLNESS',feeble='FEEBLE',pacifist='PACIFIST',restless='INSOMNIAC',shortSighted='SHORT_SIGHTED',asthmatic='ASTHMATIC',sleepy='NEEDS_MORE_SLEEP',slowHealer='SLOW_HEALER',slowLearner='SLOW_LEARNER',slowReader='SLOW_READER',sunday='SUNDAY_DRIVER',thinSkin='THIN_SKINNED',unfit='UNFIT',weak='WEAK',weakStomach='WEAK_STOMACH',fastMetabolism='WEIGHT_LOSS',slowMetabolism='WEIGHT_GAIN',lightEater='LIGHT_EATER',deaf='DEAF',hardHearing='HARD_OF_HEARING'})do names[key]=value end
 
@@ -6,13 +6,14 @@ for key,value in pairs({allThumbs='ALL_THUMBS',clumsy='CLUMSY',conspicuous='CONS
 -- Some situations can also be selected without the trait.
 T.recordingTraits={
  Agoraphobic={agoraphobic='Agoraphobic'},Claustrophobic={claustrophobic='Claustrophobic'},
- BloodAversion={hemophobic='Fear of Blood'},NicotineNeed={smoker='Smoker'},
+ BloodAversion={hemophobic='Fear of Blood'},BloodOnSkin={hemophobic='Fear of Blood'},NicotineNeed={smoker='Smoker'},
  StartleBrave={brave='Brave'},StartleCowardly={cowardly='Cowardly'},StartleDesensitized={desensitized='Desensitized'},
  TraitDriver={sunday='Sunday Driver'},
  TraitVigilant={deaf='Deaf',hardHearing='Hard of Hearing',conspicuous='Conspicuous'},
  TraitHunger={hearty='Hearty Appetite',fastMetabolism='Fast Metabolism'},TraitThirst={highThirst='High Thirst'},
- TraitLoad={weak='Weak',feeble='Feeble',disorganized='Disorganized'},
+ TraitLoad={weak='Puny',feeble='Weak',disorganized='Disorganized'},
  TraitCold={illness='Prone to Illness'},TraitNausea={weakStomach='Weak Stomach'},
+ ExhaustedCoping={asthmatic='Short of Breath',outOfShape='Out of Shape',unfit='Unfit'},
  TraitFull={lightEater='Light Eater',slowMetabolism='Slow Metabolism'},TraitSight={shortSighted='Short Sighted'},
  TraitRest={restless='Restless Sleeper',sleepy='Sleepyhead'},TraitWound={slowHealer='Slow Healer'},
  TraitFumble={allThumbs='All Thumbs'},TraitReading={slowReader='Slow Reader'},
@@ -20,8 +21,18 @@ T.recordingTraits={
  TraitScratch={thinSkin='Thin-skinned'},TraitIlliterate={illiterate='Illiterate'},
  TraitReluctant={pacifist='Reluctant Fighter'},
  KillUneasy={cowardly='Cowardly',hemophobic='Fear of Blood'},
- KillControlled={desensitized='Desensitized'},DryCoping={desensitized='Desensitized'},
+ KillControlled={brave='Brave',desensitized='Desensitized'},
+ KillDark={desensitized='Desensitized'},KillCount={desensitized='Desensitized'},DryCoping={desensitized='Desensitized'},
+ PursuitSteady={brave='Brave',desensitized='Desensitized'},PursuitUneasy={cowardly='Cowardly'},
+ AfterHumanShaken={cowardly='Cowardly'},AfterZombieShaken={cowardly='Cowardly'},
 }
+T.recordingTraits.ReloadSteady=T.controlledSpeechTraits
+T.recordingTraits.GunJammed=T.controlledSpeechTraits
+T.recordingTraits.OutOfAmmo=T.controlledSpeechTraits
+function T.prefersControlledSpeech(f)
+ local traits=f.traits or {}
+ return traits.brave==true or traits.desensitized==true
+end
 function T.matches(group,traits)
  for trait in pairs(T.recordingTraits[group])do if traits[trait] then return true end end
  return false
@@ -37,11 +48,10 @@ function T.read(player)
 end
 function T.startle(s)
  local t=s.traits or {}
- -- Actual distress wins over a character-sheet preference. Do not add panic twice.
- if (s.panic or 0)>=3 then return 'StartleCowardly' end
  if T.matches('StartleDesensitized',t) then return 'StartleDesensitized' end
  if T.matches('StartleCowardly',t) then return 'StartleCowardly' end
  if T.matches('StartleBrave',t) then return 'StartleBrave' end
+ if (s.panic or 0)>=3 then return 'StartleCowardly' end
  return 'StartleNormal'
 end
 function T.phobiaAllowed(group,s)
@@ -55,9 +65,15 @@ function T.context(group,s)
  if selected then return selected end
  local t=s.traits or {}
  if s.fire or require('CSV/Concealment').active(s) or (s.near or 0)>0 or s.humanThreat then return nil end
- if (group=='Stress' or group=='Panic') and T.matches('BloodAversion',t) and (s.bleeding or 0)>0 and (s.panic or 0)>0 then return 'BloodAversion' end
+ if (group=='Stress' or group=='Panic') and T.matches('BloodAversion',t) and (s.panic or 0)>0 then
+  if (s.bleeding or 0)>0 then return 'BloodAversion' end
+  if s.bleeding==0 and s.bloodOnSkin and s.sneaking==false then return 'BloodOnSkin' end
+ end
  if group=='Stress' and T.matches('NicotineNeed',t) and (s.nicotineStress or 0)>0 then return 'NicotineNeed' end
- if group=='Endurance' and (s.endurance or 0)>=3 and s.sneaking==false and (s.pain or 0)==0 and (s.bleeding or 0)==0 and (s.drunk or 0)==0 and (s.coldSymptoms or 0)==0 then return 'ExhaustedCoping' end
+ if group=='Endurance' and s.sneaking==false and (s.pain or 0)==0 and (s.bleeding or 0)==0 and (s.drunk or 0)==0 and (s.coldSymptoms or 0)==0 then
+  local level=s.endurance or 0
+  if level>=3 or (level==2 and T.matches('ExhaustedCoping',t)) then return 'ExhaustedCoping' end
+ end
 end
 function T.startleAllowed(id,s)
  local n=tonumber(id:match('_(%d+)$')) or 0

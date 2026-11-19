@@ -50,6 +50,17 @@ class Projects(unittest.TestCase):
         self.assertEqual((whisper['category'],whisper['delivery']),('Dialogue','whisper'))
         self.assertEqual((breathless['delivery'],breathless['acting']),('normal','breathless'))
 
+    def test_studio_distinguishes_alternates_from_optional_originals(self):
+        manifest = self.root / 'full.json'
+        initialize(manifest, 'sample', 'TR')
+        rows = {row['slot']: row for row in p.rows(manifest)['rows']}
+        for slot in ('WindowLocked_1', 'Alt_WindowLocked_1'):
+            self.assertTrue(rows[slot]['optional'])
+            self.assertEqual(rows[slot]['source'], 'WindowLocked_1')
+        self.assertFalse(rows['WindowLocked_1']['alternate'])
+        self.assertTrue(rows['Alt_WindowLocked_1']['alternate'])
+        self.assertFalse(rows['Expr_breathless_PainGeneric_1']['alternate'])
+
     def test_core_acting_tags_reach_studio_without_changing_delivery(self):
         for slot, acting in {'EngineRecovered_3':'relieved', 'PanicEscape_2':'breathless',
                              'ThreatTense_1':'uneasy', 'GunJammed_1':'tense'}.items():
@@ -58,13 +69,99 @@ class Projects(unittest.TestCase):
             self.assertTrue(p.guidance(slot).strip())
         self.assertEqual(studio_schema.entry('Expr_angry_GunJammed_1')['acting'], 'angry')
 
+    def test_trait_only_activities_have_independent_optional_recordings(self):
+        slots = studio_schema.load()['slots']
+        required = {slot for pool in studio_schema.load()['coverage']['pools'].values() for slot in pool}
+        for group, trait in {'CropHarvested': 'Gardener', 'FishCaught': 'Angler', 'TraitGlasswork': 'Artisan',
+                             'TraitForgeWork': 'Blacksmith Knowledge', 'TraitMasonry': 'Mason',
+                             'TraitWhittling': 'Whittler'}.items():
+            slot = group + '_1'
+            take = slots[slot]
+            self.assertTrue(take['optional'])
+            self.assertFalse(take.get('alternate'))
+            self.assertEqual(take['source'], slot)
+            self.assertNotIn(slot, required)
+            self.assertEqual(take['traitRule']['kind'], 'required')
+            self.assertEqual(take['traitRule']['traits'], [trait])
+            self.assertIn('In multiplayer, the server confirms', p.playback_when(take))
+
+    def test_controlled_threat_takes_are_optional_and_filterable(self):
+        full = self.root / 'trait-takes.json'
+        initialize(full, 'sample', 'TR', trial=False)
+        targets = {'MortalFear', 'HumanDanger', 'KeepHidden', 'ShelterThreat'}
+        coverage = {slot for pool in studio_schema.load()['coverage']['pools'].values() for slot in pool}
+        variants = [row for row in p.rows(full)['rows'] if row['traitControlled']]
+        self.assertEqual({row['context'] for row in variants}, targets)
+        self.assertEqual(len(variants), 10)
+        for row in variants:
+            self.assertEqual(row['acting'], 'controlled')
+            self.assertEqual(row['traits'], ['Brave', 'Desensitized'])
+            self.assertTrue(row['optional'])
+            self.assertNotIn(row['slot'], coverage)
+        self.assertEqual(next(row['text'] for row in variants if row['slot'] == 'Alt_MortalFearControlled_1'),
+                         'Sakin ol. Bir çıkış bul.')
+
+    def test_playback_rules_distinguish_requirements_preferences_and_other_routes(self):
+        full = self.root / 'playback.json'
+        initialize(full, 'sample', 'TR', trial=False)
+        rows = {row['slot']: row for row in p.rows(full)['rows']}
+        for row in rows.values():
+            self.assertTrue(row['playbackWhen'].strip(), row['slot'])
+            if row['traits']:
+                self.assertEqual(row['traitRule']['traits'], row['traits'])
+                self.assertTrue(row['traitRule']['description'].strip(), row['slot'])
+        for slot, kind in {
+            'Alt_MortalFearControlled_1': 'required',
+            'Alt_Whisper_MortalFearControlled_1': 'required',
+            'MortalFear_1': 'conditional',
+            'StartleBrave_1': 'required',
+            'StartleNormal_1': 'excluded',
+            'Expr_frightened_GunJammed_1': 'excluded',
+            'Expr_frightened_OutOfAmmo_1': 'excluded',
+            'StartleCowardly_1': 'conditional',
+            'TraitStudy_1': 'conditional',
+            'ExhaustedCoping_1': 'conditional',
+            'ReloadSteady_1': 'preferred',
+            'PanicGrounding_2': 'preferred',
+            'Whisper_ThreatTense_2': 'preferred',
+        }.items():
+            self.assertEqual(rows[slot]['traitRule']['kind'], kind, slot)
+        self.assertEqual(set(rows['ExhaustedCoping_1']['traits']), {'Short of Breath', 'Out of Shape', 'Unfit'})
+        self.assertIn('any survivor', rows['ExhaustedCoping_1']['traitRule']['description'])
+        self.assertIn('without Brave', rows['Expr_frightened_GunJammed_1']['traitRule']['description'])
+        self.assertIn('Any survivor', rows['GunJammed_1']['traitRule']['description'])
+        for slot in ('MortalFear_1', 'Whisper_MortalFear_1'):
+            description = rows[slot]['traitRule']['description']
+            self.assertIn('controlled take first, then a short threat warning', description)
+            self.assertIn('if neither is available', description)
+        # A controlled read alone never imposes a survivor trait.
+        self.assertEqual(rows['Alt_WindowLocked_1']['acting'], 'controlled')
+        self.assertNotIn('traitRule', rows['Alt_WindowLocked_1'])
+
     def test_single_alternative_pack_passes_actual_core_registry(self):
         self.manifest=self.root/'full.json'
         initialize(self.manifest,'sample','EN',trial=False)
         config=p.read(self.manifest)
-        pools=studio_schema.load()['coverage']['pools']
-        chosen={pool[0] for pool in pools.values()}
-        chosen.update(pool[0] for pool in config['bank']['native']['replacements'].values())
+        schema = studio_schema.load()
+        policy = schema['coverage']
+        chosen = {pool[0] for pool in policy['pools'].values()}
+        chosen.update(pool[0] for event, pool in config['bank']['native']['replacements'].items()
+                      if event not in policy['optionalNativeEvents'])
+        self.assertTrue({'Cough', 'WhisperHey', 'WhisperMegaphonePsst'} <= policy['optionalNativeEvents'].keys())
+        optional_delivery = {
+            slot for slot, row in schema['slots'].items()
+            if row['profile'] == 'ill' or row['delivery'] == 'whisper'
+        }
+        self.assertTrue({'Expr_congested_AnimalTracks_1', 'Whisper_MortalFear_1'} <= optional_delivery)
+        self.assertTrue(all(schema['slots'][slot]['optional'] for slot in optional_delivery))
+        self.assertTrue(optional_delivery.isdisjoint(chosen))
+        alcohol = {
+            slot for slot, row in schema['slots'].items()
+            if row['profile'] == 'drunk' or row['group'] in ('Drunk', 'ReliefSobriety', 'NativeDrunkHic')
+        }
+        self.assertTrue({'Drunk_1', 'ReliefSobriety_1', 'NativeDrunkHic_1', 'Expr_slurred_Endurance_1'} <= alcohol)
+        self.assertTrue(all(schema['slots'][slot]['optional'] for slot in alcohol))
+        self.assertTrue(alcohol.isdisjoint(chosen))
         self.assertLess(len(chosen),len(p.slots(config)))
         for slot in chosen:
             clip=p.slots(config)[slot];clip['duration']=1000
@@ -84,6 +181,20 @@ class Projects(unittest.TestCase):
         p.edit(self.manifest,lost,config['bank']['lines'][lost],'','redo')
         with self.assertRaisesRegex(ValueError,'situations or native'):
             p.package(self.manifest,self.root/'bad','unused',TOOLS.parents[1])
+
+    def test_missing_native_mapping_is_a_gap_in_readiness_and_the_finished_pack(self):
+        manifest = self.root / 'full.json'
+        initialize(manifest, 'sample', 'EN')
+        config = p.read(manifest)
+        bank = config['bank']
+        bank['coverage'] = 'situations-v1'
+        native = bank['native']['replacements']
+        event = next(event for event in native if event not in studio_schema.load()['coverage']['optionalNativeEvents'])
+        del native[event]
+        coverage = p.coverage(config, self.root, set(p.slots(config)))
+        self.assertEqual(coverage['missing'], ['Native / ' + event])
+        with self.assertRaisesRegex(ValueError, 'Native / ' + event):
+            validate(config, self.root)
 
     def test_bulk_review_is_scoped_and_atomic_and_keeps_files(self):
         first=self.supply();second=self.supply('ExploreMore_1')
@@ -272,6 +383,141 @@ class Projects(unittest.TestCase):
         entries = p.read(self.manifest.with_suffix('.work.json'))['entries']
         self.assertEqual(len({e['id'] for e in entries}), 4)
 
+    def test_slow_elevenlabs_read_does_not_block_local_studio(self):
+        from concurrent.futures import ThreadPoolExecutor
+        started, release = threading.Event(), threading.Event()
+
+        def slow_credits(_key):
+            started.set()
+            if not release.wait(5):
+                raise ValueError('Timed out waiting to release the fixture')
+            return {'used': 2, 'limit': 100, 'remaining': 98}
+
+        server, _ = make_server(self.manifest, 'ffmpeg', TOOLS.parents[1])
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+
+        def get(path, headers):
+            conn = http.client.HTTPConnection('127.0.0.1', server.server_port, timeout=3)
+            try:
+                conn.request('GET', path, headers=headers)
+                response = conn.getresponse()
+                return response.status, json.loads(response.read())
+            finally:
+                conn.close()
+
+        try:
+            _, session = get('/session', {'X-Voice-Request': 'local-editor'})
+            auth = {'X-Voice-Token': session['token']}
+            with patch('studio_elevenlabs.credits', side_effect=slow_credits), ThreadPoolExecutor() as pool:
+                balance = pool.submit(get, '/elevenlabs/credits', auth)
+                try:
+                    self.assertTrue(started.wait(2))
+                    status, project = get('/project', auth)
+                    self.assertEqual(status, 200)
+                    self.assertEqual(project['voice'], 'sample')
+                finally:
+                    release.set()
+                self.assertEqual(balance.result()[1]['remaining'], 98)
+        finally:
+            server.shutdown()
+            server.server_close()
+            worker.join()
+
+    def test_generate_and_retry_send_game_setting_and_selected_recording_brief(self):
+        # Inspect the actual provider payload after a request through the Studio route.
+        for language, slot, model in [('TR', 'StartleBrave_1', 'gemini-3.5-flash-lite'),
+                                      ('EN', 'Thirst_1', 'gemini-3.5-flash')]:
+            with self.subTest(language=language):
+                manifest = self.root / language / 'project.json'
+                manifest.parent.mkdir()
+                initialize(manifest, 'sample', language)
+                with patch('studio_dialogue.configured_key', return_value='fixture'):
+                    server, _ = make_server(manifest, 'ffmpeg', TOOLS.parents[1])
+                worker = threading.Thread(target=server.serve_forever, daemon=True)
+                worker.start()
+                conn = http.client.HTTPConnection('127.0.0.1', server.server_port, timeout=10)
+                try:
+                    conn.request('GET', '/session', headers={'X-Voice-Request': 'local-editor'})
+                    token = json.loads(conn.getresponse().read())['token']
+                    conn.request('GET', '/project', headers={'X-Voice-Token': token})
+                    state = json.loads(conn.getresponse().read())
+                    row = next(r for r in state['rows'] if r['slot'] == slot)
+                    headers = {'X-Voice-Token': token, 'X-Revision': state['revision']}
+                    self.assertEqual(state['dialogueModel'], 'gemini-3.5-flash-lite')
+                    self.assertIn(model, state['dialogueModels'])
+                    if model != state['dialogueModel']:
+                        with patch('studio_dialogue.validate_key') as validate:
+                            conn.request('POST', '/dialogue/connect', body=json.dumps({'model': model}), headers=headers)
+                            response = conn.getresponse()
+                            self.assertEqual(json.loads(response.read())['result']['model'], model)
+                            validate.assert_called_once_with('fixture', model)
+                        from studio_dialogue import configured_model
+                        self.assertEqual(configured_model(manifest.parent / '.env.local'), model)
+                    body = {'slot': slot, 'project': state['projectKey'], 'dialogue_count': 1}
+                    for draft in ('First fixture line.', 'Second fixture line.'):
+                        answer = {'content': {'parts': [{'text': json.dumps({'options': [draft]})}]}, 'finishReason': 'STOP'}
+                        with patch('studio_dialogue.provider_request', return_value={'candidates': [answer]}) as send:
+                            conn.request('POST', '/dialogue/suggest', body=json.dumps(body), headers=headers)
+                            response = conn.getresponse()
+                            result = json.loads(response.read())
+                            self.assertEqual(response.status, 200, result)
+                            self.assertEqual(result['result']['options'], [draft])
+                            _, payload = send.call_args.args
+                            self.assertEqual(send.call_args.kwargs['model'], model)
+                        instruction = payload['systemInstruction']['parts'][0]['text']
+                        self.assertIn('Project Zomboid', instruction)
+                        self.assertIn('zombie-apocalypse survival game', instruction)
+                        scene = json.loads(payload['contents'][0]['parts'][0]['text'])
+                        self.assertEqual(scene['locale'], language)
+                        for prompt_field, row_field in [('situation', 'context'), ('whenItPlays', 'playbackWhen'),
+                                                        ('traitRule', 'traitRule'), ('recordingGuidance', 'guidance'),
+                                                        ('recommendedCues', 'elevenLabsTags'), ('profanity', 'profanity'),
+                                                        ('delivery', 'delivery'), ('acting', 'acting')]:
+                            self.assertEqual(scene[prompt_field], row.get(row_field))
+                        self.assertEqual('reaction_window' in scene, slot == 'StartleBrave_1')
+                        self.assertEqual(scene.get('previous_drafts'), body.get('previous_drafts'))
+                        body['previous_drafts'] = [draft]
+                finally:
+                    conn.close()
+                    server.shutdown()
+                    server.server_close()
+                    worker.join()
+
+    def test_gemini_connect_returns_provider_errors_as_json(self):
+        from studio_dialogue import QuotaExceeded
+        server, _ = make_server(self.manifest, 'ffmpeg', TOOLS.parents[1])
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+        connection = http.client.HTTPConnection('127.0.0.1', server.server_port, timeout=5)
+        try:
+            connection.request('GET', '/session', headers={'X-Voice-Request': 'local-editor'})
+            token = json.loads(connection.getresponse().read())['token']
+            for error, status in ((ValueError('Invalid API key'), 400), (QuotaExceeded('Quota reached'), 429)):
+                with patch('studio_dialogue.validate_key', side_effect=error):
+                    connection.request('POST', '/dialogue/connect', body=json.dumps({'key': 'fixture'}),
+                                       headers={'X-Voice-Token': token, 'Content-Type': 'application/json'})
+                    response = connection.getresponse()
+                    self.assertEqual(response.status, status)
+                    self.assertEqual(json.loads(response.read()), {'error': str(error)})
+        finally:
+            connection.close()
+            server.shutdown()
+            server.server_close()
+            worker.join()
+
+    def test_elevenlabs_retries_reads_but_never_retries_paid_generation(self):
+        import studio_elevenlabs as e
+        offline = e.ProviderUnavailable('timeout')
+        with patch('studio_elevenlabs.read_provider_response',
+                   side_effect=[offline, {'character_count': 7, 'character_limit': 100}]) as read:
+            self.assertEqual(e.credits('test-key')['remaining'], 93)
+            self.assertEqual(read.call_count, 2)
+        with patch('studio_elevenlabs.read_provider_response', side_effect=offline) as read:
+            with self.assertRaises(e.ProviderUnavailable):
+                e.provider_request('test-key', '/v1/text-to-speech/test-voice', {'text': 'Test'})
+            read.assert_called_once()
+
     def test_elevenlabs_preview_is_local_until_accepted(self):
         old = self.supply()
         before = old.read_bytes()
@@ -309,6 +555,8 @@ class Projects(unittest.TestCase):
                 return {'character_count': 120, 'character_limit': 500}
             self.assertIn('/v1/text-to-speech/' + mock_voice, path)
             self.assertEqual(payload['model_id'], 'eleven_v4')
+            if payload['text'] == '[inhales] Hah… [exhales softly] Hah…':
+                return audio_file.read_bytes(), 30, 'native-voice-test-id'
             self.assertEqual(payload['language_code'], 'tr')
             self.assertEqual(payload['text'], script)
             return audio_file.read_bytes(), 17, 'provider-test-id'
@@ -404,6 +652,29 @@ class Projects(unittest.TestCase):
             self.assertNotEqual(old.read_bytes(), before)
             self.assertNotIn(secret.encode(), self.manifest.read_bytes())
             self.assertEqual(sum('/v1/text-to-speech/' in path for path in provider_calls), 1)
+            native = {**project_key, 'slot': 'NativeBreath_1'}
+            status, description = call('/elevenlabs/describe', native)
+            self.assertEqual(status, 200, description)
+            self.assertEqual(description['result']['prompt'], '[takes two short recovery breaths] Hah… hah…')
+            for invalid in ('', '[]', '[inhales]', '[inhales] ...', '[inhales] <break/> Ah!', ['[inhales]']):
+                self.assertEqual(call('/elevenlabs/generate', {**native, 'nativeScript': invalid})[0], 400)
+            self.assertEqual(call('/elevenlabs/generate', {**slot, 'nativeScript': '[inhales]'})[0], 400)
+            status, generated = call('/elevenlabs/generate', {**native, 'nativeScript': ' [inhales] Hah… [exhales softly] Hah… '})
+            self.assertEqual(status, 200, generated)
+            identifier = generated['result']['id']
+            for _ in range(30):
+                status, result = call('/elevenlabs/preview?id=' + identifier)
+                self.assertEqual(status, 200, result)
+                if result.get('ready'):
+                    break
+                time.sleep(0.02)
+            self.assertEqual(result, {'ready': True, 'cost': 30})
+            self.assertEqual(call('/audio/elevenlabs?id=' + identifier, raw=True)[1], audio_file.read_bytes())
+            self.assertEqual(call('/elevenlabs/history')[1][0]['requestId'], 'native-voice-test-id')
+            self.assertEqual(call('/elevenlabs/accept', {**native, 'id': identifier})[0], 200)
+            self.assertEqual(p.status(p.read(self.manifest), 'NativeBreath_1', self.root), 'pending')
+            self.assertEqual(call('/elevenlabs/describe', native)[1]['result']['prompt'],
+                             '[takes two short recovery breaths] Hah… hah…')
 
     def test_elevenlabs_prompt_obeys_core_delivery_and_type(self):
         from studio_elevenlabs import prompt
@@ -417,13 +688,25 @@ class Projects(unittest.TestCase):
         self.assertEqual(prompt(config, 'Whisper_CriticalFading_2')['text'], '[whispers, very weak and fading] Nefes alamıyorum.')
         self.assertEqual(prompt(config, 'InjuryAcute_1')['text'], '[in sudden pain] Ah!')
         self.assertIn('dry with a faint smile', prompt(config, 'KillCount_1')['text'])
-        self.assertEqual(prompt(config, 'Pain_1')['text'], '[restrained pain] Canım acıyor.')
-        self.assertIn('pain', p.core_guidance('Pain_1', 'TR'))
+        self.assertEqual(prompt(config, 'Pain_1')['text'], '[restrained pain, breath catches once] Canım acıyor.')
+        self.assertIn('strain', p.core_guidance('Pain_1', 'TR'))
+        import recording_guidance
+        _, whisper = recording_guidance.performance('Whisper_StartleCowardly_2', 'TR')
+        self.assertEqual(whisper, ['[whispers, breath catches, frightened and unsteady]'])
+        _, relief = recording_guidance.performance('Expr_congested_ReliefAnger_1', 'TR')
+        self.assertEqual(relief, ['[speaks as if their nose is pinched shut, with an audible mouth breath, starts tight, anger eases]'])
+        _, cold = recording_guidance.performance('Expr_congested_HasACold_1', 'TR')
+        self.assertEqual(cold, ['[sniffs]', '[speaks as if their nose is pinched shut]'])
         self.assertIn('otuz bir', p.core_guidance('KillCount_1', 'TR'))
         self.assertIn('after a failed attempt', p.core_guidance('EngineRecovered_1', 'EN'))
         self.assertEqual(studio_schema.entry('Whisper_CarAlarm_1')['delivery'], 'whisper')
-        with self.assertRaisesRegex(ValueError, 'nonverbal'):
-            prompt(config, 'NativeBreath_1')
+        for slot, definition in studio_schema.load()['slots'].items():
+            if definition['category'] != 'Dialogue':
+                payload = prompt(config, slot)
+                self.assertRegex(payload['text'], r'^\[[^\[\]]+\] .+')
+                self.assertTrue(any(char.isalpha() for char in p.strip_audio_tags(payload['text'])))
+                self.assertEqual(payload['model_id'], 'eleven_v4')
+                self.assertNotIn('language_code', payload)
         config['authoring'] = {'elevenLabsScripts': {'InjuryAcute_1': 'Ah! [sharp breath]'}}
         self.assertEqual(prompt(config, 'InjuryAcute_1')['text'], 'Ah! [sharp breath]')
         config['authoring']['elevenLabsScripts']['InjuryAcute_1'] = 'Ah! [in sudden pain]'
@@ -759,6 +1042,14 @@ class Projects(unittest.TestCase):
             return rms,len(samples)/44100,frequency
         original_hash=p.digest(take());rms,duration,freq=measurements()
         self.approve()
+        saved_manifest = self.manifest.read_bytes()
+        before_files = set((self.root / 'audio').iterdir())
+        with patch('voice_project.write', side_effect=OSError('disk full')):
+            with self.assertRaisesRegex(OSError, 'disk full'):
+                process(self.manifest, 'Explore_2', ffmpeg, gain_db=3)
+        self.assertEqual(set((self.root / 'audio').iterdir()), before_files)
+        self.assertEqual(self.manifest.read_bytes(), saved_manifest)
+        self.assertEqual(p.digest(take()), original_hash)
         process(self.manifest,'Explore_2',ffmpeg,3,0)
         self.assertAlmostEqual(20*math.log10(measurements()[0]/rms),3,delta=.3)
         self.assertEqual(p.status(p.read(self.manifest),'Explore_2',self.root),'pending')

@@ -35,7 +35,7 @@ On Windows, use `python` instead of `python3`. To open an existing project, add 
 
 Full pack is the default. **Listening sample** contains 18 takes for speech, whispers, calls, breathing, effort, and pain. Expand the sample before building a pack.
 
-Languages are independent of the game's interface language. English and Turkish reference text is supplied. Translate other languages before recording. Keep the intended meaning and severity.
+Languages are independent of the game's interface language. English and Turkish have starter captions. Write each line as that survivor would say it in your language. Keep the trigger, severity and profanity level. Read it aloud before recording. A Turkish smoker craving a cigarette might say “Bir sigara yakabilsem…” An agoraphobic survivor in open ground might say “Burada kabak gibi ortadayım.”
 
 Use the settings button beside a project to edit its name, author, Steam profile URL, version, and description. A pack version has three numeric parts, such as `1.0.0`. Voice IDs must remain stable after release. Core rejects conflicting IDs and prefixes rather than replacing another pack.
 
@@ -53,11 +53,15 @@ Imports support WAV, FLAC, MP3, Ogg, Opus, M4A, MP4, AAC, and WebM. Each file mu
 
 Edit the large phrase and choose **Save text** to change the caption. Captions support Unicode and right-to-left text, with a limit of 240 characters. The slot ID remains unchanged.
 
+### Native vocal reactions
+
+For native vocal reactions, open **Generate audio**. Studio pre-fills a reaction tag and a short vocal sound. Edit both in the preview dialog to try a different delivery with the selected voice. Keep a vocal sound outside the brackets, such as `[gasps] Ah!`. Listen for stray words or silence before choosing **Use this take**. Each preview uses credits.
+
 ## Edit and review takes
 
 Use the player to listen, seek, or loop. **Edit audio** applies volume, pitch, speed, and trimming to the saved take. Each edit starts from a preserved original. **Restore** recovers that original.
 
-Trim start and Trim end remove time from the original before speed processing. The controls cannot remove the whole recording. Excessive peak levels and outputs longer than 20 seconds are rejected.
+Trim start and Trim end remove time from the original before speed processing. The controls cannot remove the whole recording. Excessive peak levels and outputs longer than 20 seconds are rejected. Clips in a finished pack must fit within 5 seconds.
 
 Choose **Approve**, **Needs a retake**, or **Needs listening**. Audio and caption changes require another review. Approval records your decision; it does not mean Studio checked pronunciation or acting.
 
@@ -67,7 +71,7 @@ Open **Commands** for keyboard shortcuts and available actions. The shortcut lab
 
 ## Build and test the pack
 
-1. Open **Build voice pack**.
+1. Open **Build**.
 2. Choose **Check audio levels** and wait for the result. Listen to flagged takes.
 3. Resolve missing audio and unapproved takes.
 4. Read the [recording rights notice](../Contents/mods/ConditionalSpeechVoicesCore/authoring/CREATOR-RESPONSIBILITIES.md) and confirm that you have permission to distribute the recordings.
@@ -92,3 +96,9 @@ After updating the repository, restart Studio. Opening a project updates its req
 ## Use the command line
 
 The [command-line guide](../Contents/mods/ConditionalSpeechVoicesCore/authoring/README.md) covers the same project files and tools. You can switch between Studio and the command line without converting your project.
+
+### Generate dialogue drafts
+
+Create an API key for a Free tier project in [Google AI Studio](https://aistudio.google.com/api-keys). Open **Generate text** or **Connect Gemini** in the Studio menu. Paste the key and select **Connect**. Studio checks model access and saves the key and model in its local `.env.local` file. In **Gemini settings**, choose **Gemini 3.5 Flash-Lite** (the default) or **Gemini 3.5 Flash**. Google applies quotas and billing based on the project that owns the key.
+
+Open **Generate text**, choose one to three drafts, then select **Generate drafts**. Studio sends the recording situation, gameplay conditions, performance guidance, trait rule, voice base, profanity setting, five-second limit and project language to the selected Gemini model. Select **Retry** for a different set. Choose a draft to load it into the caption editor, then select **Save** to apply it.

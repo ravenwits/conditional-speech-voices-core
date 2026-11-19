@@ -34,6 +34,9 @@ for _,group in ipairs({'Fire','DoorLocked','DoorBlocked','EngineStalled'}) do
  end
 end
 local semantics=require 'CSV/PackSemantics'
+ b.extras.catalog.TracksMore_1={id='TracksMore_1',group='TracksMore'}
+ b.lines.TracksMore_1='More tracks.'
+ b.data.clips.test_TracksMore_1=true
 b.data.groups.GunJammed={}
 for _,id in ipairs(semantics.groups.GunJammed) do
  b.data.groups.GunJammed[#b.data.groups.GunJammed+1]={id=id,text=id}
@@ -46,9 +49,34 @@ b.data.clips.test_GunJammed_1={duration=1000}
 b.lines.GunJammed_1='The weapon jammed.'
 b.data.clips.test_PanicEscape_1=true
  b.lines.PanicEscape_1="Get away."
+for _,group in ipairs({'MortalFear','HumanDanger','KeepHidden','ShelterThreat'}) do
+ local id=group..'_1'
+ b.extras.catalog[id]=semantics.extras[id]
+ b.whispers.catalog[id]=semantics.whispers[id]
+ b.lines[id]='Default '..group
+ b.data.clips['test_'..id]={duration=1000}
+end
+b.lines.ThreatTense_2='Stay back. I need room to move.'
+b.data.clips.test_ThreatTense_2={duration=1000}
 R.register('Example',{schema=1,bank=b,voices={{id='test',name='Test',prefix='VoiceCSVTestP',base='VoiceFemale',preview='Test_1'}}})
 assert(not pcall(R.register,'Example',{schema=1,bank=b,voices={}}))
 assert(not pcall(R.register,'Conflict',{schema=1,bank=b,voices={{id='other',name='Other',prefix='VoiceCSVTestP',base='VoiceMale',preview='Test_1'}}}))
+do
+ local E=require 'CSV/Expressions'
+ local normal={id='Endurance_1',group='Endurance'}
+ local breathless={id='Expr_breathless_Endurance_1',source=normal.id,group=normal.group,profile='breathless'}
+ local drunk={id='Expr_slurred_Endurance_1',source=normal.id,group=normal.group,profile='slurred'}
+ local bank={expressions={approved=true,catalog={[breathless.id]=breathless,[drunk.id]=drunk}}}
+ local available={[breathless.id]=true,[drunk.id]=true}
+ local voice={bank=function()return bank end,extended=function()return true end,
+  clip=function(_,id)return available[id] end}
+ local f={endurance=2,drunk=2}
+ assert(E.pick(voice,'test',normal,f)==breathless)
+ available[breathless.id]=nil
+ assert(E.pick(voice,'test',normal,f)==drunk)
+ available[drunk.id]=nil
+ assert(E.pick(voice,'test',normal,f)==normal)
+end
 local V=require 'CSV/Core'
 assert(V.available() and V.pack.extraVoices.test==b and #V.pack.voiceOrder==2)
 assert(V.pack.voices.test.base=='VoiceFemale')
@@ -119,8 +147,210 @@ facts.outcome.nativeCause=nil
 assert(selection.chooseBaseLine(player,'test','EngineStalled',1,4,facts)==nil,'An unexplained engine stop cannot trigger a stall line')
 facts.outcome=nil;facts.panic=0;facts.jammed=true;facts.directAttack=1
 assert(selection.chooseLine(player,'test','GunJammed',1,4,facts).id==jamFear)
+facts.traits={brave=true};facts.panic=4
+assert(selection.chooseLine(player,'test','GunJammed',1,4,facts).id=='GunJammed_1','Brave uses the tense fault take during contact')
+facts.traits=nil;facts.panic=0
 b.data.clips['test_'..jamFear]=nil
 assert(selection.chooseLine(player,'test','GunJammed',1,4,facts).id=='GunJammed_1','A fear take is optional')
+local actor={}
+local danger={sneaking=false,near=1,visible=1,panic=3,health=100,
+ psychology={kind='humanAttack',verified=true},traits={brave=true}}
+local function psychologyPlan()
+ return selection.plan(actor,'test','Psychology',1,1,danger,{whisper=true})
+end
+line,decision=psychologyPlan()
+assert(line.id=='ThreatTense_2' and decision.mode=='spoken','Older packs can use a focused MortalFear fallback')
+for _,case in ipairs({
+ {'MortalFear','humanAttack',3}, {'HumanDanger','humanAttack',2},
+ {'KeepHidden','hiddenPursuer',3}, {'ShelterThreat','raid',3},
+}) do
+ local group=case[1]
+ local normal='Alt_'..group..'Controlled_1'
+ local whisper='Alt_Whisper_'..group..'Controlled_1'
+ b.lines[normal]='Controlled '..group
+ b.lines[whisper]=b.lines[normal]
+ b.data.clips['test_'..normal]={duration=1000}
+ b.data.clips['test_'..whisper]={duration=1000}
+ danger.psychology={kind=case[2],verified=true,knownPursuer=true,homeKnown=true}
+ danger.panic=case[3]
+ danger.traits={brave=true}
+ line,decision=psychologyPlan()
+ assert(line.id==normal and decision.mode=='spoken' and danger.panic==case[3])
+ danger.traits={desensitized=true};danger.sneaking=true
+ line,decision=psychologyPlan()
+ assert(line.id==whisper and decision.allowStealth and V.delivery('test',line.id)=='whisper')
+ assert(V.allowStealth(whisper) and V.maxPriority(whisper)==V.maxPriority('Whisper_'..group..'_1'))
+ danger.whisperRisk=1
+ line,decision=psychologyPlan()
+ assert(decision.mode=='silent' and decision.reason=='whisper_would_reveal')
+ danger.whisperRisk=0;danger.sneaking=false;danger.traits={cowardly=true}
+ line,decision=psychologyPlan()
+ assert(line.id==group..'_1' and decision.mode=='spoken')
+end
+-- Every authored trait take must require a matching, available recording. Use actual
+-- selection as well as the per-source lookup so a safety decision cannot be bypassed.
+do
+ local oldTraits=CharacterTrait
+ CharacterTrait={}
+ local selectedTrait
+ local specialist={hasTrait=function(_,key)return key==selectedTrait end}
+ local rules=require 'CSV/TraitSpeechRules'
+ local neutral={panic=3,visible=1}
+ for id,entry in pairs(require('CSV/VoiceAlternates'))do
+  if entry.forTraits then
+   b.data.clips['test_'..id]={duration=1000}
+   b.lines[id]='Specialist '..id
+   for key in pairs(entry.forTraits)do
+    CharacterTrait[key]=key;selectedTrait=key
+    assert(rules.preferredRecording(V,specialist,'test',entry.source,neutral,{},{}).id==id,id..': matching trait')
+   end
+   selectedTrait=nil
+   assert(not rules.preferredRecording(V,specialist,'test',entry.source,neutral,{},{}),id..': unrelated trait')
+   selectedTrait=next(entry.forTraits)
+   if entry.traitCondition then
+    assert(not rules.preferredRecording(V,specialist,'test',entry.source,{panic=2,visible=0},{},{}),id..': unconfirmed condition')
+   end
+   assert(not rules.preferredRecording(V,specialist,'test',entry.source,{fire=true,panic=4,visible=1},{},{}))
+   b.profanity.ids[id]=true
+   assert(not rules.preferredRecording(V,specialist,'test',entry.source,neutral,{},{profanity=false}))
+   b.profanity.ids[id]=nil
+   b.data.clips['test_'..id]=nil
+   assert(not rules.preferredRecording(V,specialist,'test',entry.source,neutral,{},{}),id..': missing clip')
+  end
+ end
+ for group,entry in pairs(rules.specialistRoutines)do
+  local id=group..'_1'
+  local event={kind='routine',verified=true,completed=true,routineGroup=group}
+  local scene={sneaking=false,near=0,visible=0,recentThreat=false,outcome=event}
+  b.lines[id]='Only a specialist may say '..id
+  selectedTrait=next(entry.forTraits);CharacterTrait[selectedTrait]=selectedTrait
+  assert(not selection.chooseBaseLine(specialist,'test',group,1,1,scene),id..': unavailable recording')
+  b.data.clips['test_'..id]=true
+  local chosen,policy=selection.plan(specialist,'test',group,1,1,scene,{safeSpeech=true})
+  assert(chosen and chosen.id==id and policy.mode=='spoken',id..': completed activity')
+  selectedTrait=nil
+  assert(not selection.chooseBaseLine(specialist,'test',group,1,1,scene),id..': does not leak to other survivors')
+  selectedTrait=next(entry.forTraits);event.verified=false
+  assert(not selection.chooseBaseLine(specialist,'test',group,1,1,scene),id..': incomplete evidence')
+  b.data.clips['test_'..id]=nil
+ end
+ local hunter='Alt_AnimalTracksHunter_1'
+ b.data.clips['test_'..hunter]=true
+ b.data.groups.AnimalTracks={{id='AnimalTracks_1'}}
+ b.lines.AnimalTracks_1='Tracks.'
+ b.data.clips.test_AnimalTracks_1=true
+ local trackScene={sneaking=false,near=0,visible=0,recentThreat=false}
+ local function tracks()return selection.plan(specialist,'test','AnimalTracks',1,1,trackScene,{safeSpeech=true})end
+ selectedTrait='HUNTER'
+ local tracked,delivery=tracks()
+ assert(tracked and tracked.id==hunter and delivery.mode=='spoken','Hunter take after the stock AnimalTracks request')
+ local trackHistory=selection.history[specialist] or {}
+ selection.history[specialist]=trackHistory
+ trackHistory.AnimalTracks_1=math.max(V.now(),1)
+ tracked=tracks()
+ assert(tracked and tracked.id==hunter,'Hunter take when the ordinary TracksMore fallback wins')
+ selectedTrait=nil
+ tracked=tracks()
+ assert(tracked and tracked.id=='TracksMore_1','Only Hunter can use the alternate')
+ selectedTrait='HUNTER'
+ b.data.clips.test_AnimalTracks_1=nil;b.data.clips.test_TracksMore_1=nil
+ tracked=tracks()
+ assert(tracked and tracked.id==hunter,'A pack may record just the Hunter take')
+ trackHistory.AnimalTracks_1=nil
+ b.data.clips['test_'..hunter]=nil
+ selectedTrait='EAGLE_EYED'
+ local id='Alt_ThreatCalmSpotter_1'
+ local observed={sneaking=false,panic=0,near=1,accessibleNear=1,reactiveNear=0,targeted=0,visible=1}
+ local function warn()return selection.plan(specialist,'test','Threat',1,4,observed,{whisper=true})end
+ assert(warn().id=='ThreatCalm_1','Old pack uses the original warning')
+ b.data.clips['test_'..id]=true
+ local spotted,heard=warn()
+ assert(spotted.id==id and heard.mode=='spoken')
+ selection.remember(specialist,id,spotted)
+ assert(warn().id=='ThreatCalm_1','A recent specialist take yields to the original')
+ selectedTrait='GRACEFUL'
+ local quiet='Alt_Whisper_KeepHiddenQuiet_1'
+ b.data.clips['test_'..quiet]=true
+ danger.traits={};danger.sneaking=true;danger.psychology={kind='hiddenPursuer',verified=true,knownPursuer=true}
+ line,decision=selection.plan(specialist,'test','Psychology',1,1,danger,{whisper=true})
+ assert(line.id==quiet and V.delivery('test',quiet)=='whisper' and decision.allowStealth,'Use the recorded whisper')
+ danger.whisperRisk=1
+ line,decision=selection.plan(specialist,'test','Psychology',1,1,danger,{whisper=true})
+ assert(decision.mode=='silent','A trait must not override exposure')
+ selectedTrait='FAST_READER'
+ local reader='Alt_BookReadingReader_1'
+ b.data.clips['test_'..reader]=true
+ local reading={sneaking=false,outcome={kind='routine',verified=true,completed=true,routineGroup='BookReading'}}
+ assert(selection.chooseBaseLine(specialist,'test','BookReading',1,1,reading).id==reader,'Optional-only pack can play its verified activity')
+ reading.outcome.completed=false
+ assert(not selection.chooseBaseLine(specialist,'test','BookReading',1,1,reading))
+ selectedTrait='STOUT'
+ local relief='Alt_ReliefLoadStrong_1'
+ b.data.clips['test_'..relief]=true
+ assert(selection.chooseBaseLine(specialist,'test','ReliefLoad',1,1,{sneaking=false}).id==relief,'A recorded specialist relief is usable on its own')
+ selectedTrait='DEXTROUS'
+ local pickup='Alt_FoundLootPacked_1'
+ b.data.clips['test_'..pickup]=true
+ b.data.clips.test_FoundLoot_3=true
+ b.lines.FoundLoot_3='I can take this.'
+ b.data.groups.FoundLoot={{id='FoundLoot_1'},{id='FoundLoot_2'},{id='FoundLoot_3'}}
+ b.data.groups.Explore={{id='Explore_1'},{id='Explore_2'}}
+ local gathering={sneaking=false,near=0,visible=0,recentThreat=false,pickup=true}
+ local chosen,policy=selection.plan(specialist,'test','FoundLoot',1,4,gathering,{safeSpeech=false})
+ assert(policy.mode=='upstream' and chosen.id==pickup,'Respect upstream filters and select the matching recording')
+ selectedTrait='FIRST_AID'
+ local sparse='Alt_BandageDoneFirstAid_1'
+ b.lines.BandageDone_2='I wrapped it.'
+ b.data.clips.test_BandageDone_2=true
+ b.extras.catalog.BandageDone_2={id='BandageDone_2',group='BandageDone'}
+ -- groupLines caches the pack's immutable extras catalogue.
+ local entries={}
+ for key,val in pairs(b.extras.catalog)do entries[key]=val end
+ b.extras.catalog=entries
+ b.data.clips['test_'..sparse]=true
+ local outcome={sneaking=false,near=0,visible=0,recentThreat=false,outcome={kind='bandage',completed=true,before={bandaged=false},after={bandaged=true}}}
+ local bandage=selection.plan(specialist,'test','BandageDone',1,1,outcome,{safeSpeech=true})
+ assert(bandage and bandage.id==sparse,'A different eligible normal take covers the sparse bank')
+ selectedTrait='OUTDOORSMAN'
+ b.data.clips.test_Alt_WetOutdoorsy_1=true
+ assert(not rules.preferredRecording(V,specialist,'test','Wet_3',{cold=3},{},{}),'Severe wet/cold does not reuse mild discomfort')
+ selectedTrait='ADRENALINE_JUNKIE'
+ local express='Expr_frightened_PanicEscape_2'
+ b.expressions.catalog[express]=semantics.expressions[express]
+ b.data.clips.test_Alt_PanicEscapeAdrenaline_1=true
+ assert(rules.preferredRecording(V,specialist,'test',express,neutral,{},{}).id=='Alt_PanicEscapeAdrenaline_1')
+ for _,extra in ipairs({id,quiet,reader,relief,pickup,sparse,'Alt_WetOutdoorsy_1','Alt_PanicEscapeAdrenaline_1'})do b.data.clips['test_'..extra]=nil end
+ CharacterTrait=oldTraits
+end
+local traits=require 'CSV/Traits'
+assert(traits.startle({panic=4,traits={brave=true}})=='StartleBrave')
+assert(traits.startle({panic=4,traits={desensitized=true}})=='StartleDesensitized')
+assert(traits.startle({panic=4})=='StartleCowardly')
+do
+ local f={endurance=2,near=0,sneaking=false}
+ for _,key in ipairs({'asthmatic','outOfShape','unfit'})do
+  f.traits={[key]=true}
+  assert(traits.context('Endurance',f)=='ExhaustedCoping',key)
+ end
+ f.traits=nil
+ assert(traits.context('Endurance',f)==nil)
+ f.endurance=3
+ assert(traits.context('Endurance',f)=='ExhaustedCoping')
+ f.traits={asthmatic=true}
+ f.endurance=1
+ assert(traits.context('Endurance',f)==nil)
+ f.endurance=2
+ for key,value in pairs({sneaking=true,near=1,humanThreat=true,fire=true,pain=1,bleeding=1,drunk=1,coldSymptoms=1}) do
+  local old=f[key]
+  f[key]=value
+  assert(traits.context('Endurance',f)==nil,key)
+  f[key]=old
+ end
+end
+local psychology=require 'CSV/PsychologyRules'
+assert(psychology.pool({kind='pursuit',intent=true,verified=true},{traits={brave=true},panic=1})=='PursuitSteady')
+assert(psychology.pool({kind='pursuit',intent=true,verified=true,experience='practiced'},{traits={cowardly=true},panic=1})=='PursuitUneasy')
+assert(psychology.pool({kind='humanKill',verified=true},{traits={pacifist=true},near=0,visible=0,recentThreat=false})=='TraitReluctant')
 local outcomes=require 'CSV/OutcomeRules'
 local openWindow={kind='car_window_open',completed=true,before={open=false},after={open=true,destroyed=false}}
 assert(outcomes.classify(openWindow)=='CarWindowOpened')
@@ -131,6 +361,51 @@ assert(outcomes.classify(smashed)=='CarWindowBroken')
 smashed.before.destroyed=true
 assert(outcomes.classify(smashed)==nil)
 local N=require 'CSV/NativeVoice';assert(N.prefix(0,'test')=='VoiceCSVTestP100')
+do
+ local saved=b.native
+ b.native={suffixes={'DrunkHic'},replacements={DrunkHic={},ShoutHey={},WhisperHey={}}}
+ local vanillaHiccup={getEvent=function()return 'Character/Voice/Female/Drunk/Hic'end,
+  getVolume=function()return 1 end,getMaxDistance=function()return 150 end}
+ local script
+ GameSounds={getSound=function(name)
+  assert(name=='VoiceFemaleDrunkHic')
+  return {getRandomClip=function()return vanillaHiccup end,getCategory=function()return 'Player'end,
+   getMasterName=function()return 'Primary'end}
+ end,OnReloadSound=function()end,isKnownSound=function()return true end}
+ GameSoundScript={new=function()return {Load=function(_,_,body)script=body end}end}
+ assert(N.ensure(0,'test')=='VoiceCSVTestP100')
+ assert(script:find('event = Character/Voice/Female/Drunk/Hic',1,true),'Missing custom hiccup uses stock audio')
+ b.native=saved
+end
 assert(not pcall(R.register,'Late',{}))
 assert(b.extraVoices==nil,'provider bank must not be mutated')
 print('PASS third party female voice, shared context, unique identity, duplicates, registry freeze and threat selection')
+
+-- B42 single-player calls the finder directly; multiplayer uses the stock
+-- OnAnimalTracks listener, which must not be installed a second time.
+do
+ local requests={}
+ ISAnimalTracksFinder={getAnimalTracks=function(_,track)return track end}
+ local show=ISAnimalTracksFinder.getAnimalTracks
+ package.loaded['Foraging/ISAnimalTracksFinder']=true
+ package.loaded.ConditionalSpeech_Core={check_AnimalTracks=function(actor,track)
+  requests[#requests+1]={actor,track}
+ end}
+ local actor={isLocalPlayer=function()return true end,isDead=function()return false end}
+ local oldVoice=V.voice
+ V.voice=function()return 'test' end
+ local connected=true
+ function isClient()return connected end
+ function isServer()return false end
+ local upstream=require 'CSV/Upstream'
+ upstream.installed=true
+ upstream.install()
+ assert(ISAnimalTracksFinder.getAnimalTracks==show)
+ connected=false;upstream.install()
+ local track={}
+ assert(ISAnimalTracksFinder.getAnimalTracks(actor,track)==track)
+ ISAnimalTracksFinder.getAnimalTracks(actor,nil)
+ assert(#requests==1 and requests[1][1]==actor and requests[1][2]==track)
+ V.voice=oldVoice
+end
+print('PASS standalone animal track discovery uses the speaking character')

@@ -34,7 +34,6 @@ P.groups['Unhappy']='emotion'
 P.groups['Angry']='emotion'
 P.groups['Uncomfortable']='emotion'
 P.groups['AnimalTracks']='routine'
-P.groups['ChopTree']='routine'
 P.groups['Explore']='routine'
 P.groups['FoodEaten']='routine'
 P.groups['FoodRaw']='routine'
@@ -80,6 +79,13 @@ function P.decide(group,intensity,s,prefs)
    return result('spoken','critical_health',4,4)
   end
   if kind=='relief' or kind=='routine' or kind=='loot' or kind=='emotion' then return result('silent','critical_health_defer') end
+ end
+ if group=='ShelterThump' then
+  if not s.outcome or not s.outcome.verified then return result('silent','unverified_shelter_impact') end
+  if critical>0 or concealment.active(s) then return result('silent','active_attack_defer') end
+  if s.sneaking==true then return result('silent','concealment') end
+  if s.sneaking==false then return result('spoken','confirmed_shelter_thump',4,2) end
+  return result('silent','unknown_concealment')
  end
  if group=='Startle' then
   if not s.nativeAlert then return result('silent','unverified_alert')end

@@ -33,6 +33,6 @@ function O.tick()
 end
 function O.install()
  require('CSV/SpeechManager').enabled=true
- for _,name in ipairs({'Observe','RoutineActions','VehicleCombat','Vehicles','Outcomes','TraitReactions','Reload','Psychology','Upstream'})do O.module(name,'install')end
+ for _,name in ipairs({'Observe','RoutineActions','VehicleCombat','Vehicles','Outcomes','ShelterThumpObserver','TraitReactions','Reload','Psychology','Upstream'})do O.module(name,'install')end
 end
 return O

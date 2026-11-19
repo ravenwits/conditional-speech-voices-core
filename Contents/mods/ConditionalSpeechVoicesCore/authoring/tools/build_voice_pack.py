@@ -30,7 +30,7 @@ def lua(value):
 
 
 def validate(config, directory):
-    from recording_limits import MAX_CAPTION, MAX_SECONDS, steam_profile
+    from recording_limits import MAX_CAPTION, MAX_CLIP_SECONDS, steam_profile
     steam_profile(config.get("steamProfile",""))
     if any(not isinstance(text,str) or len(text)>MAX_CAPTION for text in config["bank"]["lines"].values()):
         raise ValueError(f"Captions must be at most {MAX_CAPTION} characters")
@@ -54,19 +54,22 @@ def validate(config, directory):
         raise ValueError('Native registrations must include the ambient controller and every event')
     flexible = bank.get('coverage') == 'situations-v1'
     if bank.get('coverage') is not None and not flexible: raise ValueError('Unsupported coverage policy')
-    required = set(CONTRACT['slots'])
+    import studio_schema
+    coverage = studio_schema.load()['coverage']
+    optional = coverage['optionalCoverageSlots'].keys()
+    required = set(CONTRACT['slots']) - optional
     if 'needTiers' in bank:
         extension = CONTRACT['extensions']['needTiers']
         if bank['needTiers'] != extension['version']:
             raise ValueError('Unsupported need tier extension')
-        required.update(extension['slots'])
-        if any(not bank['lines'].get(line) for line in extension['slots']):
+        required.update(set(extension['slots']) - optional)
+        if any(not bank['lines'].get(line) for line in set(extension['slots']) - optional):
             raise ValueError('Missing need tier caption')
     if 'criticalHealth' in bank:
         extension = CONTRACT['extensions']['criticalHealth']
-        if bank['criticalHealth'] != 1 or any(not bank['lines'].get(line) for line in extension['slots']):
+        if bank['criticalHealth'] != 1 or any(not bank['lines'].get(line) for line in set(extension['slots']) - optional):
             raise ValueError('Invalid critical health extension or captions')
-        required.update(extension['slots'])
+        required.update(set(extension['slots']) - optional)
     voices = set()
     prefixes = set()
     for voice in bank['voices']:
@@ -80,10 +83,11 @@ def validate(config, directory):
         if voice['base'] not in ('VoiceMale', 'VoiceFemale'):
             raise ValueError('Invalid native voice base')
         if flexible:
-            import studio_schema
-            for meaning,pool in studio_schema.load()['coverage']['pools'].items():
-                if not any(name+'_'+slot in bank['data']['clips'] for slot in pool):
-                    raise ValueError('Missing situation '+meaning)
+            prefix = name + '_'
+            available = {key[len(prefix):] for key in bank['data']['clips'] if key.startswith(prefix)}
+            readiness = studio_schema.build_coverage(bank['native']['replacements'], available)
+            if readiness['missing']:
+                raise ValueError('Missing situation ' + readiness['missing'][0])
         for slot in sorted([] if flexible else required):
             line = bank.get('aliases', {}).get(slot, slot)
             if name + '_' + line not in bank['data']['clips']:
@@ -101,9 +105,9 @@ def validate(config, directory):
             raise ValueError(name + ': preview closing recording must belong to playlist')
         for event in CONTRACT['nativeEvents']:
             pool = bank['native']['replacements'].get(event)
-            if not pool:
+            if not flexible and not pool and event not in coverage['optionalNativeEvents']:
                 raise ValueError(name + ': missing native event ' + event)
-            for line in pool:
+            for line in pool or ():
                 if name + '_' + line not in bank['data']['clips']:
                     raise ValueError(name + ': missing native recording ' + line)
                 if ('Shout' in event or 'Whisper' in event) and not bank['lines'].get(line):
@@ -119,8 +123,8 @@ def validate(config, directory):
         if not sound.startswith('CSV_' + owner + '_'):
             raise ValueError('Recording references another speaker: ' + key)
         duration = clip['duration']
-        if not isinstance(duration, (int, float)) or not math.isfinite(duration) or duration <= 0 or duration > MAX_SECONDS*1000:
-            raise ValueError('Invalid duration ' + key)
+        if not isinstance(duration, (int, float)) or not math.isfinite(duration) or duration <= 0 or duration > MAX_CLIP_SECONDS*1000:
+            raise ValueError(f'{key}: clip duration must be greater than zero and at most {MAX_CLIP_SECONDS} seconds')
         expected.add(sound)
     if expected != set(config['assets']):
         raise ValueError('Assets must exactly match referenced sound events')

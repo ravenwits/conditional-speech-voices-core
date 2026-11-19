@@ -1,4 +1,4 @@
-local U={installed=false,trees=setmetatable({},{__mode='k'}),needs=setmetatable({},{__mode='k'}),nextScan=0}
+local U={installed=false,needs=setmetatable({},{__mode='k'}),nextScan=0}
 local function safe(fn)local ok,value=pcall(fn);if ok then return value end end
 local function eligiblePlayer(p)
  return p and p:isLocalPlayer() and not p:isDead() and require('CSV/Core').extended(require('CSV/Core').voice(p))
@@ -11,27 +11,6 @@ function U.countSpeech(player,text)
  if not suffix or text~=tostring(f.rounds)..' '..suffix then return false end
  require('ConditionalSpeech_Core').generateSpeechFrom(player,'AmmoCount',1,1,false,false)
  return true
-end
-function U.trackTree(action)
- local p,tree=action.character,action.tree
- if not eligiblePlayer(p) or not tree or tree:getObjectIndex()<0 then return end
- local square=tree:getSquare();if not square then return end
- U.trees[p]={tree=tree,x=square:getX(),y=square:getY(),z=square:getZ(),at=getTimestampMs()}
-end
-function U.scanTrees(now)
- for p,t in pairs(U.trees)do
-  if now-t.at>8000 or not eligiblePlayer(p) or p:getZ()~=t.z or (p:getX()-t.x)^2+(p:getY()-t.y)^2>36 then U.trees[p]=nil
-  elseif safe(function()return t.tree:getObjectIndex()<0 end) then
-   local square=safe(function()return getCell():getGridSquare(t.x,t.y,t.z)end)
-   -- Object disappearance in an unloaded chunk is not proof of a felled tree.
-   if square and safe(function()return square:getTree()==nil end)==true then
-    U.trees[p]=nil
-    require('CSV/State').record(p,'treeDown')
-    require('ConditionalSpeech_Core').generateSpeechFrom(p,'ChopTree',1,1,false,false)
-    require('CSV/ProductionReport').observe('tree_removed_after_local_chop',{})
-   end
-  end
- end
 end
 function U.observeNeeds(p,f,now)
  if not eligiblePlayer(p) then return end
@@ -66,16 +45,29 @@ end
 function U.tick()
  if not U.installed or not require('CSV/Conditions').enabled then return end
  local now=getTimestampMs();if now<U.nextScan then return end;U.nextScan=now+1000
- U.scanTrees(now)
  for i=0,getNumActivePlayers()-1 do local p=getSpecificPlayer(i);if eligiblePlayer(p) then U.observeNeeds(p,require('CSV/State').capture(p),now) end end
 end
 function U.install()
+ if not isClient() and not isServer() then
+  require('CSV/Connections').install('solo-animal-tracks',function(t)
+   require 'Foraging/ISAnimalTracksFinder'
+   local show=ISAnimalTracksFinder.getAnimalTracks
+   local speech=require 'ConditionalSpeech_Core'
+   t:replace(ISAnimalTracksFinder,'getAnimalTracks',function(player,track)
+    local result=show(player,track)
+    if track and eligiblePlayer(player) and require('CSV/Core').config.enabled then
+     require('CSV/Observers').run('tracks.discovered',speech.check_AnimalTracks,player,track)
+    end
+    return result
+   end)
+  end)
+ end
  if U.installed then return true end
  local ok,err=require('CSV/Connections').install('upstream-actions',function(t)
   local speech=require 'ConditionalSpeech_Core'
-  require 'TimedActions/ISEatFoodAction';require 'TimedActions/ISChopTreeAction'
+  require 'TimedActions/ISEatFoodAction'
   assert(type(speech.load_n_set_Moodles)=='function' and type(speech.check_AteFood)=='function','upstream mood/food interface unavailable')
-  assert(ISEatFoodAction and type(ISEatFoodAction.perform)=='function' and ISChopTreeAction and type(ISChopTreeAction.animEvent)=='function','timed action interface unavailable')
+  assert(ISEatFoodAction and type(ISEatFoodAction.perform)=='function','timed action interface unavailable')
   local loadMoodles=speech.load_n_set_Moodles
   t:replace(speech,'load_n_set_Moodles',function(index,player)
    if player==nil and index~=nil and type(index)~='number' then player=index;index=0 end
@@ -95,11 +87,6 @@ function U.install()
    U.foodAction=previous
    if not result[1] then error(result[2])end
    return unpack(result,2)
-  end)
-  local anim=ISChopTreeAction.animEvent
-  t:replace(ISChopTreeAction,'animEvent',function(self,event,...)
-   if isClient() and event=='ChopTree' and self.axe then U.trackTree(self)end
-   return anim(self,event,...)
   end)
   local meta=require 'ConditionalSpeech_metaValues'
   t:set(speech,'DAWN_TIME',speech.DAWN_TIME or meta.DAWN_TIME)

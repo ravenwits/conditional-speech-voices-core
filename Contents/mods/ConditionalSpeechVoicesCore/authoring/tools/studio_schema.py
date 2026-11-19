@@ -66,6 +66,18 @@ def validate(config):
         if strip_text(bank.get(branch))!=strip_text(reference.get(branch)):
             raise ValueError('Core-defined '+branch+' cannot be edited in Studio.')
 
+def build_coverage(native_replacements, available_slots):
+    """Count the Core situations and required native events covered by these recordings."""
+    policy = load()['coverage']
+    pools = dict(policy['pools'])
+    for event in template()['native']['replacements']:
+        if event not in policy['optionalNativeEvents']:
+            pools['Native / ' + event] = native_replacements.get(event, [])
+    missing = {group: pool for group, pool in pools.items() if available_slots.isdisjoint(pool)}
+    return dict(required=len(pools), covered=len(pools) - len(missing),
+                missing=list(missing), missingSlots=missing, pools=pools)
+
+
 def entry(slot):
     try: return load()['slots'][slot]
     except KeyError: raise ValueError('Unknown Core recording slot: '+slot) from None

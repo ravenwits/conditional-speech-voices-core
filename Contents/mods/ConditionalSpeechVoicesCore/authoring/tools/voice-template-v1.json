@@ -2158,6 +2158,171 @@
         "id": "CarWindowBroken_1",
         "group": "CarWindowBroken",
         "text": "The car window's broken."
+      },
+      "InjuredHead_1": {
+        "id": "InjuredHead_1",
+        "group": "WoundSite",
+        "text": "Ow, my head."
+      },
+      "BleedingHead_1": {
+        "id": "BleedingHead_1",
+        "group": "BleedingSite",
+        "text": "My head’s bleeding."
+      },
+      "InjuredNeck_1": {
+        "id": "InjuredNeck_1",
+        "group": "WoundSite",
+        "text": "My neck really hurts."
+      },
+      "BleedingNeck_1": {
+        "id": "BleedingNeck_1",
+        "group": "BleedingSite",
+        "text": "I can feel blood on my neck."
+      },
+      "InjuredHand_1": {
+        "id": "InjuredHand_1",
+        "group": "WoundSite",
+        "text": "Ow, my hand."
+      },
+      "BleedingHand_1": {
+        "id": "BleedingHand_1",
+        "group": "BleedingSite",
+        "text": "My hand’s bleeding."
+      },
+      "InjuredArm_1": {
+        "id": "InjuredArm_1",
+        "group": "WoundSite",
+        "text": "My arm hurts."
+      },
+      "BleedingArm_1": {
+        "id": "BleedingArm_1",
+        "group": "BleedingSite",
+        "text": "I’m bleeding from my arm."
+      },
+      "InjuredChest_1": {
+        "id": "InjuredChest_1",
+        "group": "WoundSite",
+        "text": "My chest hurts right here."
+      },
+      "BleedingChest_1": {
+        "id": "BleedingChest_1",
+        "group": "BleedingSite",
+        "text": "I’m bleeding from my chest."
+      },
+      "InjuredBelly_1": {
+        "id": "InjuredBelly_1",
+        "group": "WoundSite",
+        "text": "My belly hurts right here."
+      },
+      "BleedingBelly_1": {
+        "id": "BleedingBelly_1",
+        "group": "BleedingSite",
+        "text": "My belly’s bleeding."
+      },
+      "InjuredGroin_1": {
+        "id": "InjuredGroin_1",
+        "group": "WoundSite",
+        "text": "My groin hurts."
+      },
+      "BleedingGroin_1": {
+        "id": "BleedingGroin_1",
+        "group": "BleedingSite",
+        "text": "I’m bleeding from my groin."
+      },
+      "InjuredLeg_1": {
+        "id": "InjuredLeg_1",
+        "group": "WoundSite",
+        "text": "Ow, my leg."
+      },
+      "BleedingLeg_1": {
+        "id": "BleedingLeg_1",
+        "group": "BleedingSite",
+        "text": "My leg’s bleeding."
+      },
+      "InjuredFoot_1": {
+        "id": "InjuredFoot_1",
+        "group": "WoundSite",
+        "text": "My foot really hurts."
+      },
+      "BleedingFoot_1": {
+        "id": "BleedingFoot_1",
+        "group": "BleedingSite",
+        "text": "I’m bleeding from my foot."
+      },
+      "BleedingUnspecified_1": {
+        "id": "BleedingUnspecified_1",
+        "group": "BleedingSite",
+        "text": "I'm bleeding. I need a bandage."
+      },
+      "BloodOnSkin_1": {
+        "id": "BloodOnSkin_1",
+        "group": "BloodOnSkin",
+        "text": "There's blood on me. I need to wash it off."
+      },
+      "BiteUnspecified_1": {
+        "id": "BiteUnspecified_1",
+        "group": "BiteWound",
+        "text": "I got bitten. Damn it."
+      },
+      "BiteHead_1": {
+        "id": "BiteHead_1",
+        "group": "BiteWound",
+        "text": "I got bitten on the head."
+      },
+      "BiteNeck_1": {
+        "id": "BiteNeck_1",
+        "group": "BiteWound",
+        "text": "It got me in the neck."
+      },
+      "BiteHand_1": {
+        "id": "BiteHand_1",
+        "group": "BiteWound",
+        "text": "It bit my hand."
+      },
+      "BiteArm_1": {
+        "id": "BiteArm_1",
+        "group": "BiteWound",
+        "text": "My arm… that’s a bite."
+      },
+      "BiteChest_1": {
+        "id": "BiteChest_1",
+        "group": "BiteWound",
+        "text": "It bit me up here, on my chest."
+      },
+      "BiteBelly_1": {
+        "id": "BiteBelly_1",
+        "group": "BiteWound",
+        "text": "It bit me in the stomach."
+      },
+      "BiteGroin_1": {
+        "id": "BiteGroin_1",
+        "group": "BiteWound",
+        "text": "It bit me in the groin."
+      },
+      "BiteLeg_1": {
+        "id": "BiteLeg_1",
+        "group": "BiteWound",
+        "text": "It got my leg. I’m bitten."
+      },
+      "BiteFoot_1": {
+        "id": "BiteFoot_1",
+        "group": "BiteWound",
+        "text": "It bit right into my foot."
+      },
+      "ShelterThump_1": {
+        "id": "ShelterThump_1",
+        "group": "ShelterThump",
+        "text": "Something's hitting it. Right outside."
+      },
+      "ShelterThump_2": {
+        "id": "ShelterThump_2",
+        "group": "ShelterThump",
+        "text": "That's close. I'd better back up."
+      },
+      "ShelterThump_3": {
+        "id": "ShelterThump_3",
+        "group": "ShelterThump",
+        "text": "I heard that. It's right there."
       }
     }
   },
@@ -2714,30 +2879,15 @@
         "group": "TraitWound",
         "text": "I've had this wound for days. Come on, heal already."
       },
-      "ChopTree_1": {
-        "id": "Whisper_ChopTree_1",
-        "group": "ChopTree",
-        "text": "That should give us some wood."
-      },
       "TraitFumble_1": {
         "id": "Whisper_TraitFumble_1",
         "group": "TraitFumble",
         "text": "Come on. My hands won't cooperate."
       },
-      "ChopTree_2": {
-        "id": "Whisper_ChopTree_2",
-        "group": "ChopTree",
-        "text": "One more swing. Come on."
-      },
       "Windchill_2": {
         "id": "Whisper_Windchill_2",
         "group": "Windchill",
         "text": "Need to get out of this wind."
-      },
-      "ChopTree_3": {
-        "id": "Whisper_ChopTree_3",
-        "group": "ChopTree",
-        "text": "Finally. Give me a second."
       },
       "ReliefHunger_3": {
         "id": "Whisper_ReliefHunger_3",
@@ -3044,11 +3194,6 @@
         "group": "RottenMore",
         "text": "That was spoiled. Should not have eaten it."
       },
-      "RepeatedHit_3": {
-        "id": "Whisper_RepeatedHit_3",
-        "group": "RepeatedHit",
-        "text": "Just go down, damn it!"
-      },
       "FoodSuspect_3": {
         "id": "Whisper_FoodSuspect_3",
         "group": "FoodSuspect",
@@ -3329,20 +3474,10 @@
         "group": "ReliefRest",
         "text": "Not so tired anymore."
       },
-      "RepeatedHit_1": {
-        "id": "Whisper_RepeatedHit_1",
-        "group": "RepeatedHit",
-        "text": "Come on, go down already!"
-      },
       "ReliefRest_3": {
         "id": "Whisper_ReliefRest_3",
         "group": "ReliefRest",
         "text": "That tired feeling has eased off."
-      },
-      "RepeatedHit_2": {
-        "id": "Whisper_RepeatedHit_2",
-        "group": "RepeatedHit",
-        "text": "Why will you not stay down?"
       },
       "CarAlarm_2": {
         "id": "Whisper_CarAlarm_2",
@@ -3914,30 +4049,15 @@
         "group": "StartleNormal",
         "text": "Jesus! ...okay. Okay."
       },
-      "MultiHit_1": {
-        "id": "Whisper_MultiHit_1",
-        "group": "MultiHit",
-        "text": "They are crowding me!"
-      },
       "StartleNormal_2": {
         "id": "Whisper_StartleNormal_2",
         "group": "StartleNormal",
         "text": "Fuck... that scared me."
       },
-      "MultiHit_2": {
-        "id": "Whisper_MultiHit_2",
-        "group": "MultiHit",
-        "text": "Back up. Give me some room!"
-      },
       "StartleBrave_1": {
         "id": "Whisper_StartleBrave_1",
         "group": "StartleBrave",
         "text": "Shit! Keep it together."
-      },
-      "MultiHit_3": {
-        "id": "Whisper_MultiHit_3",
-        "group": "MultiHit",
-        "text": "Too many. Need to move!"
       },
       "StartleBrave_2": {
         "id": "Whisper_StartleBrave_2",
@@ -5227,38 +5347,6 @@
         "id": "Expr_congested_Bored_2",
         "text": "I should find something useful to do.",
         "source": "Bored_2"
-      },
-      "Expr_slurred_ChopTree_1": {
-        "group": "ChopTree",
-        "groupFallback": true,
-        "profile": "slurred",
-        "id": "Expr_slurred_ChopTree_1",
-        "text": "That should give us some wood.",
-        "source": "ChopTree_1"
-      },
-      "Expr_congested_ChopTree_1": {
-        "group": "ChopTree",
-        "groupFallback": true,
-        "profile": "congested",
-        "id": "Expr_congested_ChopTree_1",
-        "text": "That should give us some wood.",
-        "source": "ChopTree_1"
-      },
-      "Expr_slurred_ChopTree_2": {
-        "group": "ChopTree",
-        "groupFallback": true,
-        "profile": "slurred",
-        "id": "Expr_slurred_ChopTree_2",
-        "text": "One more swing. Come on.",
-        "source": "ChopTree_2"
-      },
-      "Expr_congested_ChopTree_2": {
-        "group": "ChopTree",
-        "groupFallback": true,
-        "profile": "congested",
-        "id": "Expr_congested_ChopTree_2",
-        "text": "One more swing. Come on.",
-        "source": "ChopTree_2"
       },
       "Expr_slurred_Claustrophobic_1": {
         "group": "Claustrophobic",
@@ -7457,7 +7545,6 @@
       "Whisper_StartleDesensitized_1": true,
       "Expr_slurred_PainGeneric_1": true,
       "StartleDesensitized_6": true,
-      "Whisper_RepeatedHit_3": true,
       "StartleDesensitized_7": true,
       "Expr_angry_Angry_3": true,
       "DryCoping_1": true,
@@ -7547,20 +7634,6 @@
       }
     ],
     "groups": {
-      "ChopTree": [
-        {
-          "text": "That should give us some wood.",
-          "id": "ChopTree_1"
-        },
-        {
-          "text": "One more swing. Come on.",
-          "id": "ChopTree_2"
-        },
-        {
-          "text": "Finally. Give me a second.",
-          "id": "ChopTree_3"
-        }
-      ],
       "Claustrophobic": [
         {
           "text": "Keep that doorway clear.",
@@ -8970,9 +9043,6 @@
     "SmokeFinished_1": "I needed that.",
     "BookReading_1": "Just a few more pages.",
     "MealPrepared_1": "That's coming together.",
-    "ChopTree_1": "That should give us some wood.",
-    "ChopTree_2": "One more swing. Come on.",
-    "ChopTree_3": "Finally. Give me a second.",
     "Claustrophobic_1": "Keep that doorway clear.",
     "Claustrophobic_2": "Feels like these walls are closing in.",
     "Claustrophobic_3": "I need to get out of this room.",
@@ -9598,11 +9668,8 @@
     "Whisper_Darkness_1": "It's too damn dark. I can't see a thing.",
     "Whisper_PanicGrounding_3": "Breathe. Just give yourself a moment.",
     "Whisper_TraitWound_2": "I've had this wound for days. Come on, heal already.",
-    "Whisper_ChopTree_1": "That should give us some wood.",
     "Whisper_TraitFumble_1": "Come on. My hands won't cooperate.",
-    "Whisper_ChopTree_2": "One more swing. Come on.",
     "Whisper_Windchill_2": "Need to get out of this wind.",
-    "Whisper_ChopTree_3": "Finally. Give me a second.",
     "Whisper_ReliefHunger_3": "My stomach feels better with some food in it.",
     "Whisper_Claustrophobic_1": "Keep that doorway clear.",
     "Whisper_ChamberEmpty_2": "Magazine has rounds. Chamber is empty.",
@@ -9664,7 +9731,6 @@
     "Whisper_LootWeapon_1": "A working weapon. I can use this.",
     "Whisper_ReliefThreat_3": "A bit of space. Keep moving carefully.",
     "Whisper_RottenMore_2": "That was spoiled. Should not have eaten it.",
-    "Whisper_RepeatedHit_3": "Just go down, damn it!",
     "Whisper_FoodSuspect_3": "Ugh... I hope that meal was not the problem.",
     "Whisper_Discomfort_3": "I need to get comfortable somehow.",
     "Whisper_DoorLocked_2": "Damn, it's locked.",
@@ -9721,9 +9787,7 @@
     "Whisper_ReliefThirst_1": "That is better. Not so thirsty now.",
     "Whisper_LootClothing_3": "Good. A better layer for this cold.",
     "Whisper_ReliefRest_2": "Not so tired anymore.",
-    "Whisper_RepeatedHit_1": "Come on, go down already!",
     "Whisper_ReliefRest_3": "That tired feeling has eased off.",
-    "Whisper_RepeatedHit_2": "Why will you not stay down?",
     "Whisper_CarAlarm_2": "No, no... shut up!",
     "Whisper_Discomfort_1": "I cannot get comfortable.",
     "Whisper_ReliefStress_2": "Not so wound up now.",
@@ -9838,11 +9902,8 @@
     "Whisper_BloodAversion_2": "Don't look. Just get it covered.",
     "Whisper_LowAmmo_3": "Almost empty. Need more ammunition.",
     "Whisper_StartleNormal_1": "Jesus! ...okay. Okay.",
-    "Whisper_MultiHit_1": "They are crowding me!",
     "Whisper_StartleNormal_2": "Fuck... that scared me.",
-    "Whisper_MultiHit_2": "Back up. Give me some room!",
     "Whisper_StartleBrave_1": "Shit! Keep it together.",
-    "Whisper_MultiHit_3": "Too many. Need to move!",
     "Whisper_StartleBrave_2": "Okay. Don't freeze.",
     "Whisper_OnDawn_1": "Sky is starting to lighten.",
     "Whisper_StartleCowardly_1": "Oh God... not now.",
@@ -10021,10 +10082,6 @@
     "Expr_congested_Bleeding_3": "Shit, I need to deal with this wound.",
     "Expr_slurred_Bored_2": "I should find something useful to do.",
     "Expr_congested_Bored_2": "I should find something useful to do.",
-    "Expr_slurred_ChopTree_1": "That should give us some wood.",
-    "Expr_congested_ChopTree_1": "That should give us some wood.",
-    "Expr_slurred_ChopTree_2": "One more swing. Come on.",
-    "Expr_congested_ChopTree_2": "One more swing. Come on.",
     "Expr_slurred_Claustrophobic_1": "Keep that doorway clear.",
     "Expr_congested_Claustrophobic_1": "Keep that doorway clear.",
     "Expr_slurred_Claustrophobic_2": "Feels like these walls are closing in.",
@@ -10487,7 +10544,83 @@
     "Alt_PanicEscape_3": "Fuck! I need to get out of here!",
     "Alt_PanicGrounding_3": "Shit. Breathe. I can do this.",
     "Alt_OutOfAmmo_2": "Fuck! Nothing left!",
-    "Alt_MortalFear_2": "Fuck, I do not want to die here!"
+    "Alt_MortalFear_2": "Fuck, I do not want to die here!",
+    "Alt_MortalFearControlled_1": "Stay focused. Find a way out.",
+    "Alt_Whisper_MortalFearControlled_1": "Stay focused. Find a way out.",
+    "Alt_MortalFearControlled_2": "Keep moving. I can still get out.",
+    "Alt_Whisper_MortalFearControlled_2": "Keep moving. I can still get out.",
+    "Alt_HumanDangerControlled_1": "They're coming for me. Keep moving.",
+    "Alt_Whisper_HumanDangerControlled_1": "They're coming for me. Keep moving.",
+    "Alt_KeepHiddenControlled_1": "Stay still. Let them pass.",
+    "Alt_Whisper_KeepHiddenControlled_1": "Stay still. Let them pass.",
+    "Alt_ShelterThreatControlled_1": "They're here. Think. Where's the other way out?",
+    "Alt_Whisper_ShelterThreatControlled_1": "They're here. Think. Where's the other way out?",
+    "Alt_PanicEscapeAdrenaline_1": "I can still find a way out.",
+    "Alt_ReliefEnduranceRunner_1": "There's my second wind. I can keep going.",
+    "Alt_ThreatCalmSpotter_1": "There you are. I'll keep my distance.",
+    "Alt_BandageDoneFirstAid_1": "That'll hold. I'll check it again later.",
+    "Alt_FoundLootPacked_1": "I've got a spot for that.",
+    "Alt_LevelUpLearner_1": "Oh, I get it now.",
+    "Alt_BookReadingReader_1": "I'll squeeze in another page.",
+    "Alt_MealPreparedCook_1": "I'll give it a taste.",
+    "Alt_MealPreparedNutrition_1": "That ought to keep me going a while.",
+    "Alt_KeepHiddenQuiet_1": "If I keep still, I might slip away.",
+    "Alt_Whisper_KeepHiddenQuiet_1": "If I keep still, I might slip away.",
+    "Alt_ClothingPatchedSewer_1": "I caught both edges. That ought to hold.",
+    "Alt_SawLogsHandy_1": "That's my planks cut. Now I can get to work.",
+    "Alt_ClothingSewnCrafter_1": "I'm getting a cleaner seam these days.",
+    "Alt_ForagedHiker_1": "Glad I stopped to look.",
+    "Alt_AnimalTracksHunter_1": "I can follow these.",
+    "Alt_EngineFailedMechanic_1": "I won't drain the battery trying.",
+    "Alt_CampfireLitScout_1": "There we go. I'll let it catch.",
+    "Alt_ReliefLoadStrong_1": "That's better. I can move my shoulders again.",
+    "Alt_ReliefRestWakeful_1": "I feel rested. Time I got moving.",
+    "Alt_DarknessEyes_1": "I'll give my eyes a second.",
+    "Alt_WetOutdoorsy_1": "I've been wetter than this. I'll manage.",
+    "Alt_FoodSuspectIronGut_1": "My stomach doesn't usually turn like this.",
+    "Alt_ReliefThirstLow_1": "That's enough for me.",
+    "Alt_GeneratorRepairedTinkerer_1": "I've got a bit more life out of it.",
+    "Alt_VehicleImpactDriverSpeed_1": "I'd better ease off the gas.",
+    "Alt_WeaponReadyShooter_1": "I've got it ready.",
+    "CropHarvested_1": "I can take this harvest home.",
+    "FishCaught_1": "I've landed one.",
+    "TraitGlasswork_1": "I got the glass into shape without a crack.",
+    "TraitForgeWork_1": "I got that iron shaped while it was hot.",
+    "TraitMasonry_1": "I've got the stone the shape I wanted.",
+    "TraitWhittling_1": "I've still got the knack for carving.",
+    "InjuredHead_1": "Ow, my head.",
+    "BleedingHead_1": "My head’s bleeding.",
+    "InjuredNeck_1": "My neck really hurts.",
+    "BleedingNeck_1": "I can feel blood on my neck.",
+    "InjuredHand_1": "Ow, my hand.",
+    "BleedingHand_1": "My hand’s bleeding.",
+    "InjuredArm_1": "My arm hurts.",
+    "BleedingArm_1": "I’m bleeding from my arm.",
+    "InjuredChest_1": "My chest hurts right here.",
+    "BleedingChest_1": "I’m bleeding from my chest.",
+    "InjuredBelly_1": "My belly hurts right here.",
+    "BleedingBelly_1": "My belly’s bleeding.",
+    "InjuredGroin_1": "My groin hurts.",
+    "BleedingGroin_1": "I’m bleeding from my groin.",
+    "InjuredLeg_1": "Ow, my leg.",
+    "BleedingLeg_1": "My leg’s bleeding.",
+    "InjuredFoot_1": "My foot really hurts.",
+    "BleedingFoot_1": "I’m bleeding from my foot.",
+    "BleedingUnspecified_1": "I'm bleeding. I need a bandage.",
+    "BloodOnSkin_1": "There's blood on me. I need to wash it off.",
+    "BiteUnspecified_1": "I got bitten. Damn it.",
+    "BiteHead_1": "I got bitten on the head.",
+    "BiteNeck_1": "It got me in the neck.",
+    "BiteHand_1": "It bit my hand.",
+    "BiteArm_1": "My arm… that’s a bite.",
+    "BiteChest_1": "It bit me up here, on my chest.",
+    "BiteBelly_1": "It bit me in the stomach.",
+    "BiteGroin_1": "It bit me in the groin.",
+    "BiteLeg_1": "It got my leg. I’m bitten.",
+    "BiteFoot_1": "It bit right into my foot.",
+    "ShelterThump_1": "Something's hitting it. Right outside.",
+    "ShelterThump_2": "That's close. I'd better back up.",
+    "ShelterThump_3": "I heard that. It's right there."
   },
   "contract": 1,
   "needTiers": 1,

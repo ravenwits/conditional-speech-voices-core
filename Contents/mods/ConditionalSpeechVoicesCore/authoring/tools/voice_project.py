@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 from functools import lru_cache
 import recording_guidance
+from recording_situations import playback_when
 import studio_schema
 from recording_limits import MAX_CAPTION, MAX_SECONDS, MAX_SPEECH_SCRIPT
 
@@ -108,8 +109,8 @@ def guidance(slot):
         'breathless': 'Speak between short breaths. Keep the words understandable.',
         'frightened': 'Audibly frightened, with strained and unsteady delivery.',
         'sad': 'Sad and vulnerable, with restrained tears rather than theatrical sobbing.',
-        'congested': 'Speak with a blocked nose; keep the words understandable.',
-        'slurred': 'Slightly slurred speech; do not turn it into a joke.',
+        'ill': 'Speak with a blocked nose; keep the words understandable.',
+        'drunk': 'Slightly slurred speech; do not turn it into a joke.',
         'stammer': 'Stammer under stress, with brief broken starts.',
     }
     definition=studio_schema.entry(slot)
@@ -133,7 +134,7 @@ def guidance(slot):
         base += ' React to a blocked passage without naming the object. This line can also play for a barricaded window.'
     elif definition['source']=='EngineStalled_2':
         base += ' The engine has just cut out. Keep the urgency believable if the vehicle is under attack.'
-    if definition.get('optional') and definition['group'] in ('AfterHumanShaken','AfterZombieShaken'):
+    if definition.get('alternate') and definition['group'] in ('AfterHumanShaken','AfterZombieShaken'):
         base += ' Keep the reaction restrained. Let one short pause interrupt the thought.'
     if definition['group']=='CriticalFading':
         base += ' Very weak, fading speech with interrupted breaths, not a strong shout.'
@@ -252,6 +253,19 @@ def status(config, slot, root, clip=None, *, directories=None):
     return review.get('status', 'pending')
 
 
+def recording_brief(config, definition):
+    """The gameplay and performance details shared by Studio and dialogue drafts."""
+    slot = definition['slot']
+    note, cues = recording_guidance.performance(slot, config['bank']['language'])
+    brief = dict(context=definition['group'], delivery=definition['delivery'],
+                 acting=definition.get('acting', 'unspecified'), playbackWhen=playback_when(definition),
+                 profanity=bool(config['bank'].get('profanity', {}).get('ids', {}).get(slot)),
+                 guidance=note, elevenLabsTags=cues)
+    if 'traitRule' in definition:
+        brief['traitRule'] = definition['traitRule']
+    return brief
+
+
 def rows(manifest):
     config = read(manifest)
     schema_error=None
@@ -263,13 +277,12 @@ def rows(manifest):
     core_profanity = studio_schema.template()["profanity"]["ids"]
     for slot, clip in (slots(config).items() if not schema_error else []):
         definition=studio_schema.entry(slot)
-        note, tags = recording_guidance.performance(slot, config['bank']['language'])
         caption, script = recording_text(config, slot)
-        result.append(dict(slot=slot, category=category(slot), family=definition['family'], delivery=definition['delivery'], acting=definition.get('acting','unspecified'), context=definition['group'], profanity=bool(config['bank'].get('profanity',{}).get('ids',{}).get(slot)), profanityLocked=slot in core_profanity, optional=definition.get('optional',False), traits=definition.get('traits',[]), text=caption,
-            speechScript=script,
+        result.append(dict(slot=slot, source=definition['source'], alternate=definition.get('alternate', False), category=category(slot), family=definition['family'], profanityLocked=slot in core_profanity, optional=definition.get('optional',False), traits=definition.get('traits',[]), traitControlled=definition.get('traitControlled',False), text=caption,
+            **recording_brief(config, definition), speechScript=script,
+            nativePreview=definition['group'] in recording_guidance.NATIVE_PREVIEW_SCRIPTS,
             reference=config.get('authoring', {}).get('references', {}).get(slot, ''),
             direction=recording_note(config,slot),
-            guidance=note, elevenLabsTags=tags,
             state=status(config, slot, root, clip, directories=directories),
             audioEdit={k:v for k,v in config.get('authoring',{}).get('audioEdits',{}).get(slot,{}).items() if k in ('gainDb','semitones','speed','trimStart','trimEnd')}))
     return dict(canUndoReview=bool(config.get('authoring',{}).get('lastBulkReview')),limits=dict(caption=MAX_CAPTION,speechScript=MAX_SPEECH_SCRIPT,seconds=MAX_SECONDS,audioBytes=MAX_AUDIO),steamProfile=config.get('steamProfile',''),name=config['name'], author=config['author'], description=config['description'], voice=voice_id(config),
@@ -372,6 +385,25 @@ def mark_profanity(manifest, slot, enabled):
     return {'slot': slot, 'profanity': enabled}
 
 
+def save_active_take(manifest, config, slot, target, *, edit=None):
+    """Switch the active audio and invalidate metadata measured against the previous take."""
+    bank = config['bank']
+    clip_id = voice_id(config) + '_' + slot
+    clip = bank['data']['clips'][clip_id]
+    sound = clip['sound']
+    config['assets'][sound]['source'] = target.relative_to(manifest.parent.resolve()).as_posix()
+    clip['duration'] = 0
+    bank['peaklimits'].pop(clip_id, None)
+    authoring = config.setdefault('authoring', {})
+    authoring.get('reviews', {}).pop(slot, None)
+    authoring.get('measurements', {}).pop(sound, None)
+    if edit is None:
+        authoring.get('audioEdits', {}).pop(slot, None)
+    else:
+        authoring.setdefault('audioEdits', {})[slot] = edit
+    write(manifest, config)
+
+
 def import_audio(manifest, slot, source, ffmpeg, *, keep_previous=False):
     revision = digest(manifest)
     config = read(manifest)
@@ -408,13 +440,7 @@ def import_audio(manifest, slot, source, ffmpeg, *, keep_previous=False):
             shutil.copy2(target, rollback)
         converted.replace(target)
         try:
-            config['assets'][clip['sound']]['source'] = target.relative_to(manifest.parent.resolve()).as_posix()
-            clip['duration'] = 0
-            config['bank']['peaklimits'].pop(voice_id(config) + '_' + slot, None)
-            config.setdefault('authoring', {}).setdefault('reviews', {}).pop(slot, None)
-            config['authoring'].get('audioEdits',{}).pop(slot,None)
-            config['authoring'].get('measurements',{}).pop(clip['sound'],None)
-            write(manifest, config)
+            save_active_take(manifest, config, slot, target)
         except Exception:
             if rollback.is_file():
                 rollback.replace(target)
@@ -626,12 +652,12 @@ def package(manifest, output, ffmpeg, core):
     config = read(manifest)
     studio_schema.validate(config)
     if config.get('trial'): raise ValueError('Promote the trial before packaging')
-    readiness=coverage(config,manifest.parent)
+    # Use the same approved recordings for coverage and for the finished pack.
+    recordings = slots(config)
+    selected = approved_slots(config, manifest.parent, recordings)
+    readiness = studio_schema.build_coverage(config['bank']['native']['replacements'], selected)
     if readiness['missing']:
         raise ValueError(str(len(readiness['missing']))+' situations or native events need an approved recording')
-    # Keep the editable catalogue intact. Only approved takes enter the game pack.
-    recordings = slots(config)
-    selected={slot for slot,clip in recordings.items() if status(config,slot,manifest.parent,clip)=='approved'}
     voice=voice_id(config);bank=config['bank'];bank['coverage']='situations-v1'
     for slot in recordings:
         caption, _ = recording_text(config, slot)
@@ -718,9 +744,14 @@ def sync_core(manifest):
     write(manifest,config)
 
 
-def coverage(config,root,available=None):
-    if available is None: available={slot for slot,clip in slots(config).items() if status(config,slot,root,clip)=='approved'}
-    pools=dict(studio_schema.load()['coverage']['pools'])
-    pools.update({'Native / '+event:pool for event,pool in config['bank']['native']['replacements'].items()})
-    missing={name:pool for name,pool in pools.items() if not available.intersection(pool)}
-    return dict(required=len(pools),covered=len(pools)-len(missing),missing=list(missing),missingSlots=missing,pools=pools)
+def approved_slots(config, root, recordings):
+    root = root.resolve()
+    directories = {}
+    return {slot for slot, clip in recordings.items()
+            if status(config, slot, root, clip, directories=directories) == 'approved'}
+
+
+def coverage(config, root, available=None):
+    if available is None:
+        available = approved_slots(config, root, slots(config))
+    return studio_schema.build_coverage(config['bank']['native']['replacements'], available)

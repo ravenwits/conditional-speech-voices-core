@@ -53,7 +53,8 @@ function R.observe(player,s)
    -- Recheck the healed condition. A queued relief must not survive renewed injury/thirst.
    local valid=group=='ReliefThreat' or (rule and s[rule.field]==0)
    if not valid then Trace.step(event.trace,'cancelled','recovery_not_confirmed');state.pending[group]=nil
-   elseif require('CSV/Extras').pick(V,V.voice(player),group) then
+   elseif require('CSV/Extras').pick(V,V.voice(player),group)
+    or (s.sneaking==false and require('CSV/TraitSpeechRules').preferredRecording(V,player,V.voice(player),group..'_1',s,{},V.client.preferences())) then
     state.nextAttempt=now+5000
     Trace.call(event.trace,player,Speech.generateSpeechFrom,player,group,1,1,false,false)
     local attempt=V.client.lastAttempt[player]

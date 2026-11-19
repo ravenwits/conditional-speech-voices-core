@@ -1,5 +1,6 @@
 local N={banks={},errors=0,disabledVoices={},failures={},installed={}}
 local V=require 'CSV/Core'
+local optionalNativeEvents=require('CSV/VoiceCoverage').optionalNativeEvents
 local function spec(voice)local b=voice and V.pack.voiceBanks[voice];return b and b.native end
 function N.supported(voice)return voice~=nil and spec(voice)~=nil end
 function N.ready(player)
@@ -29,7 +30,7 @@ function N.ensure(pitch,voice)
  for _,suffix in ipairs(data.suffixes)do events[#events+1]={suffix=suffix,source=suffix,ids=data.replacements[suffix]}end
  -- These single-take events let the caption and network audio share one choice.
  for _,source in ipairs({'ShoutHey','WhisperHey'})do
-  for _,id in ipairs(data.replacements[source])do
+  for _,id in ipairs(data.replacements[source] or {})do
    events[#events+1]={suffix='CSV'..id,source=source,ids={id}}
   end
  end
@@ -39,9 +40,8 @@ function N.ensure(pitch,voice)
   if not original then error('Missing native voice event '..suffix)end
   local name=prefix..suffix
   local body={'sound '..name..' { category = '..original:getCategory()..', is3D = true, loop = false, master = '..original:getMasterName()..','}
-  if suffix=='' then
-   -- IsoPlayer.updateVocalProperties keeps this parameter-driven event alive.
-   -- A finite breath sample here restarts even when the character is resting.
+  if suffix=='' or (optionalNativeEvents[suffix] and (not event.ids or #event.ids==0)) then
+   -- Reuse the stock event for the ambient controller and unrecorded optional sounds.
    local clip=original:getRandomClip()
    body[#body+1]='clip { event = '..clip:getEvent()..', volume = '..tostring(clip:getVolume())..', distanceMax = '..tostring(clip:getMaxDistance())..', }'
   else

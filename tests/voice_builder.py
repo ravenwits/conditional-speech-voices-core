@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory() as temporary:
     assert 'Alt_NativeBreath_1' in bank['native']['replacements']['Exercise']
     optional.update(alternate_slots)
     assert set(bank['data']['clips']) == {'newvoice_' + line for line in required | optional}
-    assert not (optional & required)
+    assert optional & required == studio_schema.load()['coverage']['optionalCoverageSlots'].keys() & required
     voice = bank['voices'][0]
     assert voice['base'] == 'VoiceFemale' and config['modId'] == 'CSV-Voice-newvoice'
     assert len(voice['previewLines']) == 6 and voice['previewLast'] == 'Injured_3'
@@ -41,6 +41,7 @@ with tempfile.TemporaryDirectory() as temporary:
         lambda c: c['bank']['data']['clips'].pop('newvoice_NativeCall_1'),
         lambda c: c['bank']['lines'].pop('NativeCall_1'),
         lambda c: c['bank']['data']['clips']['newvoice_Pain_1'].update(duration=float('nan')),
+        lambda c: c['bank']['data']['clips']['newvoice_Pain_1'].update(duration=5001),
         lambda c: c['assets']['CSV_newvoice_NativeCall_1'].update(source='missing.mp3'),
         lambda c: c['bank']['voices'].append(copy.deepcopy(c['bank']['voices'][0])),
         lambda c: c['bank']['voices'][0].update(previewLines=[]),

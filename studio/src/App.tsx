@@ -1,10 +1,9 @@
 import { Dialog as LoadingDialog } from "@base-ui/react/dialog";
 import languageNames from "@studio-languages";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   Check,
-  Copy,
   Info,
   Save,
   ChevronUp,
@@ -14,7 +13,6 @@ import {
   Headphones,
   Search,
   Upload,
-  Github,
   Download,
   Terminal,
   Mic,
@@ -23,7 +21,6 @@ import {
   AudioLines,
   FolderOpen,
   Plus,
-  Sparkles,
 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -37,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { TranscribeIcon, GenerateAudioIcon } from "./SpeechIcons";
 import { Choice, Fold, Modal, useConfirm, ActionTip, Hint } from "./controls";
 import { MicrophoneTake } from "./MicrophoneTake";
 import { AudioPlayer } from "./AudioPlayer";
@@ -47,17 +45,26 @@ import {
   CollapsiblePanel,
 } from "@/components/ui/collapsible";
 import { AudioEdit } from "./AudioEdit";
-import { balancePercent, ElevenLabsBalance, ElevenLabsHistory, ElevenLabsPreview, ElevenLabsSettings, useElevenLabsBalance } from "./ElevenLabs";
+import { AlternateBadge, RecordingBrief, RecordingSelection } from "./RecordingDetail";
+import { AudioTagGuide } from "./AudioTagGuide";
+import { remainingBalancePercent, ElevenLabsBalance, ElevenLabsPreview, ElevenLabsSettings, useElevenLabsBalance } from "./ElevenLabs";
+import { GeminiPanel, GeminiSettings, useGeminiUsage } from "./Gemini";
+import { ProviderHistory } from "./ProviderHistory";
 import { action, request, setRevision, RequestError } from "./api";
+import { DialogueDrafts, readDrafts, type DraftCache } from "./DialogueDrafts";
 import {
   emptyFilters,
   filterRows,
+  recordingFilterState,
+  recordingTraits,
   coverageLabel,
   label,
   groupRows,
+  isAlternate,
   stateNames,
 } from "./model";
 import type { Project, Row, Schema, State } from "./model";
+import { applySavedReview, selectionAfterReview } from "./recordingReview";
 
 import { ToastProvider, toastManager } from "@/components/ui/toast";
 import {
@@ -95,7 +102,7 @@ export default function App() {
     [filters, setFilters] = useState(emptyFilters),
     [page, setPage] = useState(0);
   const [modal, setModal] = useState<
-      "project" | "prepare" | "import" | "create" | "open-pack" | "microphone" | "elevenlabs" | "generate" | "generation-history" | null
+      "project" | "prepare" | "import" | "create" | "open-pack" | "microphone" | "elevenlabs" | "generate" | "generation-history" | "tag-guide" | "gemini-settings" | "gemini-history" | null
     >(null),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("Opening project…"),
@@ -104,6 +111,8 @@ export default function App() {
     setRightsConfirmed(false);
   }, [modal, project?.projectKey]);
   const [text, setText] = useState("");
+  const [transcribingTakes, setTranscribingTakes] = useState<string[]>([]);
+  const transcriptionContext = useRef<object>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [report, setReport] = useState<Record<string, unknown> | null>(null),
     [projects, setProjects] = useState<{ key: string; name: string }[]>([]);
@@ -128,14 +137,41 @@ export default function App() {
   const importRef = useRef<HTMLInputElement>(null),
     batchRef = useRef<HTMLInputElement>(null),
     listRef = useRef<HTMLDivElement>(null);
+  const scrollToSlot = useRef<string | null>(null);
   const selectedRow = project?.rows.find((r) => r.slot === selected);
   const textDirty = !!selectedRow && text !== (selectedRow.speechScript ?? selectedRow.text);
+  const transcriptionKey = JSON.stringify([project?.projectKey ?? "current", selected]);
+  const isTranscribing = transcribingTakes.includes(transcriptionKey);
+  useLayoutEffect(() => {
+    transcriptionContext.current = {};
+    return () => { transcriptionContext.current = null; };
+  }, [transcriptionKey, editReset, text, audioDirty, busy]);
+  const draftCacheKey = project ? `studio.gemini.drafts:${JSON.stringify([project.projectKey, project.voice, project.language])}` : "";
+  const storedDrafts = useMemo(() => (draftCacheKey ? readDrafts(draftCacheKey) : {}), [draftCacheKey]);
+  const [draftCaches, setDraftCaches] = useState<Record<string, DraftCache>>({});
+  const draftsRef = useRef<Record<string, DraftCache>>({});
+  const draftCache = draftCaches[draftCacheKey] ?? storedDrafts;
+  function rememberDrafts(slot: string, options: string[]) {
+    const next = { ...(draftsRef.current[draftCacheKey] ?? storedDrafts), [slot]: options };
+    draftsRef.current[draftCacheKey] = next;
+    setDraftCaches((current) => ({ ...current, [draftCacheKey]: next }));
+    try { localStorage.setItem(draftCacheKey, JSON.stringify(next)); } catch { /* Keep drafts in memory. */ }
+  }
   const dialogue = selectedRow?.category === "Dialogue";
   const captionIssue = dialogue ? validateCaptionTags(text, selectedRow.elevenLabsTags) : undefined;
   const dirty = textDirty || audioDirty;
+  const geminiConnected = !!project?.dialogueGeneration;
+  const [geminiUsageRefresh, setGeminiUsageRefresh] = useState(0);
+  const geminiUsage = useGeminiUsage(geminiConnected, geminiUsageRefresh);
+  const refreshGeminiUsage = () => setGeminiUsageRefresh((count) => count + 1);
+  function onGeminiConnected(model?: string) {
+    setProject((current) => current && { ...current, dialogueGeneration: true, dialogueModel: model ?? current.dialogueModel });
+    refreshGeminiUsage();
+  }
   const elevenLabsConnected = !!project?.elevenLabs?.configured;
   const elevenLabsEnabled = elevenLabsConnected && !!project?.elevenLabs?.voice;
-  const elevenLabsBalance = useElevenLabsBalance(elevenLabsConnected, creditsRefresh);
+  const canGenerateAudio = elevenLabsEnabled && (dialogue || !!selectedRow?.nativePreview);
+  const { balance: elevenLabsBalance, error: balanceError } = useElevenLabsBalance(elevenLabsConnected, creditsRefresh);
   const missingBySlot = useMemo(() => {
     const bySlot = new Map<string, string[]>();
     for (const [group, slots] of Object.entries(
@@ -165,22 +201,7 @@ export default function App() {
   const pageCount = Math.max(1, Math.ceil(grouped.length / PAGE)),
     currentPage = Math.min(page, pageCount - 1);
   const visible = grouped.slice(currentPage * PAGE, (currentPage + 1) * PAGE);
-  const situationRows = filtered.filter(
-    (r) => r.context === selectedRow?.context,
-  );
-  const deliveries = Array.from(new Set(situationRows.map((r) => r.delivery)));
-  const actingOptions = Array.from(
-    new Set(
-      situationRows
-        .filter((row) => row.delivery === selectedRow?.delivery)
-        .map((row) => row.acting || "unspecified"),
-    ),
-  );
-  const variations = situationRows.filter(
-    (r) =>
-      r.delivery === selectedRow?.delivery &&
-      (r.acting || "unspecified") === (selectedRow?.acting || "unspecified"),
-  );
+  const situationRows = grouped.find((group) => group.context === selectedRow?.context)?.variations ?? [];
   useEffect(() => {
     if (selectedRow)
       setExpanded((v) => ({ ...v, [selectedRow.context]: true }));
@@ -196,7 +217,7 @@ export default function App() {
   const traits = useMemo(
     () =>
       Array.from(
-        new Set(project?.rows.flatMap((row) => row.traits ?? [])),
+        new Set(project?.rows.flatMap(recordingTraits)),
       ).sort(),
     [project],
   );
@@ -229,19 +250,21 @@ export default function App() {
     return {
       family: values("family", (row) => [row.family]),
       state: values("state", (row) =>
-        requiredSlots.has(row.slot) ? [row.state, "required"] : [row.state],
+        requiredSlots.has(row.slot)
+          ? [recordingFilterState(row), "required"]
+          : [recordingFilterState(row)],
       ),
       group: values("group", (row) => [row.context]),
       category: values("category", (row) => [row.category]),
       delivery: values("delivery", (row) => [row.delivery]),
       acting: values("acting", (row) => [row.acting || "unspecified"]),
-      trait: values("trait", (row) => row.traits ?? []),
+      trait: values("trait", recordingTraits),
     };
   }, [project, filters, requiredSlots]);
   function stop() {
     setPlayerEpoch((v) => v + 1);
   }
-  async function choose(row: Row) {
+  async function choose(row: Row, reveal = false) {
     if (busy) return;
     if (
       dirty &&
@@ -249,6 +272,7 @@ export default function App() {
     )
       return;
     stop();
+    scrollToSlot.current = reveal ? row.slot : null;
     setSelected(row.slot);
     setText(row.speechScript ?? row.text);
     const groupIndex = grouped.findIndex(
@@ -278,7 +302,7 @@ export default function App() {
       ),
     );
     const row =
-      p.rows.find((r) => r.slot === (prefer || selected)) || p.rows[0];
+      p.rows.find((r) => r.slot === (prefer || selected)) ?? groupRows(p.rows)[0]?.variations[0];
     if (row) {
       setSelected(row.slot);
       setText(row.speechScript ?? row.text);
@@ -373,8 +397,12 @@ export default function App() {
       ?.scrollTo?.(0, 0);
   }, [currentPage, filters]);
   useEffect(() => {
+    if (scrollToSlot.current !== selected) return;
     const frame = requestAnimationFrame(() => {
-      listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView?.({ block: "nearest" });
+      const row = listRef.current?.querySelector('[aria-current="true"]');
+      if (!row || scrollToSlot.current !== selected) return;
+      scrollToSlot.current = null;
+      row.scrollIntoView?.({ block: "nearest" });
     });
     return () => cancelAnimationFrame(frame);
   }, [selected, currentPage, expanded]);
@@ -386,12 +414,13 @@ export default function App() {
     )
       return;
     const matches = filterRows(project?.rows || [], next, requiredSlots);
+    const matchGroups = groupRows(matches);
     setFilters(next);
-    const row =
-      matches.find((r) => r.slot === (preferredSlot ?? selected)) || matches[0];
+    const row = matches.find((r) => r.slot === (preferredSlot ?? selected))
+      ?? matchGroups[0]?.variations[0];
     const groupIndex =
       preferredSlot && row
-        ? groupRows(matches).findIndex((group) => group.context === row.context)
+        ? matchGroups.findIndex((group) => group.context === row.context)
         : 0;
     setPage(Math.max(0, Math.floor(groupIndex / PAGE)));
     stop();
@@ -403,20 +432,49 @@ export default function App() {
     return true;
   }
   useEffect(() => {
-    if (dirty || filtered.some((r) => r.slot === selected)) return;
-    const row = filtered[0];
+    if (dirty || navigationRows.some((r) => r.slot === selected)) return;
+    const row = navigationRows[0];
     setSelected(row?.slot || "");
     setText(row?.speechScript ?? row?.text ?? "");
-  }, [filtered, selected, dirty]);
-  function updateFilter(key: keyof typeof filters, value: string) {
+  }, [navigationRows, selected, dirty]);
+  function updateFilter(key: keyof typeof filters, value: string, preferredSlot?: string) {
     void changeFilters({
       ...filters,
       [key]: value,
       ...(key === "family" || key === "trait" ? { group: "" } : {}),
-    });
+    }, preferredSlot);
   }
+  async function transcribe() {
+    if (!selectedRow || busy || audioDirty || textDirty || isTranscribing) return;
+    const context = transcriptionContext.current;
+    const confirmed = await confirm(
+      "Send the current audio to ElevenLabs for transcription? Review the draft before saving it. Saving replaces any inline audio tags.",
+      "Transcribe this take?",
+      "Transcribe",
+    );
+    if (!confirmed || context !== transcriptionContext.current) return;
+
+    setTranscribingTakes((takes) => [...takes, transcriptionKey]);
+    try {
+      const { result } = await request<{ result: { text: string } }>(
+        "/elevenlabs/transcribe", { project: project?.projectKey ?? "current", slot: selectedRow.slot }, {}, true, false,
+      );
+      if (context !== transcriptionContext.current) return;
+      setText(result.text);
+      toastManager.add({ title: result.text === text ? "Transcript matches the current caption" : "Transcript ready to review" });
+    } catch (error) {
+      toastManager.add({
+        title: "Could not transcribe take",
+        description: error instanceof Error ? error.message : String(error),
+        type: "error",
+      });
+    } finally {
+      setTranscribingTakes((takes) => takes.filter((key) => key !== transcriptionKey));
+    }
+  }
+
   async function save(state: Exclude<State, "missing">, next = false) {
-    if (!selectedRow || captionIssue?.error) return;
+    if (!project || !selectedRow || captionIssue?.error) return;
     await work(async () => {
       const result = await action("/save", {
         slot: selectedRow.slot,
@@ -425,62 +483,20 @@ export default function App() {
         state,
       });
       const saved = result?.row as Pick<typeof selectedRow, "slot" | "text" | "speechScript" | "direction" | "state"> | undefined;
-      const index = navigationRows.findIndex(
-        (r) => r.slot === selectedRow.slot,
-      );
-      const updatedRows = (project?.rows ?? []).map((row) =>
-        row.slot === selectedRow.slot ? { ...row, ...(saved ?? { state, text }) } : row);
-      const approvedSlots = new Set(updatedRows.filter((row) => row.state === "approved").map((row) => row.slot));
-      const missingAfterSave = project?.buildCoverage?.pools
-        ? new Set(Object.values(project.buildCoverage.pools).filter((slots) => !slots.some((slot) => approvedSlots.has(slot))).flat())
-        : requiredSlots;
-      const groupsAfterSave = groupRows(filterRows(updatedRows, filters, missingAfterSave));
-      const matchesAfterSave = groupsAfterSave.flatMap((group) => group.variations);
-      const advance = next || !matchesAfterSave.some((row) => row.slot === selectedRow.slot);
-      const nextRow = advance && index >= 0
-        ? navigationRows.slice(index + 1).find((row) => matchesAfterSave.some((match) => match.slot === row.slot))
-          ?? matchesAfterSave.find((row) => row.slot !== selectedRow.slot)
-        : undefined;
-      const nextSlot = nextRow?.slot;
       stop();
-      if (!saved || saved.slot !== selectedRow.slot) {
-        await load(nextSlot || selectedRow.slot);
-      } else {
-        setProject((current) => {
-          if (!current) return current;
-          const rows = current.rows.map((row) =>
-            row.slot === saved.slot ? { ...row, ...saved } : row,
-          );
-          const coverage = { ...current.coverage };
-          coverage[selectedRow.state]--;
-          coverage[saved.state]++;
-          const pools = current.buildCoverage?.pools;
-          let buildCoverage = current.buildCoverage;
-          if (pools) {
-            const approved = new Set(rows.filter((row) => row.state === "approved").map((row) => row.slot));
-            const missingSlots = Object.fromEntries(
-              Object.entries(pools).filter(([, slots]) => !slots.some((slot) => approved.has(slot))),
-            );
-            const missing = Object.keys(missingSlots);
-            const required = Object.keys(pools).length;
-            buildCoverage = { pools, required, covered: required - missing.length, missing, missingSlots };
-          }
-          return { ...current, rows, coverage, buildCoverage };
-        });
-        setSelected(nextSlot || saved.slot);
-        const currentRow = nextRow ?? saved;
-        setText(currentRow.speechScript ?? currentRow.text);
-        setAudioDirty(false);
-        setEditReset((value) => value + 1);
-      }
-      if (nextSlot) {
-        const gi = groupsAfterSave.findIndex((g) =>
-          g.variations.some((r) => r.slot === nextSlot),
-        );
-        setPage(Math.max(0, Math.floor(gi / PAGE)));
-      }
+      const patch = applySavedReview(project, selectedRow, saved);
+      const snapshot = patch ?? await load(selectedRow.slot);
+      if (patch) setProject((current) => current && { ...current, ...patch });
+      const { row, groupIndex } = selectionAfterReview(snapshot, filters, navigationRows, selectedRow.slot, next);
+      const nextSlot = row && row.slot !== selectedRow.slot ? row.slot : undefined;
+      scrollToSlot.current = nextSlot ?? null;
+      setSelected(row?.slot ?? "");
+      setText(row?.speechScript ?? row?.text ?? "");
+      setAudioDirty(false);
+      setEditReset((value) => value + 1);
+      if (groupIndex >= 0) setPage(Math.floor(groupIndex / PAGE));
       setMessage(
-        next ? (nextSlot ? "Approved. Next recording selected." : "Approved. No matching recordings remain.") : "Changes saved.",
+        next ? (nextSlot ? "Approved. Next recording selected." : "Approved.") : "Changes saved.",
       );
     });
   }
@@ -668,7 +684,7 @@ export default function App() {
         description:
           typeof result.message === "string"
             ? result.message
-            : "Results are available in Build voice pack.",
+            : "Open Build to see the results.",
         type: "success",
       });
       await load();
@@ -742,7 +758,7 @@ export default function App() {
       : project.coverage.approved === project.rows.length);
   const hasAudio = !!selectedRow && selectedRow.state !== "missing";
   const takeCommands = {
-    approve: { value: "Approve", key: "Ctrl+Enter", disabled: busy || audioDirty || !hasAudio || selectedRow?.state === "approved", run: () => void save("approved") },
+    approve: { value: "Approve", key: "Ctrl+Enter", disabled: busy || audioDirty || !hasAudio || selectedRow?.state === "approved", run: () => void save("approved", true) },
     import: { value: "Import audio", key: "Alt+I", disabled: busy || !selectedRow, run: () => importRef.current?.click() },
     record: { value: "Record audio", key: "Alt+R", disabled: busy || !selectedRow, run: () => { stop(); setModal("microphone"); } },
     listen: { value: "Needs listening", key: "Alt+L", disabled: busy || audioDirty || !hasAudio || selectedRow?.state === "pending", run: () => void save("pending") },
@@ -759,13 +775,13 @@ export default function App() {
       value: "Previous recording",
       key: "Alt+Left",
       disabled: busy || position <= 0,
-      run: () => void choose(navigationRows[position - 1]),
+      run: () => void choose(navigationRows[position - 1], true),
     },
     {
       value: "Next recording",
       key: "Alt+Right",
       disabled: busy || position < 0 || position >= navigationRows.length - 1,
-      run: () => void choose(navigationRows[position + 1]),
+      run: () => void choose(navigationRows[position + 1], true),
     },
     takeCommands.approve,
     {
@@ -878,11 +894,13 @@ export default function App() {
               <span className="text-xl leading-none font-thin text-muted-foreground max-[600px]:text-sm">STUDIO</span>
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 max-[600px]:gap-1 max-[400px]:max-w-[50%]">
-              {elevenLabsConnected && <ElevenLabsBalance balance={elevenLabsBalance} />}
+              {elevenLabsConnected && elevenLabsBalance && <ElevenLabsBalance balance={elevenLabsBalance} />}
               <Button size="sm" disabled={busy || !project} onClick={() => openModal("prepare")}>
-                Build voice pack
+                Build
               </Button>
-              <PopoverRoot open={headerMenuOpen} onOpenChange={setHeaderMenuOpen}>
+              <PopoverRoot open={headerMenuOpen} onOpenChange={(open) => {
+                setHeaderMenuOpen(open);
+              }}>
                 <PopoverTrigger render={<Button size="icon" variant="ghost" aria-label="Studio menu" disabled={busy} />}>
                   <Menu aria-hidden="true" />
                 </PopoverTrigger>
@@ -932,22 +950,29 @@ export default function App() {
                       {elevenLabsBalance ? (
                         <>
                           <div className="flex items-center gap-2">
-                            <Progress value={balancePercent(elevenLabsBalance)} aria-label="ElevenLabs credits used" />
-                            <span className="shrink-0 text-xs tabular-nums">{Math.round(balancePercent(elevenLabsBalance))}%</span>
+                            <Progress value={remainingBalancePercent(elevenLabsBalance)} aria-label="ElevenLabs credits remaining" />
+                            <span className="shrink-0 text-xs tabular-nums">{Math.round(remainingBalancePercent(elevenLabsBalance))}%</span>
                           </div>
                           <dl className="grid grid-cols-2 gap-1 text-xs tabular-nums">
                             <dt className="text-muted-foreground">Used</dt><dd className="text-right">{elevenLabsBalance.used.toLocaleString("en-US")}</dd>
                             <dt className="text-muted-foreground">Remaining</dt><dd className="text-right">{elevenLabsBalance.remaining.toLocaleString("en-US")}</dd>
                           </dl>
                         </>
-                      ) : <p className="text-xs text-muted-foreground">{elevenLabsBalance === null ? "Balance unavailable" : "Checking credits…"}</p>}
+                      ) : (
+                        <div className="text-xs text-muted-foreground">
+                          <p role="status">{balanceError || "Checking credits…"}</p>
+                          {balanceError && <Button size="xs" variant="link" className="px-0"
+                            onClick={() => setCreditsRefresh((count) => count + 1)}
+                            aria-label="Retry ElevenLabs balance">Retry</Button>}
+                        </div>
+                      )}
                       <div className="flex flex-wrap items-center justify-between gap-x-2">
                         <Button size="xs" variant="link" className="px-0" onClick={() => {
                           setHeaderMenuOpen(false); stop(); setModal("elevenlabs");
                         }} aria-label="ElevenLabs settings">Settings</Button>
                         <Button size="xs" variant="link" className="px-0" onClick={() => {
                           setHeaderMenuOpen(false); stop(); setModal("generation-history");
-                        }}>Generation history</Button>
+                        }}>History</Button>
                       </div>
                     </section>
                   ) : (
@@ -957,10 +982,17 @@ export default function App() {
                       <AudioLines aria-hidden="true" /> ElevenLabs settings
                     </Button>
                   ))}
+                  {project && (
+                    <GeminiPanel configured={geminiConnected} usage={geminiUsage} onSettings={() => {
+                      setHeaderMenuOpen(false); stop(); setModal("gemini-settings");
+                    }} onHistory={() => {
+                      setHeaderMenuOpen(false); stop(); setModal("gemini-history");
+                    }} />
+                  )}
                   {project && !elevenLabsConnected && (
                     <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => {
                       setHeaderMenuOpen(false); stop(); setModal("generation-history");
-                    }}>Generation history</Button>
+                    }}>History</Button>
                   )}
                   <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => {
                     setHeaderMenuOpen(false); setPackFolder(""); void openModal("open-pack");
@@ -1021,6 +1053,12 @@ export default function App() {
                           label: `${name} (${availableFilters.state.get(value) ?? 0})`,
                           disabled: !availableFilters.state.has(value),
                         })),
+                        ...(availableFilters.state.has("optional-missing")
+                          ? [{
+                              value: "optional-missing",
+                              label: `Optional missing (${availableFilters.state.get("optional-missing")})`,
+                            }]
+                          : []),
                         ...(project?.buildCoverage?.missingSlots &&
                         !project.trial
                           ? [
@@ -1151,7 +1189,7 @@ export default function App() {
                           ]}
                         />
                       )}
-                      <Label className="grid min-w-0 grid-cols-[auto_1fr] items-center gap-2 profanity-control">
+                      <Label className="profanity-control">
                         <Checkbox checked={Boolean(filters.profanity)} onCheckedChange={(checked) => updateFilter("profanity", checked ? "yes" : "")} />
                         Profanity only
                       </Label>
@@ -1285,6 +1323,7 @@ export default function App() {
                             <span>
                               {r.text || r.reference || r.slot}
                               <small>
+                                {isAlternate(r) && <AlternateBadge />}
                                 {r.slot} / {label(r.delivery)}
                               </small>
                             </span>
@@ -1338,134 +1377,16 @@ export default function App() {
             >
               {selectedRow ? (
                 <>
-                  <div className="mb-6.5 border-b pb-5.5 max-[800px]:mb-5">
-                    <div className="metadata-grid">
-                      <div>
-                        <span className="field-caption">Category</span>
-                        <span>{label(selectedRow.family)}</span>
-                      </div>
-                      <div>
-                        <span className="field-caption">Situation</span>
-                        <span>{label(selectedRow.context)}</span>
-                      </div>
-                      <div>
-                        <span className="field-caption">Status</span>
-                        <Badge
-                          variant="outline"
-                          className={"review-status " + selectedRow.state}
-                        >
-                          {stateNames[selectedRow.state]}
-                        </Badge>
-                      </div>
-                      <div>
-                        <span className="field-caption">Recording type</span>
-                        <span>{selectedRow.category}</span>
-                      </div>
-                    </div>
-                    <div
-                      className={
-                        actingOptions.length > 0
-                          ? "variation-field"
-                          : "variation-field without-acting"
-                      }
-                    >
-                      <Label className="profanity-control detail-profanity flex items-center gap-2">
-                        <Checkbox
-                          checked={Boolean(selectedRow.profanity)}
-                          disabled={busy || selectedRow.profanityLocked}
-                          onCheckedChange={(enabled) => void work(async () => {
-                            const { slot } = selectedRow;
-                            await action("/profanity", { slot, enabled });
-                            setProject((current) => current && ({
-                              ...current,
-                              rows: current.rows.map((row) => row.slot === slot ? { ...row, profanity: enabled } : row),
-                            }));
-                          })}
-                        />
-                        {selectedRow.profanityLocked ? "Contains profanity (Core)" : "Contains profanity"}
-                      </Label>
-                      <Label>Delivery</Label>
-                      <Choice
-                        name="Delivery"
-                        value={selectedRow.delivery}
-                        disabled={busy}
-                        items={deliveries.map((d) => ({
-                          value: d,
-                          label: label(d),
-                        }))}
-                        onChange={(d) => {
-                          const same = situationRows.find(
-                            (r) =>
-                              r.delivery === d && r.text === selectedRow.text,
-                          );
-                          const row =
-                            same || situationRows.find((r) => r.delivery === d);
-                          if (row) void choose(row);
-                        }}
-                      />
-                      {actingOptions.length > 0 && (
-                        <>
-                          <Label>Acting</Label>
-                          <Choice
-                            name="Acting"
-                            value={selectedRow.acting || "unspecified"}
-                            disabled={busy || actingOptions.length < 2}
-                            items={actingOptions.map((value) => ({
-                              value,
-                              label:
-                                value === "unspecified"
-                                  ? "Not specified"
-                                  : label(value),
-                            }))}
-                            onChange={(value) => {
-                              const row = situationRows.find(
-                                (r) =>
-                                  r.delivery === selectedRow.delivery &&
-                                  (r.acting || "unspecified") === value,
-                              );
-                              if (row) void choose(row);
-                            }}
-                          />
-                        </>
-                      )}
-                      <Label>Variation</Label>
-                      <div className="flex min-w-0 items-center gap-1 [&>*:first-child]:min-w-0 [&>*:first-child]:flex-1">
-                        <Choice
-                          name="Variation"
-                          value={selectedRow.slot}
-                          disabled={busy}
-                          onChange={(v) => {
-                            const r = variations.find((r) => r.slot === v);
-                            if (r) void choose(r);
-                          }}
-                          items={variations.map((r, i) => ({
-                            value: r.slot,
-                            label: `${i + 1}. ${r.slot}${r.optional ? " (optional)" : ""}`,
-                          }))}
-                        />
-                        <ActionTip text="Copy slot ID">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="shrink-0"
-                            aria-label="Copy slot ID"
-                            onClick={async () => {
-                              try {
-                                await navigator.clipboard.writeText(selectedRow.slot);
-                                toastManager.add({ title: "Slot ID copied" });
-                              } catch {
-                                toastManager.add({ title: "Could not copy slot ID", type: "error" });
-                              }
-                            }}
-                          >
-                            <Copy />
-                          </Button>
-                        </ActionTip>
-                      </div>
-                    </div>
-
-                  </div>
+                  <RecordingSelection selected={selectedRow} rows={situationRows} schema={schema} busy={busy}
+                    onChoose={(row) => void choose(row)}
+                    onProfanityChange={(enabled) => void work(async () => {
+                      const { slot } = selectedRow;
+                      await action("/profanity", { slot, enabled });
+                      setProject((current) => current && ({
+                        ...current,
+                        rows: current.rows.map((row) => row.slot === slot ? { ...row, profanity: enabled } : row),
+                      }));
+                    })} />
                   {filters.state === "required" && (
                     <Alert
                       variant="info"
@@ -1492,29 +1413,58 @@ export default function App() {
                     </Alert>
                   )}
                   <div className="caption-editor flex items-center justify-start gap-2 max-[600px]:flex-col max-[600px]:items-start">
-                    <CaptionEditor
-                      unstyled
-                      highlight={dialogue}
-                      aria-invalid={captionIssue?.error || undefined}
-                      aria-describedby={captionIssue ? "caption-tag-feedback" : undefined}
-                      aria-label="Spoken text / caption"
-                      dir="auto"
-                      data-editing={textDirty || undefined}
-                      value={text}
-                      maxLength={selectedRow.category === "Dialogue" ? (project?.limits?.speechScript ?? 10_000) : (project?.limits?.caption ?? 240)}
-                      aria-description={selectedRow.category === "Dialogue" ? "Use square brackets anywhere to add an audio tag. Tags stay out of the in-game caption." : undefined}
-                      onChange={(e) => setText(e.target.value)}
-                      disabled={busy}
-                    />
+                    <div className="relative w-full min-w-0 flex-1 max-[600px]:flex-none" aria-busy={isTranscribing}>
+                      <div className={isTranscribing ? "invisible" : undefined}>
+                        <CaptionEditor
+                          unstyled
+                          highlight={dialogue}
+                          aria-invalid={captionIssue?.error || undefined}
+                          aria-describedby={[textDirty && "caption-unsaved", captionIssue && "caption-tag-feedback"].filter(Boolean).join(" ") || undefined}
+                          aria-label="Spoken text / caption"
+                          dir="auto"
+                          data-editing={textDirty || undefined}
+                          value={text}
+                          maxLength={selectedRow.category === "Dialogue" ? (project?.limits?.speechScript ?? 10_000) : (project?.limits?.caption ?? 240)}
+                          aria-description={selectedRow.category === "Dialogue" ? "Use square brackets anywhere to add an audio tag. Tags stay out of the in-game caption." : undefined}
+                          onChange={(e) => setText(e.target.value)}
+                          disabled={busy || isTranscribing}
+                        />
+                      </div>
+                      {isTranscribing && (
+                        <div className="absolute inset-0 rounded-none border bg-muted motion-safe:animate-pulse" aria-hidden="true" />
+                      )}
+                    </div>
+                    {isTranscribing && <span className="sr-only" role="status">Transcribing audio…</span>}
+                    {dialogue && !textDirty && (
+                      <div className="flex shrink-0 self-stretch max-[600px]:self-start">
+                        {elevenLabsConnected && hasAudio && (
+                          <ActionTip text="Transcribe">
+                            <Button variant="ghost" className="h-auto! shrink-0 self-stretch rounded-none" aria-label="Transcribe"
+                              disabled={busy || audioDirty || isTranscribing} onClick={() => void transcribe()}>
+                              <TranscribeIcon />
+                            </Button>
+                          </ActionTip>
+                        )}
+                        <DialogueDrafts key={transcriptionKey}
+                          slot={selectedRow.slot} project={project?.projectKey ?? "current"}
+                          drafts={draftCache[selectedRow.slot] ?? []}
+                          onDrafts={rememberDrafts}
+                          configured={geminiConnected}
+                          onConnected={onGeminiConnected}
+                          onGenerated={refreshGeminiUsage}
+                          disabled={busy || audioDirty || isTranscribing}
+                          onUse={setText}
+                        />
+                      </div>
+                    )}
                     {textDirty && (
                       <div className="flex shrink-0 self-stretch max-[600px]:self-start">
                         <Button variant="ghost" disabled={busy} className="h-auto! rounded-none hover:bg-destructive hover:text-white" onClick={() => setText(selectedRow.speechScript ?? selectedRow.text)}>
                           Cancel
                         </Button>
                         <Button
-                          variant="ghost"
                           disabled={busy || audioDirty || captionIssue?.error}
-                          className="h-auto! shrink-0 self-stretch rounded-none hover:bg-primary hover:text-primary-foreground max-[600px]:self-start"
+                          className="h-auto! min-h-8 shrink-0 self-stretch rounded-none border-warning-foreground bg-warning-foreground text-background shadow-none hover:bg-warning-foreground/85 data-pressed:bg-warning-foreground/85 max-[600px]:self-start"
                           onClick={() => void save(selectedRow.state === "redo" ? "redo" : "pending")}
                         >
                           <Save aria-hidden="true" />
@@ -1523,26 +1473,20 @@ export default function App() {
                       </div>
                     )}
                   </div>
-                  {captionIssue && (
-                    <p id="caption-tag-feedback" role="status" className="-mt-5 mb-5 text-xs text-muted-foreground aria-invalid:text-destructive-foreground" aria-invalid={captionIssue.error}>
-                      {captionIssue.message}
-                    </p>
+                  {(textDirty || captionIssue) && (
+                    <div className="-mt-5 mb-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-1 text-xs">
+                      {textDirty && <p id="caption-unsaved" role="status" className="font-medium text-warning-foreground">Unsaved changes</p>}
+                      {captionIssue && (
+                        <p id="caption-tag-feedback" role="status" className="text-muted-foreground aria-invalid:text-destructive-foreground" aria-invalid={captionIssue.error}>
+                          {captionIssue.message}
+                        </p>
+                      )}
+                    </div>
                   )}
-                  <section
-                    className="recording-guidance"
-                    aria-label="Recording guidance"
-                  >
-                    <span className="field-caption">Recording guidance</span>
-                    <p>
-                      {selectedRow.guidance || "Use a natural, conversational delivery. Keep the meaning of this line."}
-                    </p>
-                    {!!selectedRow.elevenLabsTags?.length && (
-                      <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs" aria-label="Recommended tags">
-                        <span className="text-muted-foreground">Recommended tags</span>
-                        {selectedRow.elevenLabsTags.map((tag) => <span key={tag} className="font-mono font-semibold text-primary">{tag}</span>)}
-                      </div>
-                    )}
-                  </section>
+                  <RecordingBrief row={selectedRow} activeTrait={filters.trait} busy={busy}
+                    onTraitChange={(trait) => updateFilter("trait", trait, selectedRow.slot)} tagGuide={dialogue && elevenLabsEnabled && (
+                    <AudioTagGuide open={modal === "tag-guide"} onOpenChange={(open) => setModal(open ? "tag-guide" : null)} />
+                  )} />
                   <div className="recording-player-card" aria-busy={!!audioTransfer}>
                     {audioTransfer ? (
                       <div role="status" className="flex min-h-28 flex-col items-center justify-center gap-3 px-4 py-3 text-sm text-muted-foreground">
@@ -1562,7 +1506,7 @@ export default function App() {
                               aria-label="Previous recording"
                               disabled={position <= 0 || busy}
                               onClick={() =>
-                                choose(navigationRows[position - 1])
+                                choose(navigationRows[position - 1], true)
                               }
                             >
                               <ChevronLeft />
@@ -1577,7 +1521,7 @@ export default function App() {
                                 busy
                               }
                               onClick={() =>
-                                choose(navigationRows[position + 1])
+                                choose(navigationRows[position + 1], true)
                               }
                             >
                               <ChevronRight />
@@ -1635,7 +1579,7 @@ export default function App() {
                     </>}
                   </div>
                   <div
-                    className={`mt-4 grid gap-2 max-[640px]:grid-cols-1 ${elevenLabsEnabled ? "grid-cols-3" : "grid-cols-2"}`}
+                    className={`mt-4 grid gap-2 max-[640px]:grid-cols-1 ${canGenerateAudio ? "grid-cols-3" : "grid-cols-2"}`}
                     aria-label="Add a take"
                   >
                     <ActionTip text={takeCommands.import.key}>
@@ -1648,14 +1592,19 @@ export default function App() {
                         <Mic /> Record audio
                       </Button>
                     </ActionTip>
-                    {elevenLabsEnabled && (
-                      <Button size="lg" variant="outline" disabled={busy || dirty || selectedRow.category !== "Dialogue"}
-                        title={dirty ? "Save or cancel your edits before generating." : selectedRow.category !== "Dialogue" ? "Use recording or import for nonverbal takes." : undefined}
+                    {canGenerateAudio && (
+                      <Button size="lg" variant="outline" disabled={busy || dirty}
+                        title={dirty ? "Save or cancel your edits before generating." : undefined}
                         onClick={() => { stop(); setModal("generate"); }}>
-                        <Sparkles aria-hidden="true" /> Generate
+                        <GenerateAudioIcon /> Generate audio
                       </Button>
                     )}
                   </div>
+                  {elevenLabsConnected && !dialogue && !canGenerateAudio && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {selectedRow.nativePreview ? "Choose an ElevenLabs voice to generate this take." : "Record or import this nonverbal take."}
+                    </p>
+                  )}
                   <div className="review-actions" aria-label="Review this take">
                     <ActionTip text={takeCommands.listen.key}>
                       <Button size="lg" variant="outline" disabled={takeCommands.listen.disabled} onClick={takeCommands.listen.run} aria-keyshortcuts="Alt+L">
@@ -1709,7 +1658,11 @@ export default function App() {
                   />
                 }
               >
-                <Github size={14} /> GitHub
+                {/* GitHub mark from Lucide 0.577 (ISC), removed in Lucide 1.x. */}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4M9 18c-4.51 2-5-2-7-2" />
+                </svg> GitHub
               </Button>
               <Button
                 variant="link"
@@ -1761,7 +1714,7 @@ export default function App() {
                 {project?.coverage.approved || 0}/
                 {project?.rows.length.toLocaleString() || 0} approved
               </span>
-              <span>{project?.coverage.missing || 0} missing</span>
+              <span>{project?.rows.filter((row) => recordingFilterState(row) === "missing").length ?? 0} missing</span>
               <span>{project?.coverage.redo || 0} need a retake</span>
             </span>
             <span className="sr-only" role="status">
@@ -1923,14 +1876,22 @@ export default function App() {
                   >
                     <ul className="text-[11px] text-muted-foreground">
                       {project.buildCoverage.missing.map((group) => {
-                        const slot =
-                          project.buildCoverage?.missingSlots?.[group]?.[0];
+                        const candidates = project.buildCoverage?.missingSlots?.[group] ?? [];
+                        const rows = candidates.flatMap((slot) => {
+                          const row = project.rows.find((take) => take.slot === slot);
+                          return row ? [row] : [];
+                        });
+                        const take = rows.find((row) => row.state === "pending")
+                          ?? rows.find((row) => row.state === "redo") ?? rows[0];
+                        const slot = take?.slot;
+                        const action = take?.state === "pending" ? "Needs listening"
+                          : take?.state === "redo" ? "Needs a retake" : "Record or import";
                         return (
                           <li key={group}>
                             {slot ? (
                               <button
                                 type="button"
-                                className="w-full rounded-sm px-1 py-0.5 text-left hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-ring"
+                                className="flex w-full flex-wrap items-baseline justify-between gap-x-3 rounded-sm px-1 py-1 text-left hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-ring"
                                 disabled={busy}
                                 onClick={async () => {
                                   if (
@@ -1942,7 +1903,8 @@ export default function App() {
                                     setModal(null);
                                 }}
                               >
-                                {coverageLabel(group)}
+                                <span>{coverageLabel(group)}</span>
+                                <span className={take.state === "pending" ? "text-warning-foreground" : ""}>{action}</span>
                               </button>
                             ) : (
                               coverageLabel(group)
@@ -2352,7 +2314,8 @@ export default function App() {
         )}
         {modal === "generate" && project && selectedRow && (
           <ElevenLabsPreview key={project.projectKey + ":" + selectedRow.slot} project={project.projectKey ?? "current"}
-            slot={selectedRow.slot} existing={selectedRow.state !== "missing"} onClose={() => setModal(null)}
+            slot={selectedRow.slot} existing={selectedRow.state !== "missing"}
+            native={!!selectedRow.nativePreview} onClose={() => setModal(null)}
             onGenerated={() => setCreditsRefresh((value) => value + 1)}
             onAccept={async (id) => {
               setBusy(true);
@@ -2373,7 +2336,11 @@ export default function App() {
               }
             }} />
         )}
-        {modal === "generation-history" && <ElevenLabsHistory recordings={project?.rows ?? []} onClose={() => setModal(null)}
+        {modal === "gemini-settings" && (
+          <GeminiSettings configured={geminiConnected} model={project?.dialogueModel} models={project?.dialogueModels} onConnected={onGeminiConnected} onClose={() => setModal(null)} />
+        )}
+        {(modal === "generation-history" || modal === "gemini-history") && <ProviderHistory
+          key={modal} provider={modal === "gemini-history" ? "Gemini" : "ElevenLabs"} recordings={project?.rows ?? []} onClose={() => setModal(null)}
           onOpen={async (slot) => {
             if (await changeFilters(emptyFilters, slot)) setModal(null);
           }} />}

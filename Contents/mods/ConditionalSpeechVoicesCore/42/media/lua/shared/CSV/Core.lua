@@ -136,13 +136,8 @@ function V.contextLine(player,voice,group,intensity,facts)
             and (line.threat==nil or (line.threat==threat and (line.threat or s.visible~=nil and s.recentThreat~=nil))) and (line.id~='PanicEscape_1' or require('CSV/Concealment').active(s) or (facts and (s.accessibleNear or s.near or 0)>0) or (not facts and V.closeThreat(player))) and V.clip(voice,line.id) then return line end
     end
 end
+local PlaybackPacket=require 'CSV/PlaybackPacket'
 function V.validPacket(p)
-    if type(p)~='table' or type(p.voice)~='string' then return false end
-    local bank=pack.voiceBanks[p.voice]
-    return bank~=nil and p.version==1 and (p.pack==nil and p.packRevision==nil or p.pack==bank.id and p.packRevision==bank.revision) and V.clip(p.voice,p.line)~=nil
-        and V.finite(p.actor) and p.actor>=0 and p.actor%1==0
-        and V.finite(p.seq) and p.seq>=1 and p.seq<2147483647 and p.seq%1==0
-        and V.finite(p.radius) and p.radius>0 and p.radius<=V.config.maxDistance
-        and V.finite(p.pitch) and p.pitch>=-100 and p.pitch<=100
+    return PlaybackPacket.valid(V,p)
 end
 return V

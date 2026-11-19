@@ -15,6 +15,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, HTTPRedirectHandler, build_opener
 
+import studio_credentials as credentials
+from studio_credentials import valid_key
 import recording_guidance
 import studio_schema
 import voice_project as project
@@ -28,6 +30,10 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 
+class ProviderUnavailable(ValueError):
+    """A temporary failure reaching the provider."""
+
+
 def provider_request(key, path, payload=None):
     if not key:
         raise ValueError('Connect an ElevenLabs API key first.')
@@ -36,8 +42,17 @@ def provider_request(key, path, payload=None):
     request = Request(API + path, data=body, headers={
         'xi-api-key': key, 'Content-Type': 'application/json',
     })
+    if not audio_response and payload is None:
+        try:
+            return read_provider_response(request, 8)
+        except ProviderUnavailable:
+            return read_provider_response(request, 12)
+    return read_provider_response(request, 45 if audio_response else 8, audio_response)
+
+
+def read_provider_response(request, timeout, audio_response=False):
     try:
-        with build_opener(NoRedirect()).open(request, timeout=45 if audio_response else 6) as response:
+        with build_opener(NoRedirect()).open(request, timeout=timeout) as response:
             content = response.read(project.MAX_AUDIO + 1)
             if len(content) > project.MAX_AUDIO:
                 raise ValueError('ElevenLabs returned a response larger than Studio can accept.')
@@ -50,19 +65,61 @@ def provider_request(key, path, payload=None):
                 return content, cost, request_id[:160] or None
             return json.loads(content)
     except HTTPError as error:
+        if audio_response and error.code == 400:
+            # Expose the provider's error code without echoing request contents.
+            reason = ''
+            try:
+                body = json.loads(error.read(8192))
+                detail = body.get('detail')
+                code = detail.get('status') if isinstance(detail, dict) else None
+                if isinstance(code, str) and re.fullmatch(r'[a-z][a-z_]{1,63}', code):
+                    reason = f' ({code})'
+            except (AttributeError, ValueError, OSError):
+                pass
+            raise ValueError(f'ElevenLabs rejected the audio request (HTTP 400){reason}.') from None
         messages = {
             401: 'ElevenLabs rejected the API key.',
             403: 'The ElevenLabs API key or plan does not allow this action.',
             404: 'This voice or model is unavailable to your ElevenLabs account.',
-            422: 'ElevenLabs could not use this voice, language, or line.',
+            422: 'ElevenLabs rejected the audio prompt or generation settings.',
             429: 'ElevenLabs is limiting requests. Check your credits and try again.',
         }
+        if error.code in (500, 502, 503, 504):
+            message = f'ElevenLabs returned a temporary error (HTTP {error.code}).'
+            if audio_response:
+                message += ' Check your usage before generating again.'
+            raise ProviderUnavailable(message) from None
         raise ValueError(messages.get(error.code, f'ElevenLabs request failed (HTTP {error.code}).')) from None
-    except (URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError):
-        message = 'ElevenLabs could not be reached.'
+    except (UnicodeError, json.JSONDecodeError):
+        raise ValueError('ElevenLabs returned an unreadable response.') from None
+    except (URLError, TimeoutError, OSError) as error:
+        reason = error.reason if isinstance(error, URLError) else error
+        message = 'ElevenLabs did not respond in time.' if isinstance(reason, TimeoutError) else 'Could not connect to ElevenLabs.'
         if audio_response:
             message += ' Check your usage before generating again.'
-        raise ValueError(message) from None
+        raise ProviderUnavailable(message) from None
+
+
+def transcribe(key, audio, language):
+    if not key:
+        raise ValueError('Connect an ElevenLabs API key first.')
+    boundary = 'studio-' + secrets.token_hex(16)
+    fields = {'model_id': 'scribe_v3', 'tag_audio_events': 'false'}
+    if language:
+        fields['language_code'] = language
+    fields_body = ''.join(
+        f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'
+        for name, value in fields.items())
+    file_header = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="take.mp3"\r\n'
+                   'Content-Type: audio/mpeg\r\n\r\n')
+    body = (fields_body + file_header).encode() + audio + f'\r\n--{boundary}--\r\n'.encode()
+    response = read_provider_response(Request(API + '/v1/speech-to-text', data=body, headers={
+        'xi-api-key': key, 'Content-Type': 'multipart/form-data; boundary=' + boundary,
+    }), 60)
+    text = response.get('text') if isinstance(response, dict) else None
+    if not isinstance(text, str) or not text.strip():
+        raise ValueError('No speech was recognized in this take.')
+    return {'text': text.strip()}
 
 
 def voice_identifier(value):
@@ -78,38 +135,12 @@ def credits(key):
 
 
 KEY_FIELD = 'ELEVENLABS_API_KEY'
-KEY_LINE = re.compile(r'^\s*(?:export\s+)?ELEVENLABS_API_KEY\s*=\s*(.*?)\s*$')
-
-
-def valid_key(value):
-    return isinstance(value, str) and bool(re.fullmatch(r'[A-Za-z0-9_-]{16,256}', value))
-
-
 def saved_key(path):
-    if not path.is_file() or path.is_symlink():
-        return ''
-    for line in reversed(path.read_text(encoding='utf-8-sig').splitlines()):
-        match = KEY_LINE.fullmatch(line)
-        if match:
-            value = match[1].strip("'\"")
-            return value if valid_key(value) else ''
-    return ''
+    return credentials.saved_key(path, KEY_FIELD)
 
 
 def save_key(path, key):
-    if path.is_symlink():
-        raise ValueError('Studio cannot save a key to a linked .env.local file.')
-    existing = path.read_text(encoding='utf-8-sig').splitlines() if path.exists() else []
-    lines = [line for line in existing if not KEY_LINE.fullmatch(line)]
-    temporary = None
-    try:
-        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent, delete=False) as handle:
-            temporary = Path(handle.name)
-            handle.write('\n'.join([*lines, f'{KEY_FIELD}={key}']) + '\n')
-        temporary.replace(path)
-    finally:
-        if temporary:
-            temporary.unlink(missing_ok=True)
+    credentials.save_key(path, KEY_FIELD, key)
 
 
 def language_code(value):
@@ -191,10 +222,25 @@ def voices(key, token=None, search=''):
     }
 
 
-def prompt(config, slot):
+def prompt(config, slot, native_script=None):
     definition = studio_schema.entry(slot)
     if definition['category'] != 'Dialogue':
-        raise ValueError('Use Record audio or Import audio for this nonverbal take.')
+        group = definition['group']
+        script = recording_guidance.NATIVE_PREVIEW_SCRIPTS.get(group)
+        if not script:
+            raise ValueError('Use Record audio or Import audio for this nonverbal take.')
+        if native_script is not None:
+            if not isinstance(native_script, str) or len(native_script) > project.MAX_SPEECH_SCRIPT:
+                raise ValueError('Enter a reaction script within the script length limit.')
+            script = unicodedata.normalize('NFC', native_script).strip()
+            spoken = project.strip_audio_tags(script)
+            if not any(char.isalpha() for char in spoken):
+                raise ValueError('Add a short vocal sound outside the brackets, such as [gasps] Ah!')
+            if re.search(r'[<>/]', unicodedata.normalize('NFKC', script)):
+                raise ValueError('Use audio tags and plain text in the reaction script.')
+        return {'model_id': MODEL, 'text': script}
+    if native_script is not None:
+        raise ValueError('Edit dialogue tags in the recording caption.')
     language = language_code(config['bank']['language'])
     if not language:
         raise ValueError('This project needs a two-letter ElevenLabs language code.')
@@ -250,7 +296,7 @@ class StudioSpeech:
             entry['cost'] / entry['characters']
             for entry in self.history(manifest)
             if entry.get('voice') == voice and entry.get('model') == payload['model_id']
-            and entry.get('language') == payload['language_code'] and entry.get('status') == 'generated'
+            and entry.get('language') == payload.get('language_code') and entry.get('status') == 'generated'
             and isinstance(entry.get('cost'), int) and entry['cost'] > 0
             and isinstance(entry.get('characters'), int) and entry['characters'] > 0
         ][:10]
@@ -297,31 +343,33 @@ class StudioSpeech:
         self.preview = None
         return result
 
-    def describe(self, manifest, slot):
+    def describe(self, manifest, slot, native_script=None):
+        if not isinstance(slot, str):
+            raise ValueError('Unknown recording slot.')
         config = project.read(manifest)
         studio_schema.validate(config)
         if slot not in project.slots(config):
             raise ValueError('Unknown recording slot.')
         voice = config.get('authoring', {}).get('elevenLabsVoice', '')
-        if not self.key or not voice_identifier(voice):
+        if not self.key:
+            raise ValueError('Connect an ElevenLabs API key first.')
+        payload = prompt(config, slot, native_script)
+        if not voice_identifier(voice):
             raise ValueError('Choose an ElevenLabs voice in this project first.')
-        payload = prompt(config, slot)
         return voice, payload
 
-    def generate(self, manifest, slot, key):
-        if not isinstance(slot, str):
-            raise ValueError('Unknown recording slot.')
+    def generate(self, manifest, slot, key, native_script=None):
         if self.preview and not self.preview['future'].done():
             raise ValueError('An ElevenLabs preview is already generating.')
-        voice, payload = self.describe(manifest, slot)
+        voice, payload = self.describe(manifest, slot, native_script)
         config = project.read(manifest)
         future = Future()
         entry = self.preview = dict(id=secrets.token_urlsafe(24), future=future, manifest=manifest,
-                                    project=key, slot=slot, voice=voice, payload=payload,
+                                    project=key, slot=slot, voice=voice, payload=payload, native_script=native_script,
                                     recording=project.fingerprint(config, slot, manifest.parent))
         api_key = self.key
-        log = {'id': entry['id'], 'slot': slot, 'voice': voice, 'model': MODEL,
-               'language': payload['language_code'], 'characters': len(payload['text']),
+        log = {'id': entry['id'], 'slot': slot, 'voice': voice, 'model': payload['model_id'],
+               'language': payload.get('language_code'), 'characters': len(payload['text']),
                'estimate': self.estimate(manifest, voice, payload)[0], 'time': datetime.now(timezone.utc).isoformat()}
         try:
             self.record_request(manifest, dict(log, status='submitted'))
@@ -364,7 +412,7 @@ class StudioSpeech:
         entry = self.candidate(manifest, key, identifier)
         if not entry['future'].done() or entry['slot'] != slot:
             raise ValueError('Select the recording this preview was generated for.')
-        voice, payload = self.describe(manifest, slot)
+        voice, payload = self.describe(manifest, slot, entry['native_script'])
         config = project.read(manifest)
         if (voice, payload) != (entry['voice'], entry['payload']) or (
             project.fingerprint(config, slot, manifest.parent) != entry['recording']

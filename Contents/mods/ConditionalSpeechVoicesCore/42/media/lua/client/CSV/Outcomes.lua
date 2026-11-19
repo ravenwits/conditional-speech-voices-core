@@ -20,7 +20,7 @@ function O.snapshot(kind,obj,p)
   return {open=call(window,'isOpen'),destroyed=call(window,'isDestroyed')}
  end
  if kind=='window' then return {open=call(obj,'IsOpen'),locked=call(obj,'isLocked')==true or call(obj,'isPermaLocked')==true,blocked=call(obj,'isBarricaded')==true,destroyed=call(obj,'isDestroyed')} end
- if kind=='routine' then return {} end
+ if kind=='routine' or kind=='shelter_thump' then return {} end
  if kind=='trait' then return require('CSV/TraitReactions').snapshot(p) end
  if kind=='darkness' then return require('CSV/Darkness').snapshot(p) end
  if kind=='vehicle_combat' then return {occupied=call(p,'getVehicle')==obj} end
@@ -51,20 +51,24 @@ function O.queue(e,group)
  if e.consumed or e.queued then return false end
  local p=e.player;local s=O.players[p] or {last={}};O.players[p]=s
  local now=V.now();local gap=group=='FuelLow' and 300000 or group=='WeaponBroken' and 10000 or 45000
- if not require('CSV/VehicleRules').groups[group] and s.last[group] and now-s.last[group]<gap then return false end
+ if group~='ShelterThump' and not require('CSV/VehicleRules').groups[group] and s.last[group] and now-s.last[group]<gap then return false end
  for i=#O.pending,1,-1 do
   local q=O.pending[i]
   if q.player==p and q.group==group then
    if now>q.expires or not O.valid(q) then table.remove(O.pending,i) else return false end
   end
  end
- e.group=group;e.queued=now;e.expires=now+(group=='WeaponBroken' and 5000 or R.urgent(group) and 8000 or 20000);O.pending[#O.pending+1]=e
+ e.group=group;e.queued=now;e.expires=now+(group=='ShelterThump' and 3000 or group=='WeaponBroken' and 5000 or R.urgent(group) and 8000 or 20000);O.pending[#O.pending+1]=e
  require('CSV/ProductionReport').observe('outcome_queued',{outcomeKind=e.kind,outcomeGroup=group,outcomeNativeSound=e.nativeSound})
  return true
 end
 function O.valid(e)
  if e.consumed or e.cancelled then return false end
  local p=e.player;if not eligible(p) then return false end
+ if e.kind=='shelter_thump' then
+  local impact=require 'CSV/ShelterThump'
+  return impact.near(p,e.x,e.y,e.z,e.north,impact.square)
+ end
  if e.kind=='routine' and e.actionObject then
   local q=ISTimedActionQueue and ISTimedActionQueue.queues and ISTimedActionQueue.queues[p]
   return q and q.current==e.actionObject
@@ -182,6 +186,9 @@ function O.hook(path,name,kind,key)
    if kind=='car_window_open' and self.open~=true then return end
    local obj=kind=='start' and call(self.character,'getVehicle') or self[key]
    self._csvOutcome=O.begin(kind,self.character,obj)
+   if kind=='disinfect' and self._csvOutcome then
+    self._csvOutcome.selfTreatment=self.otherPlayer==self.character
+   end
   end)
   return start(self,...)
  end)

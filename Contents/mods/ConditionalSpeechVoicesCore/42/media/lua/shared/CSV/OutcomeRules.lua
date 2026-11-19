@@ -1,13 +1,15 @@
 local R={groups={Darkness='Explore',WeaponBroken='LowAmmo',JamCleared='GunJammed',WeaponReady='LowAmmo',FuelLow='VehicleDamage',BatteryDead='VehicleDamage',EngineFailed='VehicleDamage',BandageDone='Injured',DisinfectDone='Pain',DoorLocked='Explore',DoorBlocked='Explore'}}
 for g,parent in pairs(require('CSV/TraitSpeechRules').groups)do R.groups[g]=parent end
 for g,parent in pairs(require('CSV/VehicleRules').groups)do R.groups[g]=parent end
+R.groups.ShelterThump='Threat'
 R.groups.WindowLocked='Explore'
 R.groups.WindowBarricaded='Explore'
 R.groups.CarWindowOpened='VehicleDamage'
 R.groups.CarWindowBroken='VehicleDamage'
 R.routines={GeneratorStarted=true,GeneratorRepaired=true,CampfireLit=true,SawLogsDone=true,ClothingPatched=true,ClothingSewn=true,SmokeFinished=true,BookReading=true,MealPrepared=true}
+for group in pairs(require('CSV/TraitSpeechRules').specialistRoutines)do R.routines[group]=true end
 for group in pairs(R.routines)do R.groups[group]='Explore' end
-function R.urgent(g)return g=='WeaponBroken' or require('CSV/VehicleRules').urgent[g]==true end
+function R.urgent(g)return g=='WeaponBroken' or g=='ShelterThump' or require('CSV/VehicleRules').urgent[g]==true end
 function R.ready(f)
  if not f or f.jammed~=false or type(f.condition)~='number' or f.condition<=0 then return false end
  if f.hasChamber==true then return f.chamber==true and f.spent==false end
@@ -17,6 +19,7 @@ end
 function R.classify(e)
  if not e or e.completed~=true or e.cancelled==true then return nil end
  if e.kind and e.kind:match('^vehicle_') then return require('CSV/VehicleRules').classify(e) end
+ if e.kind=='shelter_thump' and e.verified==true then return 'ShelterThump' end
  if e.kind=='routine' and e.verified==true and R.routines[e.routineGroup] then return e.routineGroup end
  if e.kind=='trait' then return require('CSV/TraitSpeechRules').classify(e) end
  local a,b=e.before or {},e.after or {}

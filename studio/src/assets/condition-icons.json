@@ -1,0 +1,345 @@
+{
+  "Adrenaline Junkie": {
+    "index": 0,
+    "description": "Moves faster when highly panicked."
+  },
+  "Agoraphobic": {
+    "index": 1,
+    "description": "Gets panicked when outdoors."
+  },
+  "All Thumbs": {
+    "index": 2,
+    "description": "Transfers inventory items slowly. Can't craft anything while walking. Slower rope climbing speed, and higher chance of falling. Slower weapon shouldering time."
+  },
+  "Angler": {
+    "index": 3
+  },
+  "Artisan": {
+    "index": 4,
+    "description": "Better at pottery and glass crafts."
+  },
+  "Athletic": {
+    "index": 5,
+    "description": "Faster running speed. Can run for longer without tiring."
+  },
+  "Blacksmith Knowledge": {
+    "index": 6,
+    "description": "Can use an anvil to create metal items."
+  },
+  "Brave": {
+    "index": 7,
+    "description": "Less prone to becoming panicked."
+  },
+  "Bushcrafter": {
+    "index": 8,
+    "description": "Can find medicinal herbs and craft medicines and poultices from them, and make simple stone and bone tools.   Start fires faster."
+  },
+  "Cat's Eyes": {
+    "index": 9,
+    "description": "Better vision at night."
+  },
+  "Claustrophobic": {
+    "index": 10,
+    "description": "Gets panicked when in small indoor rooms."
+  },
+  "Clumsy": {
+    "index": 11,
+    "description": "Makes more noise when moving."
+  },
+  "Conspicuous": {
+    "index": 12,
+    "description": "More likely to be spotted by zombies."
+  },
+  "Cowardly": {
+    "index": 13,
+    "description": "Especially prone to becoming panicked."
+  },
+  "Crafty": {
+    "index": 14,
+    "description": "Increased XP gains for Crafting skills."
+  },
+  "Deaf": {
+    "index": 15,
+    "description": "Can't hear sound."
+  },
+  "Desensitized": {
+    "index": 16,
+    "description": "Far less prone to panic.  Ignore discomfort."
+  },
+  "Dextrous": {
+    "index": 17,
+    "description": "Transfers inventory items quickly. Faster rope climbing speed, and less chance of falling. Faster weapon shouldering time."
+  },
+  "Disorganized": {
+    "index": 18,
+    "description": "Decreased container inventory capacity. Affects world containers and bags, but not your main inventory."
+  },
+  "Eagle Eyed": {
+    "index": 19,
+    "description": "Faster visibility fade. Higher visibility arc. Weapon sights more effective at long range."
+  },
+  "Fast Learner": {
+    "index": 20,
+    "description": "Increased XP gains."
+  },
+  "Fast Metabolism": {
+    "index": 21,
+    "description": "Permanent tendency to lose weight. Starts with Low Weight trait."
+  },
+  "Fast Reader": {
+    "index": 22,
+    "description": "Takes less time to read books."
+  },
+  "Fear of Blood": {
+    "index": 23,
+    "description": "Panic when performing first aid on self. Cannot perform first aid on others. Gets stressed when bloody."
+  },
+  "First Aider": {
+    "index": 24
+  },
+  "Fit": {
+    "index": 25
+  },
+  "Former Scout": {
+    "index": 26,
+    "description": "Start fires faster."
+  },
+  "Gardener": {
+    "index": 27
+  },
+  "Graceful": {
+    "index": 28,
+    "description": "Makes less noise when moving."
+  },
+  "Gymnast": {
+    "index": 29
+  },
+  "Handy": {
+    "index": 30,
+    "description": "Faster and stronger constructions."
+  },
+  "Hard of Hearing": {
+    "index": 31,
+    "description": "Smaller perception radius. Smaller hearing range."
+  },
+  "Hearty Appetite": {
+    "index": 32,
+    "description": "Needs to eat more regularly."
+  },
+  "High Thirst": {
+    "index": 33,
+    "description": "Needs more water to survive."
+  },
+  "Hiker": {
+    "index": 34
+  },
+  "Hunter": {
+    "index": 35
+  },
+  "Illiterate": {
+    "index": 36,
+    "description": "Cannot read any books or in-world text."
+  },
+  "Inconspicuous": {
+    "index": 37,
+    "description": "Less likely to be spotted by zombies."
+  },
+  "Iron Gut": {
+    "index": 38,
+    "description": "Less chance to have food illness."
+  },
+  "Keen Cook": {
+    "index": 39,
+    "description": "Knows cooking recipes."
+  },
+  "Light Eater": {
+    "index": 40,
+    "description": "Needs to eat less regularly."
+  },
+  "Low Thirst": {
+    "index": 41,
+    "description": "Needs less water to survive."
+  },
+  "Marksman": {
+    "index": 42,
+    "description": "Improved gun accuracy and damage. Quicker reload."
+  },
+  "Mason": {
+    "index": 43,
+    "description": "Better at building stone and brick constructions."
+  },
+  "Nutritionist": {
+    "index": 44,
+    "description": "Can see the nutritional values of any food."
+  },
+  "Organized": {
+    "index": 45,
+    "description": "Increased container inventory capacity."
+  },
+  "Out of Shape": {
+    "index": 46,
+    "description": "Low endurance, low endurance regeneration."
+  },
+  "Outdoorsy": {
+    "index": 47,
+    "description": "Less affected by harsh weather conditions."
+  },
+  "Prone to Illness": {
+    "index": 48,
+    "description": "More prone to disease. Faster rate of zombification."
+  },
+  "Puny": {
+    "index": 49,
+    "description": "Far less knockback from melee weapons. Extremely small carrying weight."
+  },
+  "Reluctant Fighter": {
+    "index": 50,
+    "description": "Decreased combat XP gains."
+  },
+  "Restless Sleeper": {
+    "index": 51,
+    "description": "Slow loss of tiredness while sleeping."
+  },
+  "Runner": {
+    "index": 52
+  },
+  "Sewer": {
+    "index": 53
+  },
+  "Short Sighted": {
+    "index": 54,
+    "description": "Smaller view distance. Slower visibility fade. Weapon sights less effective."
+  },
+  "Short of Breath": {
+    "index": 55,
+    "description": "Faster endurance loss."
+  },
+  "Sleepyhead": {
+    "index": 56,
+    "description": "Needs more sleep."
+  },
+  "Slow Healer": {
+    "index": 57,
+    "description": "Recovers slowly from injuries and illness."
+  },
+  "Slow Learner": {
+    "index": 58,
+    "description": "Decreased XP gains."
+  },
+  "Slow Metabolism": {
+    "index": 59,
+    "description": "Permanent tendency to gain weight. Starts with High Weight trait."
+  },
+  "Slow Reader": {
+    "index": 60,
+    "description": "Takes longer to read books and other literature."
+  },
+  "Smoker": {
+    "index": 61,
+    "description": "Unhappiness rises when tobacco is not smoked. Stress and unhappiness decrease after smoking tobacco."
+  },
+  "Speed Demon": {
+    "index": 62,
+    "description": "Drives very fast."
+  },
+  "Stout": {
+    "index": 63,
+    "description": "Extra knockback from melee weapons. Increased carrying weight."
+  },
+  "Strong": {
+    "index": 64,
+    "description": "Extra knockback from melee weapons. Increased carrying weight."
+  },
+  "Sunday Driver": {
+    "index": 65,
+    "description": "Drives very slow."
+  },
+  "Target Shooter": {
+    "index": 66
+  },
+  "Thin-skinned": {
+    "index": 67,
+    "description": "Higher chance of being scratched or bitten by zombies."
+  },
+  "Tinkerer": {
+    "index": 68
+  },
+  "Unfit": {
+    "index": 69,
+    "description": "Very low endurance and endurance regeneration."
+  },
+  "Vehicle Knowledge": {
+    "index": 70,
+    "description": "Has knowledge of common and commercial vehicle models, and repairs."
+  },
+  "Wakeful": {
+    "index": 71,
+    "description": "Needs less sleep."
+  },
+  "Weak": {
+    "index": 72,
+    "description": "Less knockback from melee weapons. Decreased carrying weight."
+  },
+  "Weak Stomach": {
+    "index": 73,
+    "description": "Higher chance to have food illness."
+  },
+  "Whittler": {
+    "index": 74,
+    "description": "Can carve wood and bone items."
+  },
+  "Mood_Exhausted": {
+    "index": 75
+  },
+  "Mood_Panicked": {
+    "index": 76
+  },
+  "Mood_Sleepy": {
+    "index": 77
+  },
+  "Mood_Stressed": {
+    "index": 78
+  },
+  "Mood_Ill": {
+    "index": 79
+  },
+  "Mood_Drunk": {
+    "index": 80
+  },
+  "Mood_Sad": {
+    "index": 81
+  },
+  "Mood_Angry": {
+    "index": 82
+  },
+  "Mood_Bored": {
+    "index": 83
+  },
+  "Mood_Pained": {
+    "index": 84
+  },
+  "Status_Bleeding": {
+    "index": 85
+  },
+  "Status_Thirst": {
+    "index": 86
+  },
+  "Status_Hunger": {
+    "index": 87
+  },
+  "Status_HeavyLoad": {
+    "index": 88
+  },
+  "Status_TemperatureHot": {
+    "index": 89
+  },
+  "Status_TemperatureLow": {
+    "index": 90
+  },
+  "Mood_Nauseous": {
+    "index": 91
+  },
+  "Status_Wet": {
+    "index": 92
+  }
+}

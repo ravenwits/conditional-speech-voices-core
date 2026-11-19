@@ -1,6 +1,7 @@
 """A loopback-only editor for one local voice project."""
-from functools import lru_cache
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from datetime import datetime, timezone
+from functools import lru_cache, partial
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 import secrets
@@ -9,9 +10,11 @@ import socket
 import re
 import tempfile
 import subprocess
+from threading import Lock
 from urllib.parse import parse_qs, urlparse
 import webbrowser
 import studio_schema
+import studio_dialogue
 import studio_elevenlabs as elevenlabs
 from workshop_artwork import available_flag_languages, cover_image
 
@@ -32,6 +35,48 @@ def make_server(manifest, ffmpeg, core, port=0):
     # A distributed copy uses its local projects root.
     env_root = (checkout or workspace_root) if workspace_root else manifest.parent
     speech = elevenlabs.StudioSpeech(env_root / '.env.local')
+    dialogue_key = studio_dialogue.configured_key(speech.env_file)
+    dialogue_model = studio_dialogue.configured_model(speech.env_file)
+    dialogue_usage = studio_dialogue.Usage()
+    history_lock = Lock()
+    project_lock = Lock()
+    provider_reads = {'/elevenlabs/credits', '/elevenlabs/voices', '/elevenlabs/library'}
+
+    def connect_dialogue(key, model, previous_key, previous_model):
+        nonlocal dialogue_key, dialogue_model, dialogue_usage
+        studio_dialogue.validate_key(key, model)
+        with project_lock:
+            if (dialogue_key, dialogue_model) != (previous_key, previous_model):
+                raise ValueError('Gemini settings changed. Reopen settings and try again.')
+            studio_dialogue.save_settings(speech.env_file, key, model)
+            if key != dialogue_key:
+                dialogue_usage = studio_dialogue.Usage()
+            dialogue_key, dialogue_model = key, model
+        return {'configured': True, 'model': model}
+
+    def dialogue_history(path):
+        if not path.is_file():
+            return []
+        entries = json.loads(path.read_text(encoding='utf-8'))
+        if not isinstance(entries, list):
+            raise ValueError('Gemini history could not be read.')
+        return entries
+
+    def generate_dialogue(path, slot, key, context, usage, model):
+        entry = dict(id=secrets.token_hex(12), slot=slot, time=datetime.now(timezone.utc).isoformat())
+        try:
+            result = studio_dialogue.suggest(key, context, project.MAX_CAPTION, usage, model=model)
+            entry.update(status='generated', draftCount=len(result['options']))
+            return result
+        except (ValueError, OSError):
+            entry['status'] = 'failed'
+            raise
+        finally:
+            try:
+                with history_lock:
+                    project.write(path, [entry, *dialogue_history(path)[:49]])
+            except (ValueError, OSError):
+                print('Could not write Gemini request history.', flush=True)
 
     @lru_cache(maxsize=16)
     def preview(template, language):
@@ -68,6 +113,14 @@ def make_server(manifest, ffmpeg, core, port=0):
 
         def do_GET(self):
             url = urlparse(self.path)
+            # Remote account lookups can wait without blocking local reads or edits.
+            if url.path in provider_reads:
+                self.read_request(url)
+            else:
+                with project_lock:
+                    self.read_request(url)
+
+        def read_request(self, url):
             if url.path == '/' and self.local_request():
                 html = (Path(__file__).parent/'studio/index.html').read_text(encoding='utf-8')
                 self.respond(html.replace('__VOICE_SESSION__', token), 'text/html; charset=utf-8')
@@ -89,7 +142,7 @@ def make_server(manifest, ffmpeg, core, port=0):
             if url.path.startswith('/studio/assets/') and self.local_request():
                 try:
                     path = project.contained(Path(__file__).parent/'studio/assets', url.path[len('/studio/assets/'):])
-                    kinds={'.js':'text/javascript', '.css':'text/css', '.woff2':'font/woff2'}
+                    kinds={'.js':'text/javascript', '.css':'text/css', '.png':'image/png', '.woff2':'font/woff2'}
                     if path.suffix not in kinds: raise ValueError('Not an interface asset')
                     self.respond(path.read_bytes(), kinds[path.suffix])
                 except (ValueError,OSError): self.respond({'error':'Not found'},status=404)
@@ -108,8 +161,16 @@ def make_server(manifest, ffmpeg, core, port=0):
                     state = project.rows(manifest)
                     language = elevenlabs.language_code(state['language'])
                     self.respond(dict(state, projectKey=active_project, languageFlags=available_flag_languages(),
+                                      dialogueGeneration=bool(dialogue_key), dialogueModel=dialogue_model,
+                                      dialogueModels=studio_dialogue.MODELS,
                                       elevenLabs={'configured': bool(speech.key), 'voice': voice,
                                                   'languageCode': language.upper() if language else ''}))
+                elif url.path == '/dialogue/usage':
+                    self.respond(dialogue_usage.snapshot())
+                elif url.path == '/dialogue/history':
+                    with history_lock:
+                        history = dialogue_history(project.contained(manifest.parent, '.gemini-requests.json'))
+                    self.respond(history)
                 elif url.path == '/elevenlabs/credits':
                     self.respond(elevenlabs.credits(speech.key))
                 elif url.path == '/elevenlabs/history':
@@ -178,17 +239,28 @@ def make_server(manifest, ffmpeg, core, port=0):
                 self.respond({'error': str(error)}, status=400)
 
         def do_POST(self):
-            nonlocal manifest, active_project
             if not self.authorized():
                 self.respond({'error': 'Unauthorized local request'}, status=403)
                 return
+            with project_lock:
+                provider_action = self.write_request()
+            if provider_action is not None:
+                try:
+                    self.respond({'result': provider_action()})
+                except studio_dialogue.QuotaExceeded as error:
+                    self.respond({'error': str(error)}, status=429)
+                except (ValueError, OSError) as error:
+                    self.respond({'error': str(error)}, status=400)
+
+        def write_request(self):
+            nonlocal manifest, active_project
             try:
                 length = int(self.headers.get('Content-Length', '0'))
                 upload = self.path == '/import'
                 limit = project.MAX_AUDIO if upload else (512*1024 if self.path=="/review" else 65536)
                 if not 0 < length <= limit: raise ValueError('Request is empty or too large')
                 # Opening selects a destination. It never saves edits to the source project.
-                if self.path != '/open' and self.headers.get('X-Revision') != project.digest(manifest):
+                if self.path not in ('/open', '/dialogue/connect') and self.headers.get('X-Revision') != project.digest(manifest):
                     self.respond({'error': 'Project changed. Reload before saving.'}, status=409)
                     return
                 body = self.rfile.read(length)
@@ -200,8 +272,8 @@ def make_server(manifest, ffmpeg, core, port=0):
                     result = {'message': 'Imported. Listen before approving.'}
                 else:
                     data = json.loads(body)
-                    fields={'/elevenlabs/connect':{'key', 'project'}, '/elevenlabs/settings':{'voice', 'project', 'owner', 'name'},
-                            '/elevenlabs/describe':{'slot', 'project'}, '/elevenlabs/generate':{'slot', 'project'},
+                    fields={'/dialogue/suggest':{'slot', 'project', 'dialogue_count', 'previous_drafts'}, '/dialogue/connect':{'key', 'model'}, '/elevenlabs/connect':{'key', 'project'}, '/elevenlabs/settings':{'voice', 'project', 'owner', 'name'},
+                            '/elevenlabs/transcribe':{'slot', 'project'}, '/elevenlabs/describe':{'slot', 'project'}, '/elevenlabs/generate':{'slot', 'project', 'nativeScript'},
                             '/elevenlabs/accept':{'slot', 'project', 'id'}, '/profanity':{'slot','enabled'}, '/save':{'slot','text','direction','state'}, '/metadata':{'name','author','description','packVersion','steamProfile'},
                             '/update':{'apply'}, '/jobs':{'rate'}, '/measure':set(), '/package':{'rightsConfirmed'},
                             '/create':{'voice','name','language','female','trial'}, '/open':{'key'}, '/open-pack':{'folder'}, '/browse-pack-folders':{'folder','native'}, '/remove-project':{'key'},
@@ -211,10 +283,21 @@ def make_server(manifest, ffmpeg, core, port=0):
                         return
                     if not isinstance(data,dict) or set(data)-fields[self.path]:
                         raise ValueError('Unknown fields or action. Core rules are read-only.')
-                    if self.path.startswith('/elevenlabs/') and data.get('project') != active_project:
+                    if (self.path.startswith('/elevenlabs/') or self.path == '/dialogue/suggest') and data.get('project') != active_project:
                         self.respond({'error': 'The active project changed. Reopen the project before continuing.'}, status=409)
                         return
-                    if self.path == '/elevenlabs/connect':
+                    if self.path == '/dialogue/connect':
+                        return partial(connect_dialogue, data.get('key', dialogue_key), data.get('model', dialogue_model),
+                                       dialogue_key, dialogue_model)
+                    if self.path == '/dialogue/suggest':
+                        if not dialogue_key:
+                            raise ValueError('Connect a Gemini API key first.')
+                        slot = data['slot']
+                        context = studio_dialogue.scene_context(project.read(manifest), slot,
+                                                              data.get('dialogue_count', 3), data.get('previous_drafts', []))
+                        history_path = project.contained(manifest.parent, '.gemini-requests.json')
+                        return partial(generate_dialogue, history_path, slot, dialogue_key, context, dialogue_usage, dialogue_model)
+                    elif self.path == '/elevenlabs/connect':
                         result = speech.connect(data['key'])
                     elif self.path == '/elevenlabs/settings':
                         voice = data['voice']
@@ -230,13 +313,25 @@ def make_server(manifest, ffmpeg, core, port=0):
                             authoring.pop('elevenLabsVoice', None)
                         project.write(manifest, config)
                         result = {'message': 'ElevenLabs settings saved.', 'voice': voice}
+                    elif self.path == '/elevenlabs/transcribe':
+                        config = project.read(manifest)
+                        slot = data['slot']
+                        if studio_schema.entry(slot)['category'] != 'Dialogue':
+                            raise ValueError('Select a dialogue recording to transcribe.')
+                        clip = project.slots(config)[slot]
+                        path = project.contained(manifest.parent, config['assets'][clip['sound']]['source'])
+                        with path.open('rb') as handle:
+                            audio = handle.read(project.MAX_AUDIO + 1)
+                        if not audio or len(audio) > project.MAX_AUDIO:
+                            raise ValueError('The recording is empty or too large.')
+                        return partial(elevenlabs.transcribe, speech.key, audio, elevenlabs.language_code(config['bank']['language']))
                     elif self.path == '/elevenlabs/describe':
                         voice, payload = speech.describe(manifest, data['slot'])
                         estimate, samples = speech.estimate(manifest, voice, payload)
                         result = {'voice': voice, 'characterCount': len(payload['text']), 'prompt': payload['text'],
                                   'estimatedCredits': estimate, 'estimateSamples': samples}
                     elif self.path == '/elevenlabs/generate':
-                        result = speech.generate(manifest, data['slot'], active_project)
+                        result = speech.generate(manifest, data['slot'], active_project, data.get('nativeScript'))
                     elif self.path == '/elevenlabs/accept':
                         result = speech.accept(manifest, active_project, data['slot'], data['id'], ffmpeg)
                     elif self.path == '/save':
@@ -383,7 +478,7 @@ def make_server(manifest, ffmpeg, core, port=0):
                 message = 'Audio tool failed. Check the recording and local tool installation.' if isinstance(error, subprocess.SubprocessError) else str(error)
                 self.respond({'error': message}, status=400)
 
-    class StudioServer(HTTPServer):
+    class StudioServer(ThreadingHTTPServer):
         def server_bind(self):
             if hasattr(socket, 'SO_EXCLUSIVEADDRUSE'):
                 self.allow_reuse_address = False

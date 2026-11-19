@@ -59,12 +59,11 @@ local function collect(player)
   if type(s.rounds)=='number' and type(s.chamber)=='boolean' then s.empty=s.rounds==0 and not s.chamber end
  elseif weapon or player.getPrimaryHandItem then s.jammed=false end
  read(function()
-  local parts=Actors.call(body,'getBodyParts');if not parts then return end;local bandages,dirty,bleeding=0,0,0
-  for i=0,parts:size()-1 do local p=parts:get(i)
-   if p:bandaged() then bandages=bandages+1;if p:getBandageLife()<=0 then dirty=dirty+1 end end
-   if p:bleeding() then bleeding=bleeding+1 end
+  local parts=Actors.call(body,'getBodyParts')
+  if parts then require('CSV/Wounds').readBody(parts,s) end
+  if s.bleeding==0 and s.traits.hemophobic and (s.panic or 0)>0 then
+   s.bloodOnSkin=require('CSV/Wounds').bloodOnSkin(player)
   end
-  s.bandages=bandages;s.dirty=dirty;s.bleeding=bleeding
  end)
  read(function()
   if player.getSquare and not square then return end
@@ -188,7 +187,6 @@ local function collect(player)
  local distress=math.max(e.distress or 0,e.startle or 0,e.physicalInjury or 0)
  s.recentDistress=distress>0 and now>=distress and now-distress<12000
  s.pickup=e.pickup~=nil and now-e.pickup<3000
- s.treeDown=e.treeDown~=nil and now-e.treeDown<3000
  return s
 end
 function S.capture(player)

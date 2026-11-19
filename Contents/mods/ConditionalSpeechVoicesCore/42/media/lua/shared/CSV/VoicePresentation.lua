@@ -1,10 +1,10 @@
 -- Recording metadata. Existing gameplay profile IDs remain unchanged.
-return {
+local presentation={
  profiles={shaken={delivery='normal',acting='shaken'},exhausted={delivery='normal',acting='exhausted'},normal={delivery='normal'},contextual={delivery='normal'},native={delivery='nonverbal'},
  whisper={delivery='whisper'},shout={delivery='shout'},nonverbal={delivery='nonverbal'},
  angry={delivery='normal',acting='angry'},breathless={delivery='normal',acting='breathless'},
  frightened={delivery='normal',acting='frightened'},sad={delivery='normal',acting='sad'},
- congested={delivery='normal',acting='congested'},slurred={delivery='normal',acting='slurred'},
+ ill={delivery='normal',acting='ill'},drunk={delivery='normal',acting='drunk'},
  stammer={delivery='normal',acting='stammer'}},
  -- Studio labels for recordings whose performance is already defined by their situation.
  groupPresentation={
@@ -17,7 +17,7 @@ return {
   WeaponBroken={acting='startled'},
   WeaponReady={acting='controlled'},
   JamCleared={acting='waryRelief'},
-  Injured={acting='strained'},
+  Injured={acting='strained'},WoundSite={acting='strained'},BiteWound={acting='shaken'},BleedingSite={acting='strained'},BloodOnSkin={acting='uneasy'},
   PainGeneric={acting='strained'},
   RepeatedHit={acting='tense'},
   MultiHit={acting='frightened'},
@@ -71,6 +71,7 @@ return {
   HeadlightsFailed={acting='uneasy'},
   DoorLocked={acting='disappointed'},
   DoorBlocked={acting='uneasy'},
+  ShelterThump={acting='uneasy'},
   WindowLocked={acting='controlled'},
   WindowBarricaded={acting='uneasy'},
   CarWindowOpened={acting='calm'},
@@ -104,7 +105,7 @@ return {
   LostPerson={acting='uneasy'},FriendMissing={acting='uneasy'},
   FoundPerson={acting='waryRelief'},ShelterThreat={acting='shaken'}
  },
- optionalSlots={'GeneratorStarted_1','GeneratorRepaired_1','CampfireLit_1','SawLogsDone_1','ClothingPatched_1','ClothingSewn_1','SmokeFinished_1','BookReading_1','MealPrepared_1','WindowLocked_1','WindowBarricaded_1','CarWindowOpened_1','CarWindowBroken_1'},
+ optionalSlots={'ShelterThump_1','ShelterThump_2','ShelterThump_3','GeneratorStarted_1','GeneratorRepaired_1','CampfireLit_1','SawLogsDone_1','ClothingPatched_1','ClothingSewn_1','SmokeFinished_1','BookReading_1','MealPrepared_1','WindowLocked_1','WindowBarricaded_1','CarWindowOpened_1','CarWindowBroken_1'},
  slotPresentation={
   Fire_2={delivery='shout'}
  },
@@ -120,6 +121,10 @@ return {
   quietStartleNormal={'StartleNormal_1','StartleNormal_2'},
   quietStartleCowardly={'StartleCowardly_1','StartleCowardly_2'},
   quietStartleDesensitized={'StartleDesensitized_1','StartleDesensitized_2'},
-  treeFelled={'ChopTree_3'},coldWet={'Wet_3'},pickup={'FoundLoot_3'}
+  coldWet={'Wet_3'},pickup={'FoundLoot_3'}
  }
 }
+for id in pairs(require('CSV/Wounds').slots)do
+ table.insert(presentation.optionalSlots,id)
+end
+return presentation

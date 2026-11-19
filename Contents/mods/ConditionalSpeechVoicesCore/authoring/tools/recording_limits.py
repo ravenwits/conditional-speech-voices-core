@@ -3,6 +3,7 @@ import re
 MAX_CAPTION = 240
 MAX_SPEECH_SCRIPT = 10_000
 MAX_SECONDS = 20
+MAX_CLIP_SECONDS = 5
 
 def steam_profile(value):
     if not isinstance(value, str): raise ValueError("Steam profile must be a URL")

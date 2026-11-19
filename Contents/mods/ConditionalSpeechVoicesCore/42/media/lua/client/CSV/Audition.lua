@@ -235,7 +235,7 @@ function A.open(player,selectedGroup)
   local selectedVoice=require('CSV/Pack').voiceOrder[voice.selected]
   local line=A.bank(V,panel.entries[delivery.selected].group,selectedVoice)[sentence.selected]
   if not line then return end
-  for _,profile in ipairs({'frightened','angry','sad','breathless','slurred','congested','stammer','whisper'})do
+  for _,profile in ipairs({'frightened','angry','sad','breathless','drunk','ill','stammer','whisper'})do
    local chosen
    if profile=='whisper' then chosen=require('CSV/Whispers').pick(V,selectedVoice,line)
    else chosen=require('CSV/Expressions').pick(V,selectedVoice,line,{},profile)end

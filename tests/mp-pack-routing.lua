@@ -76,6 +76,15 @@ recipients={listener};outgoing={}
 assert(S.receive('CSV','speak',listener,self))
 assert(#outgoing==1 and not C.play(outgoing[1].p,listener) and #sounds==count,'local server echo does not duplicate prediction')
 self.voice='missing';assert(not V.validPacket(self),'missing provider rejected without fallback')
+-- Preview, thought and public dialogue draw from the same valid sequence range.
+local packets=require 'CSV/PlaybackPacket'
+C.sequence=2147483645
+local last=packets.forPlayback(V,C,listener,'bob','Thirst_1',15,0)
+local first=packets.forPlayback(V,C,listener,'bob','Thirst_1',15)
+assert(last.seq==2147483646 and last.pitch==0 and V.validPacket(last))
+assert(first.seq==1 and first.pitch==25 and V.validPacket(first))
+last.seq=2147483647
+assert(not V.validPacket(last))
 local prior=S.last[listener];local sent=#outgoing
 for _,payload in ipairs({false,{}, {voice={}}, {voice='bob',line={}},
  {version=1,actor=0,seq=78,voice='bob',line='Thirst_1',pitch=0,radius=0/0},

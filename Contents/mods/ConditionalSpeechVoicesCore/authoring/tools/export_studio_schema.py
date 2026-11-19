@@ -7,14 +7,15 @@ import re
 import subprocess
 import tempfile
 from studio_schema import source_digest
+from recording_traits import alternatives, recording_trait_rule
 
 TOOLS=Path(__file__).resolve().parent
 CORE=TOOLS.parents[1]
 MODULES=['VoicePresentation','VoiceAlternates','PackSemantics','VoiceRequirements','NeedTiers','Rules','Delivery','RecoveryRules',
          'LootRules','OutcomeRules','VehicleRules','VehicleCombatRules','TraitSpeechRules',
-         'ReloadRules','PsychologyRules','KillSpeech','CriticalHealth','Conditions','Traits']
+         'ReloadRules','PsychologyRules','KillSpeech','CriticalHealth','Conditions','Wounds','Traits']
 SOURCES=MODULES[:-1]+['SemanticSpeech','Concealment','Safety','Channel','Expressions','Whispers',
-                 'Selection','Startle','Injury','Recovery','Outcomes','Psychology','Callout','Traits']
+                 'Selection','Startle','Injury','Recovery','Outcomes','ShelterThumpObserver','Psychology','Callout','Traits']
 
 def snapshot():
     lua=CORE/'42/media/lua'
@@ -51,7 +52,7 @@ def export(check=False):
         for level,id in enumerate(ids,1):
             rows.setdefault(id,dict(group=group,source=id,delivery='normal')).setdefault('needLevels',[]).append(level)
     for id,entry in semantics['expressions'].items():
-        rows[id]=dict(group=entry['group'],source=entry['source'],delivery=entry['profile'])
+        rows[id]=dict(group=entry['group'],source=entry['source'],delivery={'slurred': 'drunk', 'congested': 'ill'}.get(entry['profile'], entry['profile']))
     for source,entry in semantics['whispers'].items():
         rows[entry['id']]=dict(group=entry['group'],source=source,delivery='whisper')
     for group,entries in template['native']['groups'].items():
@@ -70,9 +71,19 @@ def export(check=False):
             if path.exists() and name not in ('PackSemantics','VoiceRequirements'):
                 source_files[path.relative_to(CORE).as_posix()]=path.read_text(encoding='utf-8-sig')
     trait_links=data['Traits']['recordingTraits']
+    controlled_traits = sorted(data['Traits']['controlledSpeechTraits'].values())
+    controlled_fallbacks = data['TraitSpeechRules']['controlledFallbacks']
+    controlled_groups = {entry['group'] for entry in data['VoiceAlternates'].values() if entry.get('traitControlled')}
     groups={}
     optional = set(data['VoicePresentation']['optionalSlots'])
     alternates = data['VoiceAlternates']
+    specialist_routines = data['TraitSpeechRules']['specialistRoutines']
+    for group, specialist in specialist_routines.items():
+        slot = group + '_1'
+        if slot in rows or slot in required:
+            raise ValueError('Trait-only routine collides with an existing slot: ' + slot)
+        rows[slot] = dict(group=group, source=slot, delivery='normal')
+        optional.add(slot)
     for slot, variant in alternates.items():
         source = rows[variant['source']]
         if source['group'] != variant['group'] or slot in required:
@@ -99,6 +110,9 @@ def export(check=False):
         if row is not source:
             for key in ('needLevels','min','max','threat'):
                 if key in source: row[key]=source[key]
+        wound = data['Wounds']['slots'].get(id, {})
+        if 'region' in wound:
+            row['bodyRegion'] = wound['region']
         if group not in groups:
             references=[]
             for path,text in source_files.items():
@@ -128,7 +142,6 @@ def export(check=False):
             elif events & {'LureCmon','LureTsk'}: row.update(category='Dialogue',delivery='normal')
             else: row.update(category='Nonverbal',delivery='nonverbal')
         row['family']=groups[group]['family']
-        if group in trait_links: row['traits']=sorted(trait_links[group].values())
         profile=row['delivery']
         presentation=data['VoicePresentation']['profiles'].get(profile)
         if presentation is None: raise ValueError('Unclassified recording profile: '+profile)
@@ -138,8 +151,46 @@ def export(check=False):
         row['delivery']=slot_presentation.get('delivery',group_presentation.get('delivery',presentation['delivery']))
         row['acting']=presentation.get('acting',group_presentation.get('acting','unspecified'))
         if id in alternates:
-            row.update(delivery=alternates[id]['delivery'], acting=alternates[id]['acting'], optional=True)
+            row.update(delivery=alternates[id]['delivery'], acting=alternates[id]['acting'], optional=True, alternate=True)
+            if gate := alternates[id].get('gate'):
+                row['gate'] = gate
+            if alternates[id].get('traitControlled'):
+                row['traitControlled']=True
+        specialist = specialist_routines.get(group, {})
+        if specialist:
+            row['acting'] = specialist['acting']
+        variant = alternates.get(id, specialist)
+        if 'forTraits' in variant:
+            names = sorted(set(variant['forTraits'].values()))
+            conditions = {'panic': ' while panic is severe', 'visible': ' while a zombie is in sight'}
+            condition = conditions[variant['traitCondition']] if 'traitCondition' in variant else ''
+            trait_rule = dict(kind='required', traits=names,
+                              description='The game can choose this take' + condition +
+                              ' when the survivor has ' + alternatives(names) + '.')
+        else:
+            trait_rule = recording_trait_rule(row, trait_links, controlled_traits, controlled_groups, controlled_fallbacks)
+        if trait_rule:
+            row['traits'] = trait_rule['traits']
+            row['traitRule'] = trait_rule
         if row['category'] in ('Whisper','Shout'): row['category']='Dialogue'
+    # Keep these takes in the catalogue and make them available to any pack.
+    optional_groups = {
+        'Drunk', 'NativeDrunkHic', 'ReliefSobriety',
+        'HasACold', 'ReliefColdSymptoms', 'TraitCold',
+        'NativeCough', 'NativeMuffledCough', 'NativeSneezeLight', 'NativeSneezeHeavy',
+    }
+    optional_coverage = {
+        slot for slot in active
+        if rows[slot]['profile'] in {'drunk', 'ill'}
+        or rows[slot]['delivery'] == 'whisper'
+        or rows[slot]['group'] in optional_groups
+    }
+    optional_native_events = dict.fromkeys(sorted({
+        event for slot in optional_coverage for event in rows[slot]['nativeEvents']
+    }), True)
+    for slot in optional_coverage:
+        rows[slot]['optional'] = True
+
     # A full pack needs one take for each distinct meaning. Optional performance
     # profiles do not invent additional obligations or substitute loud audio for whispers.
     pools={}
@@ -162,10 +213,15 @@ def export(check=False):
     for name,pool in data['VoicePresentation']['coveragePools'].items():
         pools['context / '+name]=pool
     from build_voice_pack import lua as encode_lua
-    coverage=dict(version=1,pools={
-        key: eligible for key,pool in sorted(pools.items())
-        if (eligible := sorted(set(pool) & active))
-    })
+    coverage = dict(
+        version=1,
+        optionalCoverageSlots=dict.fromkeys(sorted(optional_coverage), True),
+        optionalNativeEvents=optional_native_events,
+        pools={
+            key: eligible for key, pool in sorted(pools.items())
+            if (eligible := sorted(set(pool) & (active - optional_coverage)))
+        },
+    )
     coverage_path=CORE/'42/media/lua/shared/CSV/VoiceCoverage.lua'
     coverage_text='return '+encode_lua(coverage)+'\n'
     if check:
@@ -173,7 +229,7 @@ def export(check=False):
     else: coverage_path.write_text(coverage_text,encoding='utf-8')
     inputs={p.relative_to(CORE).as_posix():source_digest(p)
             for p in (CORE/'42/media/lua').rglob('*.lua') if p.name!='BuildIdentity.lua'}
-    for name in ['voice-template-v1.json','voice-contract-v1.json','export_studio_schema.py']:
+    for name in ['voice-template-v1.json','voice-contract-v1.json','export_studio_schema.py','recording_traits.py']:
         p=TOOLS/name;inputs[p.relative_to(CORE).as_posix()]=source_digest(p)
     return dict(version=1,contract=contract['version'],slots={s:rows[s] for s in sorted(active)},
                 retiredSlots=dict(sorted(retired.items())),

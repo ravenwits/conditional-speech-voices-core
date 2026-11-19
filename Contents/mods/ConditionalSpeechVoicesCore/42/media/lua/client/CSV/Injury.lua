@@ -12,7 +12,7 @@ function I.snapshot(p)
  if type(count)~='number' then return nil end
  local out={}
  for index=0,count-1 do
-  local part=call(parts,'get',index);local row={health=call(part,'getHealth'),bleeding=call(part,'getBleedingTime'),stitched=call(part,'stitched')}
+  local part=call(parts,'get',index);local row={bitten=call(part,'bitten'),health=call(part,'getHealth'),bleeding=call(part,'getBleedingTime'),stitched=call(part,'stitched')}
   for key,method in pairs(fields)do row[key]=call(part,method) end
   out[index]=row
  end
@@ -67,11 +67,11 @@ function I.observe(p,parts,now)
    local old=previous[index]
    if old then for name in pairs(fields)do
     local a,b=old[name],row[name]
-    if finite(a) and finite(b) and b>0 and not (old.stitched==true and row.stitched==false and (name=='scratch' or name=='deep')) then
+    if finite(a) and finite(b) and b>0 and (name~='bite' or row.bitten==true) and not (old.stitched==true and row.stitched==false and (name=='scratch' or name=='deep')) then
      if b>a+0.00001 and (name~='deep' or a==0) then kind=name;where=index;break end
      -- Native bite healing is at most 0.0001 * multiplier per update.
      -- Twice that accumulated allowance plus float tolerance is conservative.
-     if (name=='bite' or name=='scratch' or name=='cut') and s.clockKnown and a-b>(s.budget-(s.lastBudget or s.budget))*(name=='bite' and 0.0002 or 0.001)+0.001 and loss(old.health,row.health) then kind='bite';where=index;break end
+     if (name=='bite' or name=='scratch' or name=='cut') and s.clockKnown and a-b>(s.budget-(s.lastBudget or s.budget))*(name=='bite' and 0.0002 or 0.001)+0.001 and loss(old.health,row.health) then kind=name;where=index;break end
     end
    end end
    if kind then break end

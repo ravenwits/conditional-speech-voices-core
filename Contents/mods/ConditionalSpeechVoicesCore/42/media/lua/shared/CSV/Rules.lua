@@ -3,7 +3,6 @@ R.policies['Agoraphobic']={pool={1,2,3},event=false,levels={1,2,2,3}}
 R.policies['AnimalTracks']={pool={1},event=true,levels={1,2,2,3}}
 R.policies['Bleeding']={pool={1,3},event=false,levels={1,1,1,3}}
 R.policies['Bored']={pool={2},event=false,levels={2,2,2,2}}
-R.policies['ChopTree']={pool={1,2},event=true,levels={1,2,2,3}}
 R.policies['Claustrophobic']={pool={1,2,3},event=false,levels={1,2,2,3}}
 R.policies['Drunk']={pool={1,2,3},event=false,levels={1,2,2,3}}
 R.policies['Endurance']={pool={1,2,3},event=false,levels={1,2,2,3}}
@@ -47,8 +46,8 @@ R.policies['Angry']={pool={1,2,3},event=false,levels={1,2,2,3}}
 function R.pool(V,player,group,intensity,maximum,facts,voice)
     local groups=(V.bank and V.bank(voice).data or V.data).groups
     local s=facts or require('CSV/State').capture(player)
+    if group=='Bleeding' and not s.bleedingCut then return {(groups.Bleeding or {})[3]} end
     if group=='FoundLoot' then return {s.pickup==true and groups.FoundLoot[3] or groups.Explore[2]} end
-    if group=='ChopTree' and s.treeDown==true then return {groups.ChopTree[3]} end
     if group=='MultiHit' and s.reactiveCrowd and s.reactiveCrowd>=3 then return groups.MultiHit end
     if group=='Wet' and s.cold and s.cold>=2 and intensity and intensity>=3 then return {groups.Wet[3]} end
     if group=='PanicCallback' then return {groups.Panic[1]} end

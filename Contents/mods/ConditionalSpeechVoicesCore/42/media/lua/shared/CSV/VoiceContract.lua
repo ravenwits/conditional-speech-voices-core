@@ -1,6 +1,7 @@
 -- Versioned semantic coverage. Physical filenames may differ between languages.
 local requirements = require 'CSV/VoiceRequirements'
-local Contract = {version = requirements.version}
+local coverage = require 'CSV/VoiceCoverage'
+local Contract = {version = requirements.version, maxClipMs = 5000}
 
 function Contract.check(definition)
     local errors = {}
@@ -17,6 +18,8 @@ function Contract.check(definition)
         if type(clip)~='table' or type(clip.sound)~='string' or clip.sound=='' or type(clip.duration)~='number'
             or clip.duration~=clip.duration or clip.duration<=0 or clip.duration==math.huge then
             errors[#errors+1]='Invalid clip '..tostring(id)
+        elseif clip.duration>Contract.maxClipMs then
+            errors[#errors+1]='Clip exceeds five seconds: '..tostring(id)
         end
     end
     local suffixes = {}
@@ -43,11 +46,13 @@ function Contract.check(definition)
             if bank.criticalHealth~=1 then errors[#errors+1]='Unsupported critical health extension' end
             for _,id in ipairs({'CriticalWound_1','CriticalWound_2','CriticalFading_1','CriticalFading_2','Whisper_CriticalWound_1','Whisper_CriticalWound_2','Whisper_CriticalFading_1','Whisper_CriticalFading_2'})do
                 local clip=bank.data.clips[voice.id..'_'..id]
-                if not clip or type(clip.duration)~='number' or clip.duration<=0 or type((bank.lines or {})[id])~='string' then errors[#errors+1]=voice.id..': missing critical health slot '..id end
+                if (clip or not coverage.optionalCoverageSlots[id]) and (not clip or type(clip.duration)~='number' or clip.duration<=0 or type((bank.lines or {})[id])~='string') then
+                    errors[#errors+1]=voice.id..': missing critical health slot '..id
+                end
             end
         end
         if flexible then
-            for meaning,pool in pairs(require('CSV/VoiceCoverage').pools) do
+            for meaning,pool in pairs(coverage.pools) do
                 local found=false
                 for _,id in ipairs(pool) do
                     local clip=bank.data.clips[voice.id..'_'..id]
@@ -60,7 +65,9 @@ function Contract.check(definition)
             local id = aliases[slot] or slot
             local clip = bank.data.clips[voice.id .. '_' .. id]
             if not clip then
-                errors[#errors + 1] = voice.id .. ': missing slot ' .. slot
+                if not coverage.optionalCoverageSlots[slot] then
+                    errors[#errors + 1] = voice.id .. ': missing slot ' .. slot
+                end
             elseif type(clip.sound) ~= 'string' or type(clip.duration) ~= 'number'
                 or clip.duration ~= clip.duration or clip.duration <= 0 or clip.duration == math.huge then
                 errors[#errors + 1] = voice.id .. ': invalid clip ' .. id
@@ -70,7 +77,9 @@ function Contract.check(definition)
         for _, event in ipairs(requirements.nativeEvents) do
             local pool = (native.replacements or {})[event]
             if type(pool) ~= 'table' or #pool == 0 then
-                errors[#errors + 1] = voice.id .. ': missing native event ' .. event
+                if not coverage.optionalNativeEvents[event] or (pool ~= nil and type(pool) ~= 'table') then
+                    errors[#errors + 1] = voice.id .. ': missing native event ' .. event
+                end
             else
                 for _, id in ipairs(pool) do
                     if not bank.data.clips[voice.id .. '_' .. id] then

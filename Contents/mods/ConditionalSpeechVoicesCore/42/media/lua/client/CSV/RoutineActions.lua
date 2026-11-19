@@ -6,8 +6,10 @@ local function queue(p,group,action,skillBook)
  if not p or not p:isLocalPlayer() or p:isDead() or not V.config.enabled then return false end
  local voice=V.voice(p)
  if not voice or not V.extended(voice) or not V.languageSupported() then return false end
- local available=V.clip(voice,group..'_1')
- if not available and group=='SawLogsDone' then available=V.clip(voice,'ChopTree_1') end
+ local source=group..'_1'
+ local traits=require 'CSV/TraitSpeechRules'
+ local available=not traits.specialistRoutines[group] and V.clip(voice,source)
+ if not available then available=traits.preferredRecording(V,p,voice,source,{},{},nil) end
  if not available and group=='BookReading' and skillBook then
   available=V.clip(voice,'TraitStudy_1') or V.clip(voice,'TraitStudy_2')
  end
@@ -24,40 +26,6 @@ function A.read(p,action)
   or type(action.startPage)~='number' or pages<=action.startPage then return false end
  local skill=call(book,'getSkillTrained')
  return queue(p,'BookReading',action,SkillBook and SkillBook[skill]~=nil)
-end
-
-local function craftGroup(recipe)
- local name=call(recipe,'getName')
- if name=='SawLogs' or name=='Base.SawLogs' then return 'SawLogsDone','Plank' end
- local category=call(recipe,'getCategory')
- if category=='Tailoring' then return 'ClothingSewn','Clothing' end
- if category=='Cooking' then return 'MealPrepared','Food' end
-end
-
-local function outputs(logic)
- local result=ArrayList.new()
- logic:getCreatedOutputItems(result)
- return result
-end
-
-local function craftBefore(self)
- local group,kind=craftGroup(self.craftRecipe)
- if not group or not self.logic then return end
- local old=outputs(self.logic)
- local previous={}
- for i=0,old:size()-1 do previous[old:get(i):getID()]=true end
- return {group=group,kind=kind,previous=previous}
-end
-
-local function craftAfter(self,context)
- local made=outputs(self.logic)
- for i=0,made:size()-1 do
-  local item=made:get(i)
-  if not context.previous[item:getID()] and
-   (context.kind=='Plank' and item:getFullType()=='Base.Plank' or context.kind~='Plank' and instanceof(item,context.kind)) then
-   return queue(self.character,context.group)
-  end
- end
 end
 
 local function smokeBefore(self)
@@ -92,7 +60,7 @@ local function install(name,loadAction,getAction,method,before,after)
    local p=self.character
    local context
    if not isClient() and not isServer() and p and p:isLocalPlayer() and not p:isDead() and V.config.enabled then
-    local ok,value=observe('routine.'..name..'.before',before,self)
+    local ok,value=observe('routine.'..name..'.before',before,self,...)
     if ok then context=value end
    end
    local result=original(self,...)
@@ -118,7 +86,32 @@ local function fireAfter(self)
  if fire and fire.isLit==true then queue(self.character,'CampfireLit') end
 end
 
+local received=setmetatable({},{__mode='k'})
+local function receive(module,command,event)
+ if module~='CSVActivities' or command~='completed' or type(event)~='table' then return end
+ if not require('CSV/TraitSpeechRules').specialistRoutines[event.group] then return end
+ local playerId,sequence=event.playerId,event.sequence
+ if not V.finite(playerId) or playerId<0 or playerId%1~=0
+  or not V.finite(sequence) or sequence<1 or sequence%1~=0 then return end
+ for i=0,getNumActivePlayers()-1 do
+  local player=getSpecificPlayer(i)
+  if call(player,'isLocalPlayer')==true and call(player,'getOnlineID')==playerId then
+   if sequence<=(received[player] or 0) then return end
+   received[player]=sequence
+   return queue(player,event.group)
+  end
+ end
+end
+
 function A.install()
+ if isClient() then
+  require('CSV/Connections').install('activity-client',function(t)
+   t:event(Events.OnServerCommand,receive)
+   t:event(Events.OnConnected,function()received=setmetatable({},{__mode='k'})end)
+  end)
+ elseif not isServer() then
+  require('CSV/ActivityCompletion').install(queue)
+ end
  install('generator-start','TimedActions/ISActivateGenerator',function()return ISActivateGenerator end,'complete',
   function(self)return self.activate==true and call(self.generator,'isActivated')==false end,
   function(self,_,success)
@@ -133,8 +126,6 @@ function A.install()
  install('campfire-kindling','Camping/TimedActions/ISLightFromKindle',function()return ISLightFromKindle end,'updateKindling',fireBefore,fireAfter)
  install('campfire-literature','Camping/TimedActions/ISLightFromLiterature',function()return ISLightFromLiterature end,'complete',fireBefore,fireAfter)
  install('campfire-petrol','Camping/TimedActions/ISLightFromPetrol',function()return ISLightFromPetrol end,'complete',fireBefore,fireAfter)
- -- complete runs on the server in MP. Do not speak for speculative client actions.
- install('craft','Entity/TimedActions/ISHandcraftAction',function()return ISHandcraftAction end,'performRecipe',craftBefore,craftAfter)
  install('patch','TimedActions/ISRepairClothing',function()return ISRepairClothing end,'complete',function()return true end,
   function(self,_,success)if success==true then queue(self.character,'ClothingPatched')end end)
  install('smoke','TimedActions/ISEatFoodAction',function()return ISEatFoodAction end,'complete',smokeBefore,smokeAfter)

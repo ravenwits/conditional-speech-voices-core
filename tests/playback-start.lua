@@ -147,3 +147,15 @@ playing=true;pending=true
 ctx=emit();C.cancel(ctx.playbackEntry,'urgent_interrupt',true)
 assert(#sent==3,'interrupting an unrelayed line sends no stop')
 print('PASS MP relay waits for engine startup and interrupts only relayed audio')
+
+-- A low pitch can stretch a legal five-second file past the pack limit.
+for i=#C.active,1,-1 do C.cancel(C.active[i],'test_reset',false) end
+V.clip=function()return {sound='Test',duration=5000}end
+V.config.followPitch=true;V.pitchMultiplier=function()return 0.75 end
+playing=true;pending=false
+assert(C.play({actor=1,seq=3071,line='Test',voice='test',radius=10,pitch=0},p,false))
+C.sweep()
+local capped=C.active[1]
+assert(capped.started and capped.deadline-capped.started==5000)
+now=now+4999;C.sweep();assert(not capped.finishedReason)
+now=now+1;C.sweep();assert(capped.finishedReason=='duration_limit')

@@ -113,10 +113,7 @@ function C.preview(player,lineID,selectedVoice,previewRadius,previewPitch,detail
     if not V.pack.voiceBanks[voice] then return rejected('unsupported_voice') end
     lineID=lineID or randomPreview(voice)
     if not lineID then return rejected('no_recorded_clip') end
-    C.sequence=C.sequence+1
-    if C.sequence>=2147483647 then C.sequence=1 end
-    local packet={version=1,pack=V.bank(voice).id,packRevision=V.bank(voice).revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,
-        line=lineID,voice=voice,pitch=previewPitch or V.pitch(player),radius=previewRadius or 15}
+    local packet=require('CSV/PlaybackPacket').forPlayback(V,C,player,voice,lineID,previewRadius or 15,previewPitch)
     local trace=require 'CSV/Trace'
     details=details or {};details.trace=details.trace or trace.begin(player,lineID,'local_preview',details.contextFacts,'preview')
     trace.step(details.trace,'play_requested','preview',{line=lineID,voice=voice})

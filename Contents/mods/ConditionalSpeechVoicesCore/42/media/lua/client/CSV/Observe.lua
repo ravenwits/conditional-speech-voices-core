@@ -18,12 +18,9 @@ function O.transfer(self,item)
   else report(p,'pickup','FoundLoot') end
  end
 end
-function O.tree(self,wasStanding)
- if wasStanding and self.tree and self.tree:getObjectIndex()<0 then report(self.character,'treeDown','ChopTree') end
-end
 function O.install()
  if O.installed then return true end
- local first=require('CSV/Connections').install('inventory-observer',function(t)
+ O.installed=require('CSV/Connections').install('inventory-observer',function(t)
   require 'TimedActions/ISInventoryTransferAction'
   local original=ISInventoryTransferAction.playTransferCompleteSound
   t:replace(ISInventoryTransferAction,'playTransferCompleteSound',function(self,item,...)
@@ -32,19 +29,6 @@ function O.install()
    return unpack(result)
   end)
  end)
- local second=require('CSV/Connections').install('tree-observer',function(t)
-  require 'TimedActions/ISChopTreeAction'
-  local original=ISChopTreeAction.animEvent
-  t:replace(ISChopTreeAction,'animEvent',function(self,event,...)
-   local valid,standing=pcall(function()return event=='ChopTree' and not isClient() and self.axe~=nil and self.tree:getObjectIndex()>=0 end)
-   local result={original(self,event,...)}
-   if valid and standing then local good,err=pcall(O.tree,self,true)
-    if not good and not O.treeError then O.treeError=true;print('[CSV] tree observer: '..tostring(err)) end
-   end
-   return unpack(result)
-  end)
- end)
- O.installed=first and second
  return O.installed
 end
 return O

@@ -16,7 +16,7 @@ function K.pool(f,experience)
  if K.angry(f) then return 'KillAngry' end
  if (f.unhappy or 0)>=3 or (f.traits or {}).cowardly and (f.panic or 0)>0 or (f.traits or {}).hemophobic and (f.bleeding or 0)>0 then return 'KillUneasy' end
  if K.dark(f,experience) then return 'KillDark' end
- if experience=='practiced' or (f.traits or {}).desensitized then return 'KillControlled' end
+ if experience=='practiced' or (f.traits or {}).desensitized or (f.traits or {}).brave and (f.near or 0)>0 then return 'KillControlled' end
  return 'KillUneasy'
 end
 function K.allowed(id,f)

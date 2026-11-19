@@ -39,6 +39,7 @@ export function Choice({
   items,
   disabled = false,
   triggerClassName = "",
+  selectedContent,
 }: {
   name: string;
   value: string;
@@ -46,6 +47,7 @@ export function Choice({
   items: { value: string; label: string; disabled?: boolean; content?: ReactNode }[];
   disabled?: boolean;
   triggerClassName?: string;
+  selectedContent?: ReactNode;
 }) {
   return (
     <Select
@@ -57,7 +59,7 @@ export function Choice({
       disabled={disabled}
     >
       <SelectTrigger aria-label={name} className={`w-full min-w-0 ${triggerClassName}`}>
-        <SelectValue>{items.find((item) => item.value === value)?.content}</SelectValue>
+        <SelectValue>{selectedContent ?? items.find((item) => item.value === value)?.content}</SelectValue>
       </SelectTrigger>
       <SelectPopup>
         {items.map((i) => (

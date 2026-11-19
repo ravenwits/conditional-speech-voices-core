@@ -14,7 +14,7 @@ def original_duration(manifest,slot,ffmpeg):
     config=project.read(manifest);clip=project.slots(config)[slot]
     edit=config.get('authoring',{}).get('audioEdits',{}).get(slot,{})
     path=project.contained(manifest.parent,edit.get('original') or config['assets'][clip['sound']]['source'])
-    raw=subprocess.run([ffmpeg,'-nostdin','-v','error','-i',str(path),'-t',str(MAX_SECONDS+1),'-f','s16le','-ac','1','-ar','8000','pipe:1'],capture_output=True,check=True,timeout=30).stdout
+    raw=subprocess.run([ffmpeg,'-nostdin','-v','error','-i',str(path),'-f','s16le','-ac','1','-ar','8000','pipe:1'],capture_output=True,check=True,timeout=30).stdout
     return len(raw)/16000
 
 def process(manifest,slot,ffmpeg,gain_db=0,semitones=0,restore=False,speed=1,trim_start=0,trim_end=0):
@@ -24,15 +24,14 @@ def process(manifest,slot,ffmpeg,gain_db=0,semitones=0,restore=False,speed=1,tri
     if not math.isfinite(gain_db) or not -12<=gain_db<=12: raise ValueError('Gain must be between -12 and +12 dB')
     if not math.isfinite(semitones) or not -4<=semitones<=4: raise ValueError('Pitch must be between -4 and +4 semitones')
     trim_start=float(trim_start);trim_end=float(trim_end)
-    if not all(math.isfinite(v) and 0<=v<MAX_SECONDS for v in (trim_start,trim_end)): raise ValueError("Trim must be a finite number of seconds within the recording limit")
+    if not all(math.isfinite(v) and 0<=v for v in (trim_start,trim_end)): raise ValueError("Trim must be a finite, non-negative number of seconds")
     revision=project.digest(manifest);config=project.read(manifest);studio_schema.validate(config)
     clip=project.slots(config).get(slot)
     if not clip: raise ValueError('Unknown Core recording slot')
     asset=config['assets'][clip['sound']];root=manifest.parent
     current=project.contained(root,asset['source'])
     if not current.is_file(): raise ValueError('Import audio before editing it')
-    authoring=config.setdefault('authoring',{});edits=authoring.setdefault('audioEdits',{})
-    previous=edits.get(slot)
+    previous = config.get('authoring', {}).get('audioEdits', {}).get(slot)
     if previous:
         if project.digest(current)!=previous['renderedHash']: raise ValueError('This take changed outside Studio. Import it again before editing.')
         original=project.contained(root,previous['original'])
@@ -77,10 +76,13 @@ def process(manifest,slot,ffmpeg,gain_db=0,semitones=0,restore=False,speed=1,tri
             target=audio_dir/(project.voice_id(config)+'_'+slot+'_'+uuid.uuid4().hex[:12]+'.mp3')
             temporary.replace(target)
         else: target=original
-        asset['source']=target.relative_to(root.resolve()).as_posix()
-        clip['duration']=0;config['bank']['peaklimits'].pop(project.voice_id(config)+'_'+slot,None)
-        authoring.setdefault('reviews',{}).pop(slot,None);authoring.setdefault('measurements',{}).pop(clip['sound'],None)
-        edits[slot]=dict(original=original.relative_to(root.resolve()).as_posix(),originalHash=original_hash,
-                         renderedHash=project.digest(target),gainDb=gain_db,semitones=semitones,speed=speed,trimStart=trim_start,trimEnd=trim_end)
-        project.write(manifest,config)
+        try:
+            edit = dict(original=original.relative_to(root.resolve()).as_posix(), originalHash=original_hash,
+                        renderedHash=project.digest(target), gainDb=gain_db, semitones=semitones,
+                        speed=speed, trimStart=trim_start, trimEnd=trim_end)
+            project.save_active_take(manifest, config, slot, target, edit=edit)
+        except Exception:
+            if target != original:
+                target.unlink(missing_ok=True)
+            raise
     return dict(message='Original restored. Listen before approving.' if restore else 'Audio settings saved to the recording. Listen before approving.')

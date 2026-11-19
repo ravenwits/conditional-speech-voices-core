@@ -4,10 +4,12 @@ local function index(bank)
  if indexes[bank] then return indexes[bank] end
  local result={sources={},groups={}}
  for _,entry in pairs(bank.catalog)do
-  local source=result.sources[entry.source] or {};result.sources[entry.source]=source;source[entry.profile]=entry
+  -- Older banks store the original profile name. Keep their slot IDs valid.
+  local profile=({slurred='drunk',congested='ill'})[entry.profile] or entry.profile
+  local source=result.sources[entry.source] or {};result.sources[entry.source]=source;source[profile]=entry
   if entry.groupFallback then
    local group=result.groups[entry.group] or {};result.groups[entry.group]=group
-   local pool=group[entry.profile] or {};group[entry.profile]=pool;pool[#pool+1]=entry
+   local pool=group[profile] or {};group[profile]=pool;pool[#pool+1]=entry
   end
  end
  indexes[bank]=result
@@ -21,17 +23,18 @@ function M.pick(V,voice,line,facts,forced,player)
  local options=routes.sources[line.id] or {};local fallback=routes.groups[line.group] or {}
  local f=facts or {};if f.sneaking==true and not require('CSV/Concealment').open(f) and not require('CSV/Concealment').active(f) and not forced then return line end
  local levels=f.levels or {};local choices={}
+ local controlledFault=(line.group=='GunJammed' or line.group=='OutOfAmmo') and require('CSV/Traits').prefersControlledSpeech(f)
  if forced then choices[1]=forced
  else
   if require('CSV/Concealment').active(f) and line.group=='ThreatTense' then choices[#choices+1]='frightened' end
   if (f.panic or 0)>=3 and (f.near or 0)==0 and not require('CSV/Concealment').active(f) and (line.group=='Panic' or line.group=='Agoraphobic' or line.group=='Claustrophobic') then choices[#choices+1]='stammer' end
-  if (f.panic or 0)>=3 and (require('CSV/Concealment').active(f) or ((f.near or 0)>0 and f.reactiveNear~=0) or line.group=='Agoraphobic' or line.group=='Claustrophobic') then choices[#choices+1]='frightened' end
+  if not controlledFault and (f.panic or 0)>=3 and (require('CSV/Concealment').active(f) or ((f.near or 0)>0 and f.reactiveNear~=0) or line.group=='Agoraphobic' or line.group=='Claustrophobic') then choices[#choices+1]='frightened' end
   if (f.endurance or 0)>=2 then choices[#choices+1]='breathless' end
   if (f.anger or levels.Angry or 0)>=2 then choices[#choices+1]='angry' end
   if (f.unhappy or levels.Unhappy or 0)>=3 then choices[#choices+1]='sad' end
   if (f.heat or levels.Hyperthermia or 0)>=2 then choices[#choices+1]='stammer' end
-  if (f.drunk or levels.Drunk or 0)>=2 then choices[#choices+1]='slurred' end
-  if (f.coldSymptoms or levels.HasACold or 0)>=1 then choices[#choices+1]='congested' end
+  if (f.drunk or levels.Drunk or 0)>=2 then choices[#choices+1]='drunk' end
+  if (f.coldSymptoms or levels.HasACold or 0)>=1 then choices[#choices+1]='ill' end
  end
  local history=player and V.client and V.client.history[player] or {}
  local hurried=(f.directAttack or 0)>0 or (f.activePursuit or 0)>0 or (f.endurance or 0)>=3

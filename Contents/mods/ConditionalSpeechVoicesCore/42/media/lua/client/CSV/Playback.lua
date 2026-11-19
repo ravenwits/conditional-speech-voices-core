@@ -1,3 +1,4 @@
+local maxClipMs=require('CSV/VoiceContract').maxClipMs
 local M={}
 local Trace=require 'CSV/Trace'
 local spatial={self2d=0,worldPositionUpdates=0,movedWhileTalking=0}
@@ -29,7 +30,7 @@ end
 local function observeStart(entry,now)
     if entry.started then return end
     entry.started=now
-    entry.deadline=now+entry.duration+300
+    entry.deadline=now+math.min(entry.duration+300,maxClipMs)
     Trace.step(entry.trace,'engine_active','engine_observed')
     if entry.relayOnStart and entry.player:isLocalPlayer() and isClient() then
         local sent,err=pcall(sendClientCommand,entry.player,'CSV','speak',entry.packet)
@@ -234,10 +235,11 @@ function C.play(p,actor,localPreview,details)
 end
 function C.emit(player,ctx,volume)
     if not V.finite(volume) or volume<=0 then return end
-    C.sequence=C.sequence+1
-    if C.sequence>=2147483647 then C.sequence=1 end
-    local p={version=1,pack=V.bank(ctx.voice).id,packRevision=V.bank(ctx.voice).revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,line=ctx.line.id,
-        voice=ctx.voice,pitch=V.pitch(player),radius=math.min(V.config.maxDistance,volume),priority=ctx.policy.priority,allowStealth=ctx.policy.allowStealth,exposed=ctx.policy.exposed,engaged=ctx.policy.engaged}
+    local p=require('CSV/PlaybackPacket').forPlayback(V,C,player,ctx.voice,ctx.line.id,math.min(V.config.maxDistance,volume))
+    p.priority=ctx.policy.priority
+    p.allowStealth=ctx.policy.allowStealth
+    p.exposed=ctx.policy.exposed
+    p.engaged=ctx.policy.engaged
     Trace.step(ctx.trace,'play_requested','spoken',{line=p.line,radius=p.radius,noiseRadius=ctx.policy.noiseRadius})
     local played,reason,info,entry=C.play(p,player,false,{trace=ctx.trace,group=ctx.group,nativeAlert=ctx.facts.nativeAlert})
     ctx.playbackEntry=entry

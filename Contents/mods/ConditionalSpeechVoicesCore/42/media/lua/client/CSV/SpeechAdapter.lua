@@ -18,6 +18,7 @@ local function owns(player)
   and not player:isDead() and V.voice(player)~=nil
 end
 local function generateSpeechFrom(player,group,intensity,maximum,...)
+    if group=='ChopTree' and owns(player) then return end
     if C.gameReady==false and owns(player) then
         local trace=Trace.request(player,group)
         Trace.step(trace,'blocked','game_not_ready')
@@ -176,8 +177,7 @@ local function Say(player,text,volume)
     end
     local result=say(player,text,volume)
     if ctx and ctx.line and channel.allowed and channel.channel=='private' and not require('CSV/LootRules').groups[ctx.group] and ctx.group~='FoundLoot' and (not C.lastOrdinary[player] or V.now()-C.lastOrdinary[player]>=NeedTiming.ordinaryInterval(nil,C.preferences().frequency)) then
-        C.sequence=C.sequence+1
-        local p={version=1,pack=V.bank(ctx.voice).id,packRevision=V.bank(ctx.voice).revision,actor=math.max(0,player:getOnlineID()),seq=C.sequence,line=ctx.line.id,voice=ctx.voice,pitch=V.pitch(player),radius=15}
+        local p=require('CSV/PlaybackPacket').forPlayback(V,C,player,ctx.voice,ctx.line.id,15)
         local ok,played,reason=pcall(C.play,p,player,true,{private=true,gain=.35,trace=ctx.trace})
         Trace.step(ctx.trace,'private_thought',ok and (played and 'queued' or reason) or 'play_error')
         if ok and played then require('CSV/Encounter').record(player,ctx.group,ctx.facts);C.remember(player,ctx.line.id,ctx.line);ctx.outcome='local_thought';C.lastOrdinary[player]=V.now();NeedTiming.mark(player,ctx.group,ctx.intensity,V.now()) end

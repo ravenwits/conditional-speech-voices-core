@@ -85,7 +85,7 @@ function R.register(mod,definition)
    assert(v.base=='VoiceMale' or v.base=='VoiceFemale','Invalid base voice')
    assert(type(v.preview)=='string' and type(b.native)=='table' and type(b.lines)=='table','Missing native voice data')
    assert(type(b.native.suffixes)=='table' and type(b.native.replacements)=='table' and type(b.native.pain)=='table','Invalid native bank')
-   assert(type(b.native.replacements.ShoutHey)=='table' and type(b.native.replacements.WhisperHey)=='table','Missing callout pools')
+   assert(type(b.native.replacements.ShoutHey)=='table','Missing callout pools')
    prefixes[v.prefix]=true
   end
  end

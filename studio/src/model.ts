@@ -1,16 +1,25 @@
 export type State = "missing" | "pending" | "approved" | "redo";
 export type Row = {
   slot: string;
+  source?: string;
+  alternate?: boolean;
   text: string;
   speechScript?: string | null;
   reference: string;
   direction: string;
   guidance?: string;
   elevenLabsTags?: string[];
+  nativePreview?: boolean;
   optional?: boolean;
   profanity?: boolean;
   profanityLocked?: boolean;
   traits?: string[];
+  playbackWhen?: string;
+  traitRule?: {
+    kind: "required" | "preferred" | "conditional" | "excluded";
+    traits: string[];
+    description: string;
+  } | null;
   category: string;
   family: string;
   delivery: string;
@@ -30,6 +39,9 @@ export type Project = {
   languageFlags?: string[];
   characterBase?: string;
   elevenLabs?: { configured: boolean; voice: string; languageCode?: string };
+  dialogueGeneration?: boolean;
+  dialogueModel?: string;
+  dialogueModels?: Record<string, string>;
   canUndoReview?: boolean;
   name: string;
   author: string;
@@ -81,7 +93,7 @@ export const stateNames: Record<State, string> = {
   redo: "Needs a retake",
 };
 export const label = (s: string) =>
-  s
+  (s === "slurred" ? "drunk" : s === "congested" ? "ill" : s)
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replaceAll("_", " ")
     .replace(/^./, (c) => c.toUpperCase());
@@ -124,27 +136,49 @@ export const emptyFilters: Filters = {
   acting: "",
   state: "",
 };
+export function recordingTraits(row: Row): string[] {
+  return row.traitRule?.traits ?? row.traits ?? [];
+}
+
+export function recordingFilterState(row: Row) {
+  return row.state === "missing" && row.optional ? "optional-missing" : row.state;
+}
+
 export function filterRows(rows: Row[], f: Filters, requiredSlots?: ReadonlySet<string>) {
   const query = f.search.trim().toLocaleLowerCase();
+  const slotQuery = query.replace(/[ _-]+/g, "");
   return rows.filter(
     (r) =>
       (!f.profanity || r.profanity === true) &&
       (!f.family || r.family === f.family) &&
-      (!f.trait || r.traits?.includes(f.trait)) &&
+      (!f.trait || recordingTraits(r).includes(f.trait)) &&
       (!f.group || r.context === f.group) &&
       (!f.category || r.category === f.category) &&
       (!f.delivery || r.delivery === f.delivery) &&
       (!f.acting || (r.acting || "unspecified") === f.acting) &&
       (f.state === "required"
         ? requiredSlots?.has(r.slot)
-        : !f.state || r.state === f.state) &&
+        : !f.state || recordingFilterState(r) === f.state) &&
       (!query ||
-        [r.slot, r.text, r.context, r.delivery]
+        (!!slotQuery && [r.slot, r.source].some((id) =>
+          id?.toLocaleLowerCase().replace(/[ _-]+/g, "").includes(slotQuery))) ||
+        [r.text, r.context, r.delivery, r.acting]
           .join(" ")
           .toLocaleLowerCase()
           .includes(query)),
   );
 }
+export function isAlternate(row: Row) {
+  // Earlier workbench responses only identify catalog alternates by their slot ID.
+  return row.alternate ?? row.slot.startsWith("Alt_");
+}
+
+function variationOrder(row: Row) {
+  if (isAlternate(row)) return 2;
+  if (row.source ? row.source !== row.slot : /^(Expr|Whisper)_/.test(row.slot)) return 1;
+  return 0;
+}
+
 export function groupRows(rows: Row[]) {
   const groups = new Map<string, Row[]>();
   for (const row of rows) {
@@ -152,5 +186,8 @@ export function groupRows(rows: Row[]) {
     if (list) list.push(row);
     else groups.set(row.context, [row]);
   }
-  return [...groups].map(([context, variations]) => ({ context, variations }));
+  return [...groups].map(([context, variations]) => ({
+    context,
+    variations: variations.sort((a, b) => variationOrder(a) - variationOrder(b)),
+  }));
 }
