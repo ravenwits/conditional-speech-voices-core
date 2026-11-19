@@ -1,3 +1,28 @@
+## 0.44
+
+### Core
+
+- Add body-part reactions for bites, injuries and active bleeding. Blood on the survivor's skin without an active wound has its own reaction. The game does not assume who the blood came from.
+- Add an optional shelter reaction when a zombie lands its first nearby strike on a door, window or barricade. Repeated strikes on the same opening count as one encounter.
+- Add trait-specific reactions where the trait changes the response. Brave and Desensitized survivors can use a more controlled Mortal Fear take.
+- Trigger supported activity reactions in multiplayer only after the server confirms completion, and assign the line to the survivor who completed the action.
+- Keep a separate recording bank for each official voice so each character plays their own audio and captions.
+
+### Studio
+
+- Show when a line plays, who can say it, and how to perform it. Trait labels distinguish requirements, exclusions and conditional use. Trait and moodle icons explain the relevant conditions.
+- Add an audio tag guide, ElevenLabs transcription and audio preview playback, and Gemini dialogue drafts with retry. Drafts use the selected project language and scene, with first-person reactions in place of self-coaching.
+- Search by recording ID, list primary takes before alternatives, and advance to the next visible recording after approval.
+- Keep optional Whisper, Drunk and Ill takes out of required coverage and missing-audio totals. Require game-ready audio to fit within five seconds.
+
+### Official voice packs
+
+- English. Bob and Kate now have 1,587 recordings each. Rewrite self-directed commands as first-person reactions and re-record high-pitched takes that stood out from each character's usual voice.
+- Turkish. Alp and Müjde now have 1,587 recordings each. Refresh Turkish dialogue and recordings for the expanded injury, trait and activity catalogue.
+- Shorten 20 overlong recordings in the Workshop builds. The original Studio takes are preserved.
+
+Studio tests, Core tests and offline checks of the combined Workshop packs passed. Live gameplay and multiplayer playtesting are pending.
+
 ## 0.43
 
 - Validate built voice packs with the Core registry and report loudness outliers.
