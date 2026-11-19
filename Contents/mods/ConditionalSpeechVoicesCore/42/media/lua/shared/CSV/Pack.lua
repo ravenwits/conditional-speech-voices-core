@@ -27,7 +27,7 @@ local function official(mod,module,id,language)
  if type(getActivatedMods)=='function' and not getActivatedMods():contains(mod) then return nil end
  local ok,paths=pcall(require,module..'/VoiceBanks')
  if not ok then return loadBank(mod,module..'/Manifest',id,language) end
- for _,path in ipairs(paths)do provider(mod..'/'..path,path)end
+ for _,path in ipairs(paths)do provider(path:match('[^/]+$'),path)end
 end
 -- Legacy packs remain loadable while subscribers receive updates separately.
 local en=official('Conditional-Speech-Voices-English','CSV_EN','csv.en','EN')
